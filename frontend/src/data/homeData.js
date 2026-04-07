@@ -1,0 +1,262 @@
+import { 
+  TrendingUp, 
+  Code2, 
+  Brain, 
+  Palette, 
+  Database, 
+  Cloud, 
+  ShieldCheck, 
+  Terminal,
+  Wifi, 
+  Award, 
+  Globe, 
+  Flame 
+} from 'lucide-react';
+
+const BASE_IMG = 'https://res.cloudinary.com/db2vju4mv/image/upload/f_auto,q_auto';
+
+export const HERO_STATS = [
+  { target: 50,  suffix: 'K+', label: 'Active Learners', decimals: 0 },
+  { target: 100,  suffix: '+',  label: 'Expert Courses',  decimals: 0 },
+  { target: 4.7, suffix: '',   label: 'Avg Rating',      decimals: 1 },
+  { target: 98,  suffix: '%',  label: 'Completion Rate', decimals: 0 },
+];
+
+// ✅ Single source of truth — ticker component should import and use this
+export const TICKER_STATS = [
+  { value: '50K+', label: 'Learners' },
+  { value: '100+',  label: 'Courses'  },
+  { value: '4.7★', label: 'Rating'   },
+  { value: '98%',  label: 'Completion' },
+];
+
+export const CATEGORIES = [
+  { label: 'Marketing',       icon: TrendingUp,   count: 12, color: 'orange'  },
+  { label: 'Web Development', icon: Code2,        count: 12, color: 'cyan'    },
+  { label: 'AI / Machine Learning',         icon: Brain,        count: 12, color: 'violet'  },
+  { label: 'Design',          icon: Palette,      count: 12, color: 'amber'   },
+  { label: 'Data Science',    icon: Database,     count: 12, color: 'emerald' },
+  { label: 'Cloud Computing', icon: Cloud,        count: 12, color: 'blue'    },
+  { label: 'Cybersecurity',   icon: ShieldCheck,  count: 12, color: 'indigo'  },
+  { label: 'DSA',             icon: Terminal,     count: 12, color: 'rose'    },
+];
+
+export const COLOR_MAP = {
+  orange:  'bg-orange-50 border-orange-200 text-orange-600 group-hover:bg-orange-100',
+  cyan:    'bg-cyan-50 border-cyan-200 text-cyan-600 group-hover:bg-cyan-100',
+  violet:  'bg-violet-50 border-violet-200 text-violet-600 group-hover:bg-violet-100',
+  amber:   'bg-amber-50 border-amber-200 text-amber-600 group-hover:bg-amber-100',
+  emerald: 'bg-emerald-50 border-emerald-200 text-emerald-600 group-hover:bg-emerald-100',
+  blue:    'bg-blue-50 border-blue-200 text-blue-600 group-hover:bg-blue-100',
+  indigo:  'bg-indigo-50 border-indigo-200 text-indigo-600 group-hover:bg-indigo-100',
+  rose:    'bg-rose-50 border-rose-200 text-rose-600 group-hover:bg-rose-100',
+};
+
+export const FEATURED_COURSES = [
+  {
+    _id: '1', title: 'Full Stack Web Development Bootcamp', instructor: 'Rohan Gupta',
+    rating: 4.7, reviewCount: 2341, duration: '42h', enrollCount: 12500,
+    price: 2999, originalPrice: 8999, level: 'Beginner', category: 'Web Development', isLive: false,
+    thumbnail: `${BASE_IMG}/v1773810688/webdev2_xb0ao3.webp`,
+  },
+  {
+    _id: '2', title: 'Machine Learning with Python', instructor: 'Ananya Iyer',  // ✅ fixed
+    rating: 4.6, reviewCount: 1876, duration: '38h', enrollCount: 9800,
+    price: 3499, originalPrice: 9999, level: 'Intermediate', category: 'AI / Machine Learning', isLive: true,
+    thumbnail: `${BASE_IMG}/v1773810725/ai-ml1_ridnur.webp`,
+  },
+  {
+    _id: '3', title: 'UI/UX Design Essentials', instructor: 'Priya Kulkarni',   // ✅ fixed
+    rating: 4.5, reviewCount: 987, duration: '24h', enrollCount: 5600,
+    price: 1999, originalPrice: 5999, level: 'Beginner', category: 'Design', isLive: false,
+    thumbnail: `${BASE_IMG}/v1773810790/design1_zqejk3.webp`,
+  },
+  {
+    _id: '4', title: 'Cloud Infrastructure with AWS', instructor: 'Siddharth Rao',
+    rating: 4.7, reviewCount: 3120, duration: '35h', enrollCount: 15200,
+    price: 0, originalPrice: 7999, level: 'Advanced', category: 'Cloud Computing', isLive: false,
+    thumbnail: `${BASE_IMG}/v1773810876/cloud-computing2_n3ffat.jpg`,
+  },
+];
+
+export const FEATURES = [
+  {
+    icon: Wifi,
+    title: 'Live Interactive Sessions',
+    tagline: 'Learn in real time, not your own time.',
+    desc: 'Evening & weekend batches built for working professionals — HD video, live Q&A, and real-time doubt resolution with expert instructors who have shipped at scale.',
+    bullets: ['IST-friendly evening & weekend slots', 'HD video + screen share', 'Live Q&A & doubt resolution', 'Recordings available 24 h later'],
+    tw: {
+      tabActiveBorder:  'border-cyan-400',
+      tabActiveShadow:  'shadow-lg shadow-cyan-500/20',
+      tabIconActive:    'bg-cyan-500',
+      tabIconInactive:  'bg-slate-100',
+      tabIconClrActive: 'text-white',
+      tabIconClrInact:  'text-slate-400',
+      tabTitleActive:   'text-slate-900',
+      tabTitleInactive: 'text-slate-500',
+      dot:              'bg-cyan-500',
+      cardBorder:       'border-cyan-200',
+      topBar:           'bg-cyan-500',
+      iconBg:           'bg-cyan-50',
+      iconBorder:       'border-cyan-200',
+      iconColor:        'text-cyan-500',
+      tagline:          'text-cyan-600',
+      bullet:           'text-cyan-500',
+      cta:              'bg-cyan-500 hover:bg-cyan-600 shadow-lg shadow-cyan-500/30',
+    },
+  },
+  {
+    icon: Award,
+    title: 'Blockchain Certificates',
+    tagline: "Credentials that can't be faked.",
+    desc: 'Tamper-proof, QR-verified digital certificates minted on-chain and recognised by 1,200+ Indian employers — including TCS, Infosys, and Flipkart.',
+    bullets: ['QR code instant verification', 'Recognised by 1,200+ employers', 'LinkedIn-shareable in one click', 'Permanent & tamper-proof'],
+    tw: {
+      tabActiveBorder:  'border-violet-400',
+      tabActiveShadow:  'shadow-lg shadow-violet-500/20',
+      tabIconActive:    'bg-violet-600',
+      tabIconInactive:  'bg-slate-100',
+      tabIconClrActive: 'text-white',
+      tabIconClrInact:  'text-slate-400',
+      tabTitleActive:   'text-slate-900',
+      tabTitleInactive: 'text-slate-500',
+      dot:              'bg-violet-600',
+      cardBorder:       'border-violet-200',
+      topBar:           'bg-violet-600',
+      iconBg:           'bg-violet-50',
+      iconBorder:       'border-violet-200',
+      iconColor:        'text-violet-600',
+      tagline:          'text-violet-600',
+      bullet:           'text-violet-500',
+      cta:              'bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-500/30',
+    },
+  },
+  {
+    icon: Brain,
+    title: 'AI Learning Engine',
+    tagline: 'A curriculum that adapts to you.',
+    desc: 'Personalised recommendations and adaptive progress tracking that learns your pace, spots weak areas, and keeps you on the fastest path to your goal.',
+    bullets: ['Adaptive quiz difficulty', 'Personalised course suggestions', 'Weekly progress insights', 'Gap analysis & remediation'],
+    tw: {
+      tabActiveBorder:  'border-amber-400',
+      tabActiveShadow:  'shadow-lg shadow-amber-500/20',
+      tabIconActive:    'bg-amber-500',
+      tabIconInactive:  'bg-slate-100',
+      tabIconClrActive: 'text-white',
+      tabIconClrInact:  'text-slate-400',
+      tabTitleActive:   'text-slate-900',
+      tabTitleInactive: 'text-slate-500',
+      dot:              'bg-amber-500',
+      cardBorder:       'border-amber-200',
+      topBar:           'bg-amber-500',
+      iconBg:           'bg-amber-50',
+      iconBorder:       'border-amber-200',
+      iconColor:        'text-amber-500',
+      tagline:          'text-amber-600',
+      bullet:           'text-amber-500',
+      cta:              'bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/30',
+    },
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Job Guarantee Support',
+    tagline: "We don't stop at the course.",
+    desc: 'Dedicated placement cell with resume reviews, mock interviews, and direct referrals to 1,200+ hiring partners across India.',
+    bullets: ['1:1 resume & LinkedIn review', 'Mock interviews with seniors', 'Direct referrals to hiring partners', 'Salary negotiation coaching'],
+    tw: {
+      tabActiveBorder:  'border-emerald-400',
+      tabActiveShadow:  'shadow-lg shadow-emerald-500/20',
+      tabIconActive:    'bg-emerald-500',
+      tabIconInactive:  'bg-slate-100',
+      tabIconClrActive: 'text-white',
+      tabIconClrInact:  'text-slate-400',
+      tabTitleActive:   'text-slate-900',
+      tabTitleInactive: 'text-slate-500',
+      dot:              'bg-emerald-500',
+      cardBorder:       'border-emerald-200',
+      topBar:           'bg-emerald-500',
+      iconBg:           'bg-emerald-50',
+      iconBorder:       'border-emerald-200',
+      iconColor:        'text-emerald-500',
+      tagline:          'text-emerald-600',
+      bullet:           'text-emerald-500',
+      cta:              'bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/30',
+    },
+  },
+  {
+    icon: Globe,
+    title: 'India-First Content',
+    tagline: 'Built for Bharat, not borrowed from abroad.',
+    desc: 'Courses in Hinglish, INR pricing, India-specific case studies, and no-cost EMI — built for learners across all 28 states.',
+    bullets: ['Hinglish explanations available', 'INR pricing & no-cost EMI', 'India-specific case studies', 'Offline-ready lesson downloads'],
+    tw: {
+      tabActiveBorder:  'border-rose-400',
+      tabActiveShadow:  'shadow-lg shadow-rose-500/20',
+      tabIconActive:    'bg-rose-500',
+      tabIconInactive:  'bg-slate-100',
+      tabIconClrActive: 'text-white',
+      tabIconClrInact:  'text-slate-400',
+      tabTitleActive:   'text-slate-900',
+      tabTitleInactive: 'text-slate-500',
+      dot:              'bg-rose-500',
+      cardBorder:       'border-rose-200',
+      topBar:           'bg-rose-500',
+      iconBg:           'bg-rose-50',
+      iconBorder:       'border-rose-200',
+      iconColor:        'text-rose-500',
+      tagline:          'text-rose-600',
+      bullet:           'text-rose-500',
+      cta:              'bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/30',
+    },
+  },
+  {
+    icon: Flame,
+    title: 'Streak & Gamification',
+    tagline: 'Make learning a habit, not a chore.',
+    desc: 'Daily streaks, XP points, leaderboards, and micro-rewards that build consistent learning habits — because motivation needs a system.',
+    bullets: ['Daily streak fire rewards', 'XP points & level-up system', 'Weekly cohort leaderboards', 'Achievement badges & certificates'],
+    tw: {
+      tabActiveBorder:  'border-indigo-400',
+      tabActiveShadow:  'shadow-lg shadow-indigo-500/20',
+      tabIconActive:    'bg-indigo-500',
+      tabIconInactive:  'bg-slate-100',
+      tabIconClrActive: 'text-white',
+      tabIconClrInact:  'text-slate-400',
+      tabTitleActive:   'text-slate-900',
+      tabTitleInactive: 'text-slate-500',
+      dot:              'bg-indigo-500',
+      cardBorder:       'border-indigo-200',
+      topBar:           'bg-indigo-500',
+      iconBg:           'bg-indigo-50',
+      iconBorder:       'border-indigo-200',
+      iconColor:        'text-indigo-500',
+      tagline:          'text-indigo-600',
+      bullet:           'text-indigo-500',
+      cta:              'bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30',
+    },
+  },
+];
+
+export const TESTIMONIALS = [
+  {
+    name: 'Ananya Sridhar', role: 'SDE at Infosys', avatar: 'AS', rating: 5, city: 'Coimbatore',
+    text: "Learnflow's Full Stack bootcamp gave me the confidence to crack my first FAANG-adjacent interview. I went from ₹4.5 LPA to ₹11 LPA in 5 months.",
+  },
+  {
+    name: 'Rohit Gupta', role: 'Data Analyst at Mu Sigma', avatar: 'RG', rating: 5, city: 'Bengaluru',
+    text: 'The ML course used real Indian datasets — railway booking patterns, IPL stats, election data. It felt relevant, not generic. Got shortlisted at Mu Sigma specifically because of my Learnflow badge.',
+  },
+  {
+    name: 'Meena Patel', role: 'Product Designer at Razorpay', avatar: 'MP', rating: 4, city: 'Pune',
+    text: "Coming from a non-tech background in Ahmedabad, I was sceptical. But the weekend batches fit my schedule perfectly. 8 months later I design Razorpay's checkout flow.",
+  },
+];
+
+export const COMPANY_LOGOS = [
+  { name: 'Google',    url: 'https://res.cloudinary.com/db2vju4mv/image/upload/e_trim,h_200,c_fit,f_auto,q_100/v1773419179/hero_logo1_wsh62c.webp', cls: 'h-9'      },
+  { name: 'Microsoft', url: 'https://res.cloudinary.com/db2vju4mv/image/upload/e_trim,h_200,c_fit,f_png,q_100/v1773419179/hero_logo2_tbka4u.png',  cls: 'h-9'      },
+  { name: 'Amazon',    url: 'https://res.cloudinary.com/db2vju4mv/image/upload/e_trim,h_200,c_fit,f_auto,q_100/v1773419180/hero_logo3_mwzsdn.webp', cls: 'h-8 mt-4' },
+  { name: 'IBM',       url: 'https://res.cloudinary.com/db2vju4mv/image/upload/e_trim,h_200,c_fit,f_auto,q_100/v1773419181/hero_logo4_upvzb5.png',  cls: 'h-7'      },
+  { name: 'Meta',      url: 'https://res.cloudinary.com/db2vju4mv/image/upload/e_trim,h_200,c_fit,f_auto,q_100/v1773419183/hero_logo5_ghjkrg.png',  cls: 'h-7'      },
+];

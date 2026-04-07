@@ -1,0 +1,29 @@
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "/api",
+  timeout: 10000,
+  headers: { "Content-Type": "application/json" },
+});
+
+// Attach Bearer token from localStorage
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("lf_token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Handle 401 — clean logout, no broken refresh loop
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("lf_user");
+      localStorage.removeItem("lf_token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default api;

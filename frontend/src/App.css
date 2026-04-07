@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Custom Keyframe Animations ─────────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(6, 182, 212, 0); }
+}
+
+/* ── Animation utility classes ───────────────────────────────── */
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-ticker {
+  animation: ticker 35s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* fade-up with staggered delays (HeroSection, etc.) */
+.animate-fade-up      { animation: fadeUp 0.6s ease-out forwards; opacity: 0; }
+.animate-fade-up-d1   { animation: fadeUp 0.6s ease-out 0.1s forwards; opacity: 0; }
+.animate-fade-up-d2   { animation: fadeUp 0.6s ease-out 0.2s forwards; opacity: 0; }
+.animate-fade-up-d3   { animation: fadeUp 0.6s ease-out 0.3s forwards; opacity: 0; }
+.animate-fade-up-d4   { animation: fadeUp 0.6s ease-out 0.4s forwards; opacity: 0; }
+.animate-fade-up-d5   { animation: fadeUp 0.6s ease-out 0.5s forwards; opacity: 0; }
+.animate-fade-up-d6   { animation: fadeUp 0.6s ease-out 0.6s forwards; opacity: 0; }
+
+/* count-up with staggered delays (AdminDashboard stat cards) */
+.animate-count-up     { animation: countUp 0.5s ease-out forwards; opacity: 0; }
+.animate-count-up-d1  { animation: countUp 0.5s ease-out 0.1s forwards; opacity: 0; }
+.animate-count-up-d2  { animation: countUp 0.5s ease-out 0.2s forwards; opacity: 0; }
+.animate-count-up-d3  { animation: countUp 0.5s ease-out 0.3s forwards; opacity: 0; }
+.animate-count-up-d4  { animation: countUp 0.5s ease-out 0.4s forwards; opacity: 0; }
+.animate-count-up-d5  { animation: countUp 0.5s ease-out 0.5s forwards; opacity: 0; }
+
+/* slide in from right */
+.animate-slide-in-right { animation: slideInRight 0.4s ease-out forwards; }
+
+/* pulse glow for live indicators */
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+
+@keyframes livePing {
+  0%        { transform: scale(1);   opacity: 0.6; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+.animate-live-ping {
+  animation: livePing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* ── Smooth scrollbar ────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Custom scrollbar (webkit) ───────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
