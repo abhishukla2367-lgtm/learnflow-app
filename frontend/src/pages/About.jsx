@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin, Target, Heart, Lightbulb, Globe, Users, BookOpen, Award, TrendingUp } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const TIMELINE = [
- { year:'2020', title:'Founded in Thane', desc:'Rohan Patil and Ananya Singh — two IIT graduates frustrated with the gap between college curricula and what the industry actually needs — founded Learnflow in a Pokhran Road garage.' },
+ { year:'2020', title:'Founded in Thane', desc:'Rohan Patil and Kajal Singh — two IIT graduates frustrated with the gap between college curriculam and what the industry actually needs — founded Learnflow in a Pokhran Road garage.' },
  { year:'2021', title:'First 1,000 Learners', desc:'Launched cohort-based courses in Full Stack and Data Science. Reached 1,000 active learners in 6 months entirely through word-of-mouth.' },
  { year:'2022', title:'Certification Launch', desc:'Launched India\'s first blockchain-verified tech certifications. Partnered with 150 companies including TCS, Infosys, and Google to recognise Learnflow credentials.' },
  { year:'2023', title:'Series A — ₹48 Cr', desc:'Raised ₹48 Cr in Series A funding led by Sequoia India. Expanded to 3 cities, onboarded 7+ instructors, crossed 25,000 learners.' },
@@ -19,7 +20,7 @@ const VALUES = [
 
 const TEAM = [
  { name:'Rohan Patil', role:'Co-Founder & CEO', city:'Thane', avatar:'RI', gradient:'from-cyan-500 to-blue-600', bio:'IIT Bombay alumnus. Ex-McKinsey. Passionate about making quality education accessible to every Indian.' },
- { name:'Ananya Singh', role:'Co-Founder & CTO', city:'Thane', avatar:'AS', gradient:'from-violet-500 to-purple-600', bio:'IIT Delhi. Ex-Google India. Built Learnflow\'s real-time infrastructure from scratch. 8 patents in distributed systems.' },
+ { name:'Kajal Singh', role:'Co-Founder & CTO', city:'Thane', avatar:'AS', gradient:'from-violet-500 to-purple-600', bio:'IIT Delhi. Ex-Google India. Built Learnflow\'s real-time infrastructure from scratch. 8 patents in distributed systems.' },
  { name:'Karthik Rajan', role:'VP of Product', city:'Ahmedabad', avatar:'KR', gradient:'from-emerald-500 to-teal-600', bio:'IIM Ahmedabad. 10 years in edtech. Led product at BYJU\'S before joining Learnflow. Obsessed with learning UX.' },
  { name:'Pooja Sharma', role:'Head of Curriculum',city:'Delhi', avatar:'PS', gradient:'from-amber-500 to-orange-600', bio:'PhD in Education Technology from Delhi University. Designed curricula used by 50,000+ learners across India.' },
 ];
@@ -34,6 +35,8 @@ const STATS = [
 ];
 
 export default function About() {
+    const { user } = useAuth();
+    const isLoggedIn = !!user;
  return (
  <>
  {/* Hero */}
@@ -81,7 +84,7 @@ export default function About() {
  <p>From a garage in Pokhran Road, Thane, we've grown to serve 50,000+ learners across 28 states. Every learner who lands a better job is why we come to work every day.</p>
  </div>
  <div className="flex gap-4 mt-10">
- <Link to="/register" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-cyan-600 text-white font-semibold text-base transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] shadow-sm">Start learning <ArrowRight className="w-5 h-5"/></Link>
+ <Link to={isLoggedIn ? "/courses" : "/register"} className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-cyan-600 text-white font-semibold text-base transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] shadow-sm">Start learning <ArrowRight className="w-5 h-5"/></Link>
  <Link to="/contact" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg border border-slate-200 text-slate-900 font-semibold text-base bg-white transition-all duration-200 hover:border-cyan-300 hover:bg-cyan-50 active:scale-[0.98]">Contact us</Link>
  </div>
  </div>
@@ -154,9 +157,10 @@ export default function About() {
  <section className="py-20 bg-slate-100 border-t border-slate-200">
  <div className="max-w-2xl mx-auto px-4 text-center">
  <h2 className="text-4xl font-bold text-slate-900 mb-5">Join us on the mission</h2>
- <p className="text-slate-600 text-lg leading-relaxed mb-10">Whether you're a learner, instructor, or hiring partner — there's a place for you in the Learnflow community.</p>
+ <p className="text-slate-600 text-lg leading-relaxed mb-10">From learners to leaders — join 50,000+ Indians building careers in tech with Learnflow. 
+ Your next opportunity starts here.</p>
  <div className="flex flex-wrap justify-center gap-4">
- <Link to="/register" className="inline-flex items-center gap-2 px-9 py-4 rounded-lg bg-cyan-600 text-white font-semibold text-base transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] shadow-sm">Start learning <ArrowRight className="w-5 h-5"/></Link>
+ <Link to={isLoggedIn ? "/courses" : "/register"} className="inline-flex items-center gap-2 px-9 py-4 rounded-lg bg-cyan-600 text-white font-semibold text-base transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] shadow-sm">Start learning <ArrowRight className="w-5 h-5"/></Link>
  <Link to="/contact" className="inline-flex items-center gap-2 px-9 py-4 rounded-lg border border-slate-200 text-slate-900 font-semibold text-base bg-white transition-all duration-200 hover:border-cyan-300 hover:bg-cyan-50 active:scale-[0.98]">Get in touch</Link>
  </div>
  </div>

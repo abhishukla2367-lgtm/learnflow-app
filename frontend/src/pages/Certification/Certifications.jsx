@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Award, CheckCircle, ArrowRight, Star, Shield, BadgeCheck,
- Globe, Briefcase, TrendingUp, Download, Share2, Zap, ChevronRight, Users } from 'lucide-react';
+ Globe, Briefcase, TrendingUp, Download } from 'lucide-react';
 import { CERTS } from '../../data/certsData';
+import { TESTIMONIALS } from '../../data/homeData';
 
  const WHY = [
  { icon:BadgeCheck, title:'Employer Verified', desc:'Each certificate has a unique QR code recruiters scan for instant verification.' },
@@ -10,12 +11,6 @@ import { CERTS } from '../../data/certsData';
  { icon:Briefcase, title:'Placement Support', desc:'Resume reviews, mock interviews, and direct referrals to partner companies.' },
  { icon:TrendingUp, title:'35% Salary Hike', desc:'Average salary increase reported by our graduates within 6 months of certification.' },
  { icon:Download, title:'PDF + LinkedIn Ready', desc:'Download a print-ready PDF and add your certificate to LinkedIn with one click.' },
-];
-
-const ALUMNI = [
- { name:'Ananya Sridhar', role:'Software Engineer · Infosys', city:'Coimbatore', text:'The Full Stack cert opened doors I never expected. Went from ₹4.5 LPA to ₹11 LPA at Infosys within 4 months.', avatar:'AS', rating:5 },
- { name:'Rohit Gupta', role:'Data Analyst · Mu Sigma', city:'Bengaluru', text:'Mu Sigma shortlisted me specifically because of the Learnflow badge on my LinkedIn. The Data Science cert is gold.', avatar:'RG', rating:5 },
- { name:'Meena Patel', role:'UI Designer · Razorpay', city:'Pune', text:'From non-tech in Ahmedabad to designing Razorpay\'s checkout flow. The UI/UX cert made all the difference.', avatar:'MP', rating:5 },
 ];
 
 const COMPANIES = ['TCS','Infosys','Wipro','HCL','Flipkart','Zomato','Swiggy','Razorpay','Ola','BYJU\'S','PhonePe','MakeMyTrip'];
@@ -142,20 +137,26 @@ export default function Certifications() {
  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">Their certs. Their success.</h2>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
- {ALUMNI.map(({name,role,city,text,avatar,rating})=>(
- <div key={name} className="bg-white border border-slate-200 rounded-2xl p-7 flex flex-col gap-5 shadow-sm hover:border-cyan-200 hover:shadow-md hover:-translate-y-0.5 transition-all">
- <div className="flex gap-1">{Array.from({length:rating}).map((_,i)=><Star key={i} className="w-4 h-4 text-amber-500" fill="currentColor"/>)}</div>
- <p className="text-sm text-slate-600 font-sans leading-relaxed flex-1">"{text}"</p>
- <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
- <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">{avatar}</div>
- <div>
- <p className="text-sm font-semibold text-slate-900 font-sans">{name}</p>
- <p className="text-xs text-slate-500 font-sans">{role}</p>
- <p className="text-xs text-cyan-600 font-mono mt-0.5">📍 {city}</p>
- </div>
- </div>
- </div>
- ))}
+ {TESTIMONIALS.map(({ name, role, city, text, avatar, rating }) => (
+  <div key={name} className="bg-white border border-slate-200 rounded-2xl p-7 flex flex-col gap-5 shadow-sm hover:border-cyan-200 hover:shadow-md hover:-translate-y-0.5 transition-all">
+    <div className="flex gap-1">
+      {Array.from({ length: rating }).map((_, i) => (
+        <Star key={i} className="w-4 h-4 text-amber-500" fill="currentColor" />
+      ))}
+    </div>
+    <p className="text-sm text-slate-600 font-sans leading-relaxed flex-1">"{text}"</p>
+    <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+        {avatar}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-slate-900 font-sans">{name}</p>
+        <p className="text-xs text-slate-500 font-sans">{role}</p>
+        <p className="text-xs text-cyan-600 font-mono mt-0.5">📍 {city}</p>
+      </div>
+    </div>
+  </div>
+))}
  </div>
  </div>
  </section>
