@@ -58,32 +58,51 @@ export default function CourseDetail() {
 
     const isFree = course.isFree || course.price === 0;
 
+ // ── Enroll handler ──
     if (isFree) {
-      // Free course — enroll directly, skip checkout
       try {
         setEnrolling(true);
-        await api.post(`/enrollments/${course._id}`);
-
-        // Save to localStorage cache so CoursePlayer can find it
+        // 1. Correct the variable name to 'id' (from useParams)
+        const response = await api.post(`/enrollments/${id}`, { type: 'trial' });
+        
+        // 2. Add enrollment to cache for immediate access
         const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-        cache[course._id] = {
-          id:        course._id,
-          title:     course.title,
-          thumbnail: course.thumbnail || '',
-          lessons:   buildLessons(course),
+        cache[id] = {
+          id: id,
+          title: course.title,
+          lessons: buildLessons(course),
+          enrolledAt: new Date().toISOString(),
+          isTrial: true 
         };
         localStorage.setItem('lf_course_cache', JSON.stringify(cache));
         
-        navigate(`/checkout/${course._id}`, { state: { certId: course._id, title: course.title } });
-        navigate('/success', { state: { certId: course._id, title: course.title } });
-      } catch {
-        toast.error('Enrollment failed. Please try again.');
+        // 3. Logic: If already enrolled (status 200), just go to course. If new, show success.
+        if (response.data.alreadyEnrolled) {
+          navigate(`/my-courses`); 
+        } else {
+          toast.success('7-Day Trial Started!');
+// We pass the actual data returned from your updated controller
+navigate('/success', { 
+  state: { 
+    certId: id, 
+    isTrial: true, 
+    trialEndsAt: response.data.trialEndsAt, // Crucial for the date fix
+    cert: {
+      title: course.title,
+      lessons: buildLessons(course)
+    }
+  } 
+});
+        }
+      } catch (err) {
+        // This catches actual errors (like server down or invalid ID)
+        toast.error(err.response?.data?.message || 'Enrollment failed');
       } finally {
         setEnrolling(false);
       }
       return;
     }
-
+    
     // Paid course — go to checkout
     navigate(`/checkout/${course._id}`, {
       state: {
@@ -240,7 +259,7 @@ export default function CourseDetail() {
                   {/* Price */}
                   <div className="flex items-baseline gap-3 mb-5">
                     {course.isFree || course.price === 0 ? (
-                      <span className="text-3xl font-black text-emerald-600">Free</span>
+                      <span className="text-3xl font-black text-emerald-600">7 Day Free Trial</span>
                     ) : (
                       <>
                         <span className="text-3xl font-black text-slate-900">
@@ -260,7 +279,7 @@ export default function CourseDetail() {
                       to="/my-courses"
                       className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all mb-4"
                     >
-                      <CheckCircle2 size={18} /> Go to My Learning
+                      <CheckCircle2 size={18} /> Go to My Courses
                     </Link>
                   ) : (
                     <button
@@ -271,7 +290,7 @@ export default function CourseDetail() {
                       {enrolling ? <Loader2 size={18} className="animate-spin" /> : null}
                       {enrolling
                         ? 'Enrolling…'
-                        : (course.isFree || course.price === 0 ? 'Enroll for Free' : 'Enroll Now')}
+                        : (course.isFree || course.price === 0 ? 'Enroll Now' : 'Enroll Now')}
                     </button>
                   )}
 

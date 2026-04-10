@@ -5,11 +5,18 @@ const Enrollment  = require("../models/Enrollment");
 const Notification = require("../models/Notification");
 const { broadcast } = require("../socket");
 
-/* ── POST /api/certificates/:courseId ───────────────────────── */
 exports.issueCertificate = async (req, res) => {
   const enrollment = await Enrollment.findOne({ student: req.user.id, course: req.params.courseId });
   if (!enrollment || !enrollment.isCompleted)
     return res.status(400).json({ success: false, message: "You must complete the course first" });
+ 
+  if (enrollment.isTrial) {
+  return res.status(403).json({ 
+    success: false, 
+    message: "Certificates are not available during the 7-day trial. Please upgrade to a paid plan to unlock your official certification." 
+  });
+}
+
 
   let cert = await Certificate.findOne({ student: req.user.id, course: req.params.courseId });
   if (!cert) {

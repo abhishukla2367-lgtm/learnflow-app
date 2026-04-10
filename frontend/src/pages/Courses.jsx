@@ -193,7 +193,7 @@ export default function Courses() {
                     onChange={e => { setFreeOnly(e.target.checked); setPage(1); }}
                     className="w-4 h-4 rounded accent-indigo-600"
                   />
-                  <span className="text-sm font-semibold text-slate-700">Free courses only</span>
+                  <span className="text-sm font-semibold text-slate-700">Include Trial Courses</span>
                 </label>
               </div>
             </div>

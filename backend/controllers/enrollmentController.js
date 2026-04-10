@@ -28,8 +28,15 @@ exports.enroll = async (req, res) => {
     }
 
     const existing = await Enrollment.findOne({ student: userId, course: courseId });
+    
     if (existing) {
-      return res.status(400).json({ success: false, message: "Already enrolled.", enrollment: existing });
+      // If they are already enrolled (trial or paid), just send them to the course
+      return res.status(200).json({ 
+        success: true, 
+        message: "Redirecting to course...", 
+        enrollment: existing,
+        alreadyEnrolled: true 
+      });
     }
 
     // Build certData snapshot from whichever product we found
@@ -42,17 +49,21 @@ exports.enroll = async (req, res) => {
       tag:         product.tag         || product.category || "",
     };
 
+    const isTrial = req.body.type === 'trial' || (product.price !== undefined && product.price === 0);
+    const trialEndsAt = isTrial ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
     const newEnrollment = await Enrollment.create({
       student:     userId,
       course:      courseId,
       courseModel,
       certData,
-      status:      req.body.status        || 'enrolled',
-      amount:      req.body.amount        || product.price || 0,
-      type:        req.body.type          || (product.price > 0 ? 'paid' : 'free'),
+      amount:      req.body.amount || product.price || 0,
+      type: isTrial ? 'trial' : (product.price > 0 ? 'paid' : 'free'),
+      status: isTrial ? 'trialing' : 'enrolled',
+      isTrial: isTrial,
+      trialEndsAt: trialEndsAt,
       enrolledAt:  Date.now(),
     });
-
+    
     // ── Real-time: notify the student's socket room
     const broadcast = getBroadcast();
     if (broadcast) {
@@ -73,7 +84,12 @@ exports.enroll = async (req, res) => {
       });
     }
 
-    res.status(201).json({ success: true, enrollment: newEnrollment, data: newEnrollment });
+    res.status(201).json({ 
+    success: true, 
+    enrollment: newEnrollment, 
+    isTrial: isTrial,
+    trialEndsAt: trialEndsAt 
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

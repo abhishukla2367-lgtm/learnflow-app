@@ -21,9 +21,12 @@ const enrollmentSchema = new mongoose.Schema({
     tag:         { type: String, default: "" },
   },
 
-  status:    { type: String, enum: ["enrolled", "completed", "refunded"], default: "enrolled" },
+  status:    { type: String, enum: ["enrolled", "completed", "refunded", "trialing", "expired"], default: "enrolled" },
+  isTrial:   { type: Boolean, default: false }, 
+  trialEndsAt: { type: Date },
+  isAutoChargeEnabled: { type: Boolean, default: true },
   amount:    { type: Number, default: 0 },
-  type:      { type: String, enum: ["paid", "free"], default: "paid" },
+  type:      { type: String, enum: ["paid", "free", "trial"], default: "paid" },
 
   completedLessons: [{
     lessonId:    { type: mongoose.Schema.Types.ObjectId },

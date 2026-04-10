@@ -145,12 +145,23 @@ export default function CoursePlayer() {
   const [noteSaved,      setNoteSaved]      = useState(false);
   const [expandedWeeks,  setExpandedWeeks]  = useState({});
   const [justCompleted,  setJustCompleted]  = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const videoRef = useRef(null);
+
 
   /* ── Load progress on mount ── */
   useEffect(() => {
     if (!cert) { navigate('/my-courses'); return; }
     setProgress(loadProgress(cert.id));
+    if (cert.isTrial && cert.enrolledAt) {
+    const enrollmentDate = new Date(cert.enrolledAt);
+    const now = new Date();
+    const diffInDays = (now - enrollmentDate) / (1000 * 60 * 60 * 24);
+
+    if (diffInDays > 7) {
+      setIsExpired(true);
+    }
+  }
   }, [cert?.id]); // eslint-disable-line
 
   /* ── When lesson changes ── */
@@ -208,6 +219,41 @@ export default function CoursePlayer() {
   };
 
   if (!cert || !lesson) return null;
+  /* ── Check Expiry ── */
+  /* ── Check Expiry ── */
+  const trialEndDate = cert.trialEndsAt ? new Date(cert.trialEndsAt) : null;
+  const expired = cert.isTrial && trialEndDate && new Date() > trialEndDate;
+
+  if (expired) {
+    return (
+      <div className="flex h-screen bg-slate-900 items-center justify-center p-6">
+        <div className="max-w-md w-full bg-slate-800 border border-slate-700 p-8 rounded-3xl text-center shadow-2xl">
+          <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-amber-500/20">
+            <Clock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Trial Expired</h2>
+          <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+            Your 7-day trial for <span className="text-cyan-400 font-bold">{cert.title}</span> has ended. 
+            Upgrade now to keep your progress and earn your certificate.
+          </p>
+          <div className="space-y-3">
+            <button 
+              onClick={() => navigate(`/checkout/${cert.id}`)}
+              className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-all active:scale-95 shadow-lg shadow-cyan-900/20"
+            >
+              Upgrade & Unlock Now
+            </button>
+            <button 
+              onClick={() => navigate('/my-courses')}
+              className="w-full py-3 text-slate-500 hover:text-slate-300 text-xs font-semibold transition-colors"
+            >
+              Back to My Courses
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const completedCount = progress.completedLessons?.length || 0;
   const pct            = Math.round((completedCount / lessons.length) * 100);
@@ -223,7 +269,7 @@ export default function CoursePlayer() {
 
   const hasYouTube = !!lesson.videoId;
   const hasMp4     = !!lesson.videoUrl;
-
+  
   return (
     <div className="flex h-screen bg-slate-900 overflow-hidden">
 
@@ -310,16 +356,42 @@ export default function CoursePlayer() {
         </div>
 
         {/* Quiz CTA when all done */}
-        {allDone && (
-          <div className="p-4 border-t border-slate-700 flex-shrink-0">
-            <button
-              onClick={() => navigate(`/quiz/${cert.id}`)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition-all"
-            >
-              <Trophy className="w-4 h-4" /> Take the Quiz
-            </button>
-          </div>
-        )}
+        {/* --- LINE 417: Course Completion Section --- */}
+            {allDone && (
+              <div className="max-w-4xl mx-6 mt-8 mb-12 p-8 bg-slate-800 border border-slate-700 rounded-3xl text-center shadow-xl">
+                <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                  <Trophy className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Course Completed! 🎉</h3>
+                
+                {cert.isTrial ? (
+                  <div className="mt-4">
+                    <p className="text-slate-400 mb-6 text-sm max-w-md mx-auto leading-relaxed">
+                      Amazing work! You've finished all the lessons. To claim your 
+                      <span className="text-white font-bold"> Official Certificate</span> and get lifetime access, upgrade to a full account.
+                    </p>
+                    <button 
+                      onClick={() => navigate(`/checkout/${cert.id}`)}
+                      className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95"
+                    >
+                      Upgrade to Unlock Certificate
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <p className="text-slate-400 mb-6 text-sm">
+                      Your hard work paid off. Your certificate is ready for download!
+                    </p>
+                    <button 
+                      onClick={() => navigate(`/quiz/${cert.id}`)}
+                      className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95"
+                    >
+                      Take Quiz & Claim Certificate
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
       </aside>
 
       {/* ══════════ MAIN ══════════ */}

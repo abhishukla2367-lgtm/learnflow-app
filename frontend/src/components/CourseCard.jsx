@@ -59,12 +59,15 @@ export default function CourseCard({ course, className = '' }) {
           )}
         </div>
 
-        {/* Top-right: price pill */}
         <div className="absolute top-3 right-3">
-          {price === 0 ? (
-            <span className="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold font-mono rounded-full shadow">
-              Free
-            </span>
+        {course.isEnrolled && course.enrollmentType === 'trial' ? (
+        <span className="px-2.5 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase rounded-full shadow animate-pulse">
+        Trial Active
+        </span>
+        ) : price === 0 ? (
+        <span className="px-2.5 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-full shadow">
+        7-Day Trial
+        </span>
           ) : (
             price != null && (
               <span className="px-2.5 py-1 bg-white/95 text-slate-900 text-xs font-bold rounded-full shadow border border-white/60">

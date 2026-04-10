@@ -17,12 +17,42 @@ exports.initiatePayment = async (req, res) => {
     return res.status(400).json({ success: false, message: "Already enrolled" });
 
   if (course.isFree || course.price === 0) {
-    const enrollment = await Enrollment.create({ student: req.user.id, course: courseId });
-    await Course.findByIdAndUpdate(courseId, { $inc: { enrollmentCount: 1 } });
-    await User.findByIdAndUpdate(req.user.id, { $addToSet: { enrolledCourses: course._id } });
-    try { broadcast.newEnrollment({ studentName: req.user.name, courseName: course.title, courseId: course._id }); } catch {}
-    return res.status(201).json({ success: true, free: true, enrollment });
-  }
+  const trialDuration = 7; // days
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + trialDuration);
+
+  const enrollment = await Enrollment.create({ 
+    student: req.user.id, 
+    course: courseId,
+    status: "trialing", // Start in trialing state
+    type: "free",
+    trialEndsAt: trialEndsAt,
+    certData: { 
+      title: course.title, 
+      thumbnail: course.thumbnail, 
+      instructor: course.instructor?.name || 'Instructor' 
+    } // Snapshot for "My Courses"
+  });
+
+  await Course.findByIdAndUpdate(courseId, { $inc: { enrollmentCount: 1 } });
+  await User.findByIdAndUpdate(req.user.id, { $addToSet: { enrolledCourses: courseId } });
+
+  // Real-time notification to the student
+  try { 
+    broadcast.newEnrollment({ 
+      studentName: req.user.name, 
+      courseName: course.title, 
+      courseId: course._id 
+    }); 
+  } catch {}
+
+  return res.status(201).json({ 
+    success: true, 
+    isTrial: true, 
+    trialEndsAt,
+    message: "Your 7-day free trial has started!" 
+  });
+}
 
   const discountAmt = course.discount > 0 ? Math.round((course.price * course.discount) / 100) : 0;
   const finalAmount = course.price - discountAmt;

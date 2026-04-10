@@ -1,4 +1,3 @@
-// middleware/authMiddleware.js
 const jwt  = require("jsonwebtoken");
 const User = require("../models/User");
 
@@ -59,4 +58,30 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, authorize, admin, optionalAuth };
+const checkAccess = async (req, res, next) => {
+  const Enrollment = require("../models/Enrollment");
+  
+  // Find enrollment for this user and the requested course
+  const enrollment = await Enrollment.findOne({ 
+    student: req.user.id, 
+    course: req.params.courseId || req.body.courseId 
+  });
+
+  if (!enrollment) {
+    return res.status(403).json({ success: false, message: "Not enrolled in this course" });
+  }
+
+  // If trial is over, block access
+  if (enrollment.status === "expired") {
+    return res.status(402).json({ 
+      success: false, 
+      message: "Your 7-day trial has ended. Please purchase the course to continue.",
+      requiresPayment: true 
+    });
+  }
+
+  next();
+};
+
+module.exports = { protect, authorize, admin, optionalAuth, checkAccess };
+

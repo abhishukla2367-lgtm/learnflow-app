@@ -27,8 +27,7 @@ router.get("/check/:courseId", protect, async (req, res) => {
 // POST /api/enrollments/:courseId — enroll
 router.post("/:courseId", protect, enroll);
 
-// PUT /api/enrollments/:courseId/progress — update progress
-router.put("/:courseId/progress", protect, updateProgress);
+router.patch("/:courseId/progress", protect, updateProgress);
 
 // GET /api/enrollments/:courseId/detail
 router.get("/:courseId/detail", protect, async (req, res) => {

@@ -126,7 +126,6 @@ export default function CertDetail() {
                       <span className="text-sm text-slate-400 line-through">₹{cert.origPrice.toLocaleString('en-IN')}</span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold font-mono ${cert.accentBg} ${cert.accentText} border ${cert.accentBorder}`}>{disc}% off</span>
                     </div>
-                    <p className="text-xs text-slate-500 font-mono">One-time payment · Lifetime access</p>
                   </div>
 
                   <button
@@ -135,43 +134,7 @@ export default function CertDetail() {
                   >
                     Enrol Now <ArrowRight className="w-4 h-4" />
                   </button>
-
-                  <button
-                  onClick={() => {
-                    if (!user) { navigate('/register'); return; }
-                    const uid   = user._id || user.id;
-                    const lsKey = enrollmentKey(uid);
-                    const snap  = {
-                      _id:        `free_${cert.id}_${Date.now()}`,
-                      course: {
-                        _id:         cert.id,
-                        id:          cert.id,
-                        title:       cert.title,
-                        thumbnail:   cert.thumbnail || null,
-                        instructor:  null,
-                        description: cert.desc || null,
-                        emoji:       cert.emoji || null,
-                        tag:         cert.tag   || null,
-                      },
-                      certId:     cert.id,
-                      progress:   0,
-                      enrolledAt: new Date().toISOString(),
-                      type:       'free',
-                    };
-                    try {
-                      const stored  = JSON.parse(localStorage.getItem(lsKey) || '[]');
-                      const deduped = stored.filter(e =>
-                        String(e.certId || e.course?._id || e.course?.id) !== String(cert.id)
-                      );
-                      localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
-                    } catch { /* ignore */ }
-                    navigate('/my-courses');
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-all duration-200"
-                >
-                  Start free trial
-                </button>
-
+                  
                   <div className="border-t border-slate-200 pt-4 space-y-2.5">
                     {[
                       [BadgeCheck, 'Blockchain-verified certificate'],

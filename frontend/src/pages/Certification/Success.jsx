@@ -23,8 +23,9 @@ export default function Success() {
   const certId = location.state?.certId || cert?._id || cert?.id || null;
   const firstLesson = cert?.lessons?.[0]?._id || cert?.lessons?.[0]?.id || null;
   const courseName  = cert?.title            || 'Professional Certification';
-
-  const curriculumTo = '/my-courses'; 
+  const isTrial = location.state?.isTrial || false;
+  const trialEndsAt = location.state?.trialEndsAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const curriculumTo = certId ? `/learn/${certId}` : '/my-courses';
   const introVideoTo = certId 
   ? (firstLesson ? `/learn/${certId}/${firstLesson}` : `/learn/${certId}`)
   : '/my-courses';
@@ -77,22 +78,27 @@ export default function Success() {
         </div>
 
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-mono font-bold mb-4 uppercase tracking-wider">
-          Payment Successful
-        </div>
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-mono font-bold mb-4 uppercase tracking-wider ${
+        isTrial ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+        }`}>
+       {isTrial ? 'Trial Membership Active' : 'Payment Successful'}
+       </div>
 
         {/* Heading */}
         <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">
-          You're enrolled,{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-violet-600">
-            Welcome!
-          </span>
+        {isTrial ? "Your trial has started," : "You're enrolled,"}{' '}
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-violet-600">
+        Welcome!
+        </span>
         </h1>
-
         <p className="text-slate-500 text-lg mb-10 max-w-md mx-auto">
-          Your enrollment for{' '}
-          <span className="font-semibold text-slate-800">"{courseName}"</span>{' '}
-          is confirmed. Your dashboard is ready.
+        {isTrial ? (
+        <>
+        You have full access to <span className="font-semibold text-slate-800">"{courseName}"</span> for the next 7 days (until {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString() : 'soon'}).
+        </>
+        ) : (
+        <>Your enrollment for <span className="font-semibold text-slate-800">"{courseName}"</span> is confirmed. Your dashboard is ready.</>
+        )}
         </p>
 
         {/* What you get — only shown when cert data is available */}

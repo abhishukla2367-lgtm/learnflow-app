@@ -188,7 +188,7 @@ export default function Quiz() {
               </button>
             )}
             <button onClick={() => navigate('/my-courses')} className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-all">
-              Back to My Learning
+              Back to My Courses
             </button>
           </div>
         </div>
