@@ -40,14 +40,54 @@ export const CERTS = [
       rating: 5,
     },
     lessons: [
-      { id: '1-1', weekLabel: 'Week 1–2', title: 'HTML5 & CSS3 Foundations', duration: '48 min', videoId: 'qz0aGYrrlhU', description: 'Build the structural and visual foundations of modern websites using semantic HTML5 and advanced CSS3 including Flexbox and Grid layouts.' },
-      { id: '1-2', weekLabel: 'Week 1–2', title: 'Modern JavaScript ES6+', duration: '62 min', videoId: 'PkZNo7MFNFg', description: 'Deep dive into ES6+ features: arrow functions, destructuring, async/await, modules, and the event loop.' },
-      { id: '1-3', weekLabel: 'Week 3–5', title: 'React — Components & Hooks', duration: '55 min', videoId: 'w7ejDZ8SWv8', description: 'Learn React from the ground up — JSX, functional components, useState, useEffect, and building real UIs.' },
-      { id: '1-4', weekLabel: 'Week 3–5', title: 'React Router & State Management', duration: '30 min', videoId: 'zpUMRsAO6', description: 'Master client-side routing with React Router and global state management patterns using Context API and Redux.' },
-      { id: '1-5', weekLabel: 'Week 6–8', title: 'Node.js & Express REST APIs', duration: '58 min', videoId: 'fBNz5xF-Kx4', description: 'Build scalable REST APIs with Node.js and Express — middleware, routing, authentication, and error handling.' },
-      { id: '1-6', weekLabel: 'Week 9–10', title: 'MongoDB & Mongoose', duration: '44 min', videoId: 'ExcRbSdMbqA', description: 'Design and query NoSQL databases with MongoDB. Schema design, aggregation pipelines, and Mongoose ODM.' },
-      { id: '1-7', weekLabel: 'Week 11', title: 'Auth, JWT & Security', duration: '46 min', videoId: '7Q17ubqLfaM', description: 'Implement secure authentication with JWT, bcrypt password hashing, role-based access control, and OWASP security practices.' },
-      { id: '1-8', weekLabel: 'Week 12', title: 'AWS Deployment & CI/CD', duration: '52 min', videoId: 'SqcY0GlETPk', description: 'Deploy full-stack applications to AWS EC2, configure Nginx, set up GitHub Actions CI/CD pipelines, and manage environment variables.' },
+      {
+        id: '1-1', weekLabel: 'Week 1–2', title: 'HTML5 & CSS3 Foundations', duration: '48 min',
+        // freeCodeCamp — HTML Full Course for Beginners (Beau Carnes)
+        videoId: 'mU6anWqZJcc',
+        description: 'Build the structural and visual foundations of modern websites using semantic HTML5 and advanced CSS3 including Flexbox and Grid layouts.',
+      },
+      {
+        id: '1-2', weekLabel: 'Week 1–2', title: 'Modern JavaScript ES6+', duration: '62 min',
+        // freeCodeCamp — JavaScript Full Course for Beginners
+        videoId: 'PkZNo7MFNFg',
+        description: 'Deep dive into ES6+ features: arrow functions, destructuring, async/await, modules, and the event loop.',
+      },
+      {
+        id: '1-3', weekLabel: 'Week 3–5', title: 'React — Components & Hooks', duration: '55 min',
+        // Traversy Media — React Crash Course 2021
+        videoId: 'w7ejDZ8SWv8',
+        description: 'Learn React from the ground up — JSX, functional components, useState, useEffect, and building real UIs.',
+      },
+      {
+        id: '1-4', weekLabel: 'Week 3–5', title: 'React Router & State Management', duration: '30 min',
+        // Web Dev Simplified — React Router v6 Tutorial
+        videoId: 'zpUMRsAO6-Y',
+        description: 'Master client-side routing with React Router and global state management patterns using Context API and Redux.',
+      },
+      {
+        id: '1-5', weekLabel: 'Week 6–8', title: 'Node.js & Express REST APIs', duration: '58 min',
+        // Traversy Media — Node.js & Express Crash Course
+        videoId: 'Oe421EPjeBE',
+        description: 'Build scalable REST APIs with Node.js and Express — middleware, routing, authentication, and error handling.',
+      },
+      {
+        id: '1-6', weekLabel: 'Week 9–10', title: 'MongoDB & Mongoose', duration: '44 min',
+        // freeCodeCamp — MongoDB Full Tutorial
+        videoId: 'xdbm7n9dWHM',
+        description: 'Design and query NoSQL databases with MongoDB. Schema design, aggregation pipelines, and Mongoose ODM.',
+      },
+      {
+        id: '1-7', weekLabel: 'Week 11', title: 'Auth, JWT & Security', duration: '46 min',
+        // Web Dev Simplified — JWT Authentication Tutorial
+        videoId: '7Q17ubqLfaM',
+        description: 'Implement secure authentication with JWT, bcrypt password hashing, role-based access control, and OWASP security practices.',
+      },
+      {
+        id: '1-8', weekLabel: 'Week 12', title: 'AWS Deployment & CI/CD', duration: '52 min',
+        // TechWorld with Nana — GitHub Actions CI/CD Tutorial
+        videoId: '40X6abe5wv0',
+        description: 'Deploy full-stack applications to AWS EC2, configure Nginx, set up GitHub Actions CI/CD pipelines, and manage environment variables.',
+      },
     ],
     quiz: [
       { q: 'Which hook is used to perform side effects in a React functional component?', options: ['useState', 'useEffect', 'useContext', 'useReducer'], correct: 1 },
@@ -98,14 +138,54 @@ export const CERTS = [
       rating: 5,
     },
     lessons: [
-      { id: '2-1', weekLabel: 'Week 1–2', title: 'Python for Data Science', duration: '54 min', videoId: 'rfscVS0vtbw', description: 'Python fundamentals tailored for data science — data types, functions, file I/O, and working with the scientific Python stack.' },
-      { id: '2-2', weekLabel: 'Week 3–5', title: 'Pandas & NumPy Mastery', duration: '58 min', videoId: 'e60ItwlZTKM', description: 'Manipulate, clean, and transform large datasets using Pandas DataFrames and NumPy arrays for high-performance computation.' },
-      { id: '2-3', weekLabel: 'Week 3–5', title: 'Data Visualisation with Matplotlib & Seaborn', duration: '46 min', videoId: 'a9UrKTVEeZA', description: 'Create publication-quality charts, heatmaps, and interactive visualisations to communicate data insights effectively.' },
-      { id: '2-4', weekLabel: 'Week 6–8', title: 'Machine Learning with Scikit-learn', duration: '65 min', videoId: 'ukzFI9rgwfU', description: 'Supervised and unsupervised learning — linear regression, decision trees, random forests, SVM, KMeans, and model evaluation.' },
-      { id: '2-5', weekLabel: 'Week 9–10', title: 'Deep Learning with TensorFlow', duration: '70 min', videoId: 'aircAruvnKk', description: 'Build and train neural networks from scratch. Understand backpropagation, CNNs, RNNs, and transfer learning with Keras.' },
-      { id: '2-6', weekLabel: 'Week 11–12', title: 'NLP & Text Mining', duration: '52 min', videoId: '05ONoGfmKvA', description: 'Process and analyse text data using NLTK, spaCy, and transformers. Sentiment analysis, named entity recognition, and text classification.' },
-      { id: '2-7', weekLabel: 'Week 13–14', title: 'Feature Engineering & Model Selection', duration: '48 min', videoId: '0B5eIE_1vpU', description: 'Advanced techniques for feature selection, dimensionality reduction with PCA, hyperparameter tuning with GridSearchCV.' },
-      { id: '2-8', weekLabel: 'Week 13–14', title: 'MLOps & Model Deployment', duration: '56 min', videoId: '1yoD62U7_V8', description: 'Deploy ML models as REST APIs using FastAPI and Flask. Containerise with Docker and monitor models in production with MLflow.' },
+      {
+        id: '2-1', weekLabel: 'Week 1–2', title: 'Python for Data Science', duration: '54 min',
+        // freeCodeCamp — Python for Everybody (Dr. Chuck)
+        videoId: 'HrRA67O-QXI',
+        description: 'Python fundamentals tailored for data science — data types, functions, file I/O, and working with the scientific Python stack.',
+      },
+      {
+        id: '2-2', weekLabel: 'Week 3–5', title: 'Pandas & NumPy Mastery', duration: '58 min',
+        // Keith Galli — Complete Pandas Tutorial
+        videoId: 'e60ItwlZTKM',
+        description: 'Manipulate, clean, and transform large datasets using Pandas DataFrames and NumPy arrays for high-performance computation.',
+      },
+      {
+        id: '2-3', weekLabel: 'Week 3–5', title: 'Data Visualisation with Matplotlib & Seaborn', duration: '46 min',
+        // Corey Schafer — Matplotlib Tutorial Full Series
+        videoId: '-jTD74eEy2I',
+        description: 'Create publication-quality charts, heatmaps, and interactive visualisations to communicate data insights effectively.',
+      },
+      {
+        id: '2-4', weekLabel: 'Week 6–8', title: 'Machine Learning with Scikit-learn', duration: '65 min',
+        // freeCodeCamp — Machine Learning with Python
+        videoId: 'ukzFI9rgwfU',
+        description: 'Supervised and unsupervised learning — linear regression, decision trees, random forests, SVM, KMeans, and model evaluation.',
+      },
+      {
+        id: '2-5', weekLabel: 'Week 9–10', title: 'Deep Learning with TensorFlow', duration: '70 min',
+        // 3Blue1Brown — Neural Networks (Chapter 1)
+        videoId: 'aircAruvnKk',
+        description: 'Build and train neural networks from scratch. Understand backpropagation, CNNs, RNNs, and transfer learning with Keras.',
+      },
+      {
+        id: '2-6', weekLabel: 'Week 11–12', title: 'NLP & Text Mining', duration: '52 min',
+        // freeCodeCamp — NLP with Python (spaCy & NLTK)
+        videoId: '05ONoGfmKvA',
+        description: 'Process and analyse text data using NLTK, spaCy, and transformers. Sentiment analysis, named entity recognition, and text classification.',
+      },
+      {
+        id: '2-7', weekLabel: 'Week 13–14', title: 'Feature Engineering & Model Selection', duration: '48 min',
+        // Krish Naik — Feature Engineering Full Course
+        videoId: '0B5eIE_1vpU',
+        description: 'Advanced techniques for feature selection, dimensionality reduction with PCA, hyperparameter tuning with GridSearchCV.',
+      },
+      {
+        id: '2-8', weekLabel: 'Week 13–14', title: 'MLOps & Model Deployment', duration: '56 min',
+        // TechWorld with Nana — MLOps Explained
+        videoId: 'ZVWg18AXXuE',
+        description: 'Deploy ML models as REST APIs using FastAPI and Flask. Containerise with Docker and monitor models in production with MLflow.',
+      },
     ],
     quiz: [
       { q: 'Which Python library is primarily used for data manipulation and analysis?', options: ['NumPy', 'Pandas', 'Matplotlib', 'Scikit-learn'], correct: 1 },
@@ -156,14 +236,54 @@ export const CERTS = [
       rating: 4,
     },
     lessons: [
-      { id: '3-1', weekLabel: 'Week 1–2', title: 'UX Foundations & Design Thinking', duration: '42 min', videoId: '5C_HPTJg5ek', description: 'Understand the UX design process, empathy mapping, user personas, and how design thinking solves real human problems.' },
-      { id: '3-2', weekLabel: 'Week 1–2', title: 'User Research Methods', duration: '38 min', videoId: 'c9Wg6Cb_YlU', description: 'Conduct user interviews, usability tests, and surveys. Synthesise research into actionable insights using affinity diagrams.' },
-      { id: '3-3', weekLabel: 'Week 3–4', title: 'Wireframing & Information Architecture', duration: '44 min', videoId: 'qpH7-KFWZRI', description: 'Create low-fidelity wireframes, site maps, and user flows. Learn to structure information for maximum usability.' },
-      { id: '3-4', weekLabel: 'Week 5–6', title: 'Figma UI Design Mastery', duration: '60 min', videoId: 'FTFaQWZBqQ8', description: 'Master Figma from scratch — auto-layout, components, variables, styles, and building production-ready high-fidelity designs.' },
-      { id: '3-5', weekLabel: 'Week 7–8', title: 'Prototyping & Usability Testing', duration: '48 min', videoId: 'I0-vBdh4sZ8', description: 'Build interactive prototypes in Figma. Run usability tests, collect feedback, and iterate your designs based on real user data.' },
-      { id: '3-6', weekLabel: 'Week 9', title: 'Design Systems & Tokens', duration: '52 min', videoId: '_W0bSen8Qjg', description: 'Build scalable design systems with reusable components, design tokens, typography scales, and colour palettes.' },
-      { id: '3-7', weekLabel: 'Week 9', title: 'Accessibility & Inclusive Design', duration: '40 min', videoId: 'eSahyHKetJg', description: 'Design for all users — WCAG 2.1 guidelines, colour contrast, keyboard navigation, screen reader support, and ARIA labels.' },
-      { id: '3-8', weekLabel: 'Week 10', title: 'Developer Handoff & Portfolio', duration: '36 min', videoId: 'B242nuM3y2s', description: 'Prepare design specifications for developers using Figma Dev Mode. Build a portfolio that lands product design roles.' },
+      {
+        id: '3-1', weekLabel: 'Week 1–2', title: 'UX Foundations & Design Thinking', duration: '42 min',
+        // AJ&Smart — Design Thinking Full Course
+        videoId: '6lmvCqvmjfE',
+        description: 'Understand the UX design process, empathy mapping, user personas, and how design thinking solves real human problems.',
+      },
+      {
+        id: '3-2', weekLabel: 'Week 1–2', title: 'User Research Methods', duration: '38 min',
+        // Nielsen Norman Group — User Research Methods Overview
+        videoId: 'kQ_6faxhyIw',
+        description: 'Conduct user interviews, usability tests, and surveys. Synthesise research into actionable insights using affinity diagrams.',
+      },
+      {
+        id: '3-3', weekLabel: 'Week 3–4', title: 'Wireframing & Information Architecture', duration: '44 min',
+        // Figma — Wireframing in Figma Official Tutorial
+        videoId: 'qpH7-KFWZRI',
+        description: 'Create low-fidelity wireframes, site maps, and user flows. Learn to structure information for maximum usability.',
+      },
+      {
+        id: '3-4', weekLabel: 'Week 5–6', title: 'Figma UI Design Mastery', duration: '60 min',
+        // DesignCourse — Figma UI Design Tutorial for Beginners
+        videoId: 'FTFaQWZBqQ8',
+        description: 'Master Figma from scratch — auto-layout, components, variables, styles, and building production-ready high-fidelity designs.',
+      },
+      {
+        id: '3-5', weekLabel: 'Week 7–8', title: 'Prototyping & Usability Testing', duration: '48 min',
+        // Figma — Prototyping in Figma Official Tutorial
+        videoId: 'OlbdIXLunt4',
+        description: 'Build interactive prototypes in Figma. Run usability tests, collect feedback, and iterate your designs based on real user data.',
+      },
+      {
+        id: '3-6', weekLabel: 'Week 9', title: 'Design Systems & Tokens', duration: '52 min',
+        // Figma — Design Systems Tutorial
+        videoId: 'CJyJN0ZdEGA',
+        description: 'Build scalable design systems with reusable components, design tokens, typography scales, and colour palettes.',
+      },
+      {
+        id: '3-7', weekLabel: 'Week 9', title: 'Accessibility & Inclusive Design', duration: '40 min',
+        // Google — Web Accessibility (WCAG & Inclusive Design)
+        videoId: 'UAKeNiaay10',
+        description: 'Design for all users — WCAG 2.1 guidelines, colour contrast, keyboard navigation, screen reader support, and ARIA labels.',
+      },
+      {
+        id: '3-8', weekLabel: 'Week 10', title: 'Developer Handoff & Portfolio', duration: '36 min',
+        // Figma — Dev Mode & Developer Handoff Official Tutorial
+        videoId: 'ALkqhXv0GPk',
+        description: 'Prepare design specifications for developers using Figma Dev Mode. Build a portfolio that lands product design roles.',
+      },
     ],
     quiz: [
       { q: 'What is the primary goal of UX design?', options: ['Make things look beautiful', 'Increase company revenue', 'Create useful, usable, and enjoyable experiences', 'Write clean code'], correct: 2 },
@@ -214,14 +334,54 @@ export const CERTS = [
       rating: 4.7,
     },
     lessons: [
-      { id: '4-1', weekLabel: 'Week 1–2', title: 'Linux & Shell Scripting', duration: '56 min', videoId: '7eh4d9jwnl4', description: 'Master Linux fundamentals, file permissions, process management, and write powerful bash scripts to automate repetitive tasks.' },
-      { id: '4-2', weekLabel: 'Week 1–2', title: 'Networking for DevOps', duration: '44 min', videoId: 'IPvYjXCsTg8', description: 'TCP/IP, DNS, HTTP/HTTPS, load balancing, firewalls, VPCs, and subnets — everything a DevOps engineer needs to know.' },
-      { id: '4-3', weekLabel: 'Week 3–4', title: 'Docker — Containers & Images', duration: '60 min', videoId: 'fqULJBBEVQE', description: 'Build, ship, and run containerised applications with Docker. Dockerfiles, multi-stage builds, Docker Compose, and best practices.' },
-      { id: '4-4', weekLabel: 'Week 5–6', title: 'Kubernetes in Production', duration: '70 min', videoId: 'X48VuDVv0do', description: 'Deploy and manage containerised workloads on Kubernetes — pods, services, deployments, Helm charts, and RBAC security.' },
-      { id: '4-5', weekLabel: 'Week 7–8', title: 'AWS Core Services', duration: '65 min', videoId: 'a9UrKTVEeZA', description: 'EC2, S3, RDS, VPC, IAM, EKS, CloudFront — architect and deploy cloud infrastructure on AWS following best practices.' },
-      { id: '4-6', weekLabel: 'Week 9–10', title: 'Terraform & Infrastructure as Code', duration: '58 min', videoId: '77lMCiiMilo', description: 'Provision cloud infrastructure with Terraform. Modules, state management, workspaces, and integrating IaC into CI/CD pipelines.' },
-      { id: '4-7', weekLabel: 'Week 9–10', title: 'CI/CD with GitHub Actions & Jenkins', duration: '52 min', videoId: 'scEDHsr3APg', description: 'Build automated pipelines for testing, building, and deploying applications with GitHub Actions and Jenkins.' },
-      { id: '4-8', weekLabel: 'Week 11–12', title: 'Monitoring with Prometheus & Grafana', duration: '48 min', videoId: 'h4Sl21AKiDg', description: 'Instrument applications, collect metrics with Prometheus, build real-time dashboards in Grafana, and set up alerting rules.' },
+      {
+        id: '4-1', weekLabel: 'Week 1–2', title: 'Linux & Shell Scripting', duration: '56 min',
+        // freeCodeCamp — Linux Command Line Full Course
+        videoId: 'FL7K2A2KH7g',
+        description: 'Master Linux fundamentals, file permissions, process management, and write powerful bash scripts to automate repetitive tasks.',
+      },
+      {
+        id: '4-2', weekLabel: 'Week 1–2', title: 'Networking for DevOps', duration: '44 min',
+        // PowerCert Animated Videos — Networking Full Course
+        videoId: 'mNTs-shuFno',
+        description: 'TCP/IP, DNS, HTTP/HTTPS, load balancing, firewalls, VPCs, and subnets — everything a DevOps engineer needs to know.',
+      },
+      {
+        id: '4-3', weekLabel: 'Week 3–4', title: 'Docker — Containers & Images', duration: '60 min',
+        // freeCodeCamp — Docker Tutorial for Beginners (Full Course)
+        videoId: 'exmSJpJvIPs',
+        description: 'Build, ship, and run containerised applications with Docker. Dockerfiles, multi-stage builds, Docker Compose, and best practices.',
+      },
+      {
+        id: '4-4', weekLabel: 'Week 5–6', title: 'Kubernetes in Production', duration: '70 min',
+        // TechWorld with Nana — Kubernetes Tutorial for Beginners (Full Course)
+        videoId: 'X48VuDVv0do',
+        description: 'Deploy and manage containerised workloads on Kubernetes — pods, services, deployments, Helm charts, and RBAC security.',
+      },
+      {
+        id: '4-5', weekLabel: 'Week 7–8', title: 'AWS Core Services', duration: '65 min',
+        // freeCodeCamp — AWS Certified Cloud Practitioner (Full Course)
+        videoId: '3WZzmiAkYBQ',
+        description: 'EC2, S3, RDS, VPC, IAM, EKS, CloudFront — architect and deploy cloud infrastructure on AWS following best practices.',
+      },
+      {
+        id: '4-6', weekLabel: 'Week 9–10', title: 'Terraform & Infrastructure as Code', duration: '58 min',
+        // TechWorld with Nana — Terraform Course for Beginners
+        videoId: 'l5k1ai_GBDE',
+        description: 'Provision cloud infrastructure with Terraform. Modules, state management, workspaces, and integrating IaC into CI/CD pipelines.',
+      },
+      {
+        id: '4-7', weekLabel: 'Week 9–10', title: 'CI/CD with GitHub Actions & Jenkins', duration: '52 min',
+        // TechWorld with Nana — GitHub Actions Tutorial
+        videoId: 'R8_veQiYBjI',
+        description: 'Build automated pipelines for testing, building, and deploying applications with GitHub Actions and Jenkins.',
+      },
+      {
+        id: '4-8', weekLabel: 'Week 11–12', title: 'Monitoring with Prometheus & Grafana', duration: '48 min',
+        // TechWorld with Nana — Prometheus & Grafana Tutorial
+        videoId: 'h4Sl21AKiDg',
+        description: 'Instrument applications, collect metrics with Prometheus, build real-time dashboards in Grafana, and set up alerting rules.',
+      },
     ],
     quiz: [
       { q: 'What does CI/CD stand for?', options: ['Code Integration / Code Deployment', 'Continuous Integration / Continuous Delivery', 'Cloud Infrastructure / Cloud Deployment', 'Container Images / Container Deployment'], correct: 1 },
@@ -272,14 +432,54 @@ export const CERTS = [
       rating: 4.9,
     },
     lessons: [
-      { id: '5-1', weekLabel: 'Week 1–2', title: 'React Native & Expo Fundamentals', duration: '50 min', videoId: '0-S5a0eXPoc', description: 'Set up your development environment with Expo, understand the React Native component model, StyleSheet, and Flexbox for mobile layouts.' },
-      { id: '5-2', weekLabel: 'Week 3–4', title: 'Navigation with React Navigation', duration: '46 min', videoId: 'K74l26pE4YA', description: 'Implement stack, tab, and drawer navigators. Pass parameters between screens and manage deep linking.' },
-      { id: '5-3', weekLabel: 'Week 3–4', title: 'Core UI Components & Lists', duration: '42 min', videoId: 'TNhaISOUy6Q', description: 'Build performant list views with FlatList and SectionList, build custom components, and implement pull-to-refresh patterns.' },
-      { id: '5-4', weekLabel: 'Week 5–6', title: 'Redux Toolkit & State Management', duration: '54 min', videoId: 'VJov5QWEKE4', description: 'Manage complex application state with Redux Toolkit, RTK Query for API calls, and persist state with Redux Persist.' },
-      { id: '5-5', weekLabel: 'Week 7–8', title: 'Firebase Auth & Firestore', duration: '58 min', videoId: 'vFW1bvRZm1g', description: 'Integrate Firebase authentication, real-time Firestore database, Cloud Storage, and push notifications with FCM.' },
-      { id: '5-6', weekLabel: 'Week 9', title: 'Animations with Reanimated 3', duration: '52 min', videoId: '1RAMRadSMpY', description: 'Create fluid, 60fps animations with React Native Reanimated 3. Spring animations, gesture handlers, and shared element transitions.' },
-      { id: '5-7', weekLabel: 'Week 9', title: 'Native Modules & Device APIs', duration: '44 min', videoId: 'T2foRGF5WnI', description: 'Access device hardware — camera, location, contacts, biometrics, and local notifications using Expo APIs and native modules.' },
-      { id: '5-8', weekLabel: 'Week 10', title: 'App Store Deployment & OTA Updates', duration: '48 min', videoId: 'yvTn7BBZzSY', description: 'Build, sign, and submit your app to Google Play and the Apple App Store. Use Expo EAS Build and OTA updates with EAS Update.' },
+      {
+        id: '5-1', weekLabel: 'Week 1–2', title: 'React Native & Expo Fundamentals', duration: '50 min',
+        // freeCodeCamp — React Native Course for Beginners (Expo)
+        videoId: '0-S5a0eXPoc',
+        description: 'Set up your development environment with Expo, understand the React Native component model, StyleSheet, and Flexbox for mobile layouts.',
+      },
+      {
+        id: '5-2', weekLabel: 'Week 3–4', title: 'Navigation with React Navigation', duration: '46 min',
+        // Catalin Miron — React Navigation v6 Full Tutorial
+        videoId: 'Jj3lM7KIKkA',
+        description: 'Implement stack, tab, and drawer navigators. Pass parameters between screens and manage deep linking.',
+      },
+      {
+        id: '5-3', weekLabel: 'Week 3–4', title: 'Core UI Components & Lists', duration: '42 min',
+        // William Candillon — React Native FlatList Tutorial
+        videoId: 'br3kkw5m_jw',
+        description: 'Build performant list views with FlatList and SectionList, build custom components, and implement pull-to-refresh patterns.',
+      },
+      {
+        id: '5-4', weekLabel: 'Week 5–6', title: 'Redux Toolkit & State Management', duration: '54 min',
+        // Laith Harb — Redux Toolkit Full Tutorial
+        videoId: '1i04-A7kfFI',
+        description: 'Manage complex application state with Redux Toolkit, RTK Query for API calls, and persist state with Redux Persist.',
+      },
+      {
+        id: '5-5', weekLabel: 'Week 7–8', title: 'Firebase Auth & Firestore', duration: '58 min',
+        // Net Ninja — React Native Firebase Full Course
+        videoId: 'knk5Fjrpde0',
+        description: 'Integrate Firebase authentication, real-time Firestore database, Cloud Storage, and push notifications with FCM.',
+      },
+      {
+        id: '5-6', weekLabel: 'Week 9', title: 'Animations with Reanimated 3', duration: '52 min',
+        // William Candillon — React Native Reanimated 3 Tutorial
+        videoId: '8hW5Dnuu99Q',
+        description: 'Create fluid, 60fps animations with React Native Reanimated 3. Spring animations, gesture handlers, and shared element transitions.',
+      },
+      {
+        id: '5-7', weekLabel: 'Week 9', title: 'Native Modules & Device APIs', duration: '44 min',
+        // Expo — Using Native Device APIs with Expo
+        videoId: '-Oniup60Afs',
+        description: 'Access device hardware — camera, location, contacts, biometrics, and local notifications using Expo APIs and native modules.',
+      },
+      {
+        id: '5-8', weekLabel: 'Week 10', title: 'App Store Deployment & OTA Updates', duration: '48 min',
+        // Expo — EAS Build & App Store Submission Tutorial
+        videoId: 'DWpcD6bvTRA',
+        description: 'Build, sign, and submit your app to Google Play and the Apple App Store. Use Expo EAS Build and OTA updates with EAS Update.',
+      },
     ],
     quiz: [
       { q: 'Which component is used for high-performance lists in React Native?', options: ['ScrollView', 'ListView', 'FlatList', 'TableView'], correct: 2 },
@@ -330,14 +530,54 @@ export const CERTS = [
       rating: 5,
     },
     lessons: [
-      { id: '6-1', weekLabel: 'Week 1', title: 'BA Fundamentals & SDLC', duration: '38 min', videoId: 'Jl0Qk3lepsy', description: 'Understand the role of a Business Analyst in software projects, the SDLC, and how BAs bridge business stakeholders and development teams.' },
-      { id: '6-2', weekLabel: 'Week 2–3', title: 'SQL for Business Analysts', duration: '56 min', videoId: 'wIuVrrkegx4', description: 'Write SQL queries to extract business insights — SELECT, JOINs, GROUP BY, subqueries, window functions, and real-world reporting.' },
-      { id: '6-3', weekLabel: 'Week 4–5', title: 'Power BI Dashboard Design', duration: '52 min', videoId: '_uQrJ0TkZlc', description: 'Connect data sources, build interactive dashboards, write DAX formulas, and present business KPIs using Power BI.' },
-      { id: '6-4', weekLabel: 'Week 4–5', title: 'Data Storytelling with Tableau', duration: '46 min', videoId: 'TPMlZxRRaBQ', description: 'Build compelling data visualisations in Tableau, create calculated fields, and design executive-level dashboards.' },
-      { id: '6-5', weekLabel: 'Week 6', title: 'Agile & Scrum for BAs', duration: '44 min', videoId: '2Vv-BfVoq4g', description: 'Sprint planning, backlog grooming, writing user stories with acceptance criteria, and facilitating scrum ceremonies as a BA.' },
-      { id: '6-6', weekLabel: 'Week 7', title: 'Requirements Gathering & BRD', duration: '42 min', videoId: 'gqOEoUR5RHg', description: 'Conduct stakeholder interviews, document business requirements in a BRD, create use cases, and manage scope creep.' },
-      { id: '6-7', weekLabel: 'Week 7', title: 'Process Mapping with BPMN', duration: '36 min', videoId: 'BwkNceoybvA', description: 'Model business processes using BPMN notation, identify bottlenecks, and propose process improvements backed by data.' },
-      { id: '6-8', weekLabel: 'Week 8', title: 'Stakeholder Management & Presentations', duration: '40 min', videoId: 'HMHKHPyKxjk', description: 'Manage stakeholder expectations, resolve conflicts, create executive presentations, and deliver project sign-offs.' },
+      {
+        id: '6-1', weekLabel: 'Week 1', title: 'BA Fundamentals & SDLC', duration: '38 min',
+        // CareerFoundry — What Does a Business Analyst Do?
+        videoId: 'pf3vbuh0e-w',
+        description: 'Understand the role of a Business Analyst in software projects, the SDLC, and how BAs bridge business stakeholders and development teams.',
+      },
+      {
+        id: '6-2', weekLabel: 'Week 2–3', title: 'SQL for Business Analysts', duration: '56 min',
+        // freeCodeCamp — SQL Full Course for Beginners
+        videoId: '9581lX_pM54',
+        description: 'Write SQL queries to extract business insights — SELECT, JOINs, GROUP BY, subqueries, window functions, and real-world reporting.',
+      },
+      {
+        id: '6-3', weekLabel: 'Week 4–5', title: 'Power BI Dashboard Design', duration: '52 min',
+        // Guy in a Cube / Microsoft — Power BI Full Course for Beginners
+        videoId: 'xj-ByfvYtuQ',
+        description: 'Connect data sources, build interactive dashboards, write DAX formulas, and present business KPIs using Power BI.',
+      },
+      {
+        id: '6-4', weekLabel: 'Week 4–5', title: 'Data Storytelling with Tableau', duration: '46 min',
+        // freeCodeCamp — Tableau Full Course
+        videoId: 'TPMlZxRRaBQ',
+        description: 'Build compelling data visualisations in Tableau, create calculated fields, and design executive-level dashboards.',
+      },
+      {
+        id: '6-5', weekLabel: 'Week 6', title: 'Agile & Scrum for BAs', duration: '44 min',
+        // Atlassian — Agile & Scrum Full Explanation
+        videoId: 'zPznsR9YmoU',
+        description: 'Sprint planning, backlog grooming, writing user stories with acceptance criteria, and facilitating scrum ceremonies as a BA.',
+      },
+      {
+        id: '6-6', weekLabel: 'Week 7', title: 'Requirements Gathering & BRD', duration: '42 min',
+        // BA Academy — Requirements Gathering & BRD Tutorial
+        videoId: 'OPP5Elhot0E',
+        description: 'Conduct stakeholder interviews, document business requirements in a BRD, create use cases, and manage scope creep.',
+      },
+      {
+        id: '6-7', weekLabel: 'Week 7', title: 'Process Mapping with BPMN', duration: '36 min',
+        // Signavio — BPMN 2.0 Process Modelling Tutorial
+        videoId: 'BwkNceoybvA',
+        description: 'Model business processes using BPMN notation, identify bottlenecks, and propose process improvements backed by data.',
+      },
+      {
+        id: '6-8', weekLabel: 'Week 8', title: 'Stakeholder Management & Presentations', duration: '40 min',
+        // Project Management — Stakeholder Management Full Guide
+        videoId: 'MRr4jvEALsU',
+        description: 'Manage stakeholder expectations, resolve conflicts, create executive presentations, and deliver project sign-offs.',
+      },
     ],
     quiz: [
       { q: 'What does SDLC stand for?', options: ['Software Development Life Cycle', 'System Design and Launch Checklist', 'Structured Data Lifecycle', 'Software Delivery and Launch Cycle'], correct: 0 },

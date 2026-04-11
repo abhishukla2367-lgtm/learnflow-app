@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Users, CheckCircle, BookOpen, Clock, TrendingUp, Award } from 'lucide-react';
+import { ArrowRight, Users, CheckCircle, BookOpen, Clock, TrendingUp, Award } from 'lucide-react';
 import { FadeIn, StatCard } from '../ui/FadeIn';
 import { HERO_STATS, COMPANY_LOGOS } from '../../data/homeData';
+import { useAuth } from '../../context/AuthContext';
 
 const LIVE_SESSIONS = [
   { title: 'React State Management Deep Dive', instructor: 'Rohan Gupta', viewers: 238, color: 'from-cyan-500 to-cyan-700' },
@@ -57,6 +58,7 @@ function TypewriterText({ words }) {
 }
 
 export default function HeroSection() {
+  const { user } = useAuth();
   const heroRef = useRef(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -121,7 +123,7 @@ export default function HeroSection() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
               </span>
-              🇮🇳 India's Top Online Learning Platform
+              🇮🇳 India's Emerging Online Learning Platform
             </div>
 
             {/* Headline with typewriter */}
@@ -136,26 +138,25 @@ export default function HeroSection() {
             </p>
 
             {/* CTA buttons */}
-            <div className="flex flex-wrap gap-4 mb-10 animate-fade-up-d3">
-              <Link
-                to="/register"
-                className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-cyan-600 text-white font-semibold text-base shadow-lg shadow-cyan-600/30 hover:bg-cyan-700 hover:shadow-cyan-600/50 hover:-translate-y-1 active:scale-[0.97] transition-all duration-200 overflow-hidden"
-              >
-                {/* Shimmer effect */}
-                <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 ease-in-out" />
-                Start learning free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-              </Link>
-              <Link
-                to="/live-sessions"
-                className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-slate-200 text-slate-800 font-semibold text-base bg-white hover:border-cyan-300 hover:bg-cyan-50 hover:-translate-y-1 active:scale-[0.97] transition-all duration-200 shadow-sm"
-              >
-                <div className="w-6 h-6 rounded-full bg-cyan-100 flex items-center justify-center group-hover:bg-cyan-200 transition-colors">
-                  <Play className="w-3 h-3 text-cyan-600 ml-0.5" fill="currentColor" />
-                </div>
-                See live sessions
-              </Link>
-            </div>
+            {/* CTA buttons */}
+<div className="flex flex-wrap gap-4 mb-10 animate-fade-up-d3">
+  <Link
+    to={user ? "/courses" : "/register"}
+    className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-cyan-600 text-white font-semibold text-base shadow-lg shadow-cyan-600/30 hover:bg-cyan-700 hover:shadow-cyan-600/50 hover:-translate-y-1 active:scale-[0.97] transition-all duration-200 overflow-hidden"
+  >
+    <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 ease-in-out" />
+    Start Learning 
+    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+  </Link>
+
+  <Link
+    to="/contact"
+    className="group inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border border-slate-200 text-slate-800 font-semibold text-base bg-white hover:border-cyan-300 hover:bg-cyan-50 hover:-translate-y-1 active:scale-[0.97] transition-all duration-200 shadow-sm"
+  >
+    Get in Touch
+    <ArrowRight className="w-4 h-4 text-slate-800 group-hover:translate-x-1 transition-transform duration-200" />
+  </Link>
+</div>
 
             {/* Trust badges */}
             <div className="flex flex-wrap gap-5 animate-fade-up-d4">

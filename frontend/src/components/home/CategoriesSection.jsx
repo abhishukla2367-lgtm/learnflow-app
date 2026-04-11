@@ -68,27 +68,27 @@ export default function CategoriesSection() {
         </FadeIn>
 
         {/* ── Category grid ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {CATEGORIES.map(({ label, icon: Icon, count, color }, i) => (
             <FadeIn key={label} delay={i * 60}>
               <TiltCard className={`group h-full`}>
                 <Link
                   to={`/courses?category=${label}`}
-                  className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl bg-white border border-slate-200 text-center transition-all duration-300 cursor-pointer overflow-hidden h-full hover:border-transparent shadow-sm hover:shadow-xl ${GLOW_COLOR[color]}`}
+                  className={`relative flex flex-col items-center gap-4 p-8 rounded-2xl bg-white border border-slate-200 text-center transition-all duration-300 cursor-pointer overflow-hidden h-full hover:border-transparent shadow-sm hover:shadow-xl ${GLOW_COLOR[color]}`}
                 >
                   {/* Background glow on hover */}
                   <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl ${COLOR_MAP[color].split(' ')[0]}`} />
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-2xl bg-gradient-to-br from-current to-transparent" />
 
                   <div className="relative z-10">
-                    <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-all duration-300 ${COLOR_MAP[color]}`}>
+                    <div className={`w-16 h-16 rounded-2xl border-[0.5px] flex items-center justify-center shadow-inner transition-all duration-300 ${COLOR_MAP[color]}`}>
                       <Icon className="w-6 h-6 transition-transform duration-300 group-hover:scale-110" />
                     </div>
                   </div>
 
                   <div className="relative z-10">
-                    <p className="text-sm font-semibold text-slate-900 group-hover:text-slate-800 transition-colors leading-tight">{label}</p>
-                    <p className="text-xs text-slate-400 font-mono mt-1">{count} courses</p>
+                    <p className="text-base font-bold tracking-tight text-slate-900 group-hover:text-slate-800 transition-colors leading-tight">{label}</p>
+                    <p className="text-[13px] text-slate-500 font-medium mt-1.5">{count} courses</p>
                   </div>
 
                   {/* Bottom accent line */}
@@ -103,7 +103,7 @@ export default function CategoriesSection() {
         <FadeIn delay={200} className="text-center mt-10">
           <Link
             to="/courses"
-            className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium bg-white hover:border-cyan-300 hover:text-cyan-700 hover:bg-cyan-50 transition-all duration-200 shadow-sm"
+            className="group inline-flex items-center gap-2 px-8 py-3 rounded-full border border-slate-200 text-slate-900 text-sm font-medium bg-white hover:border-cyan-300 hover:text-cyan-700 hover:bg-cyan-50 transition-all duration-200 shadow-sm"
           >
             View all categories
             <span className="group-hover:translate-x-0.5 transition-transform duration-200">→</span>

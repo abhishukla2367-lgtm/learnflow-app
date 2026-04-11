@@ -32,7 +32,6 @@ import Quiz           from './pages/Certification/Quiz';
 import CertificatePage from './pages/Certification/CertificatePage';
 
 // Information & Resource Pages
-import LiveSessions   from './pages/LiveSessions';
 import Instructors    from './pages/Instructors';
 import About          from './pages/About';
 import Contact        from './pages/Contact';
@@ -86,7 +85,6 @@ function PublicLayout() {
           <Route path="/about"           element={<About />} />
           <Route path="/contact"         element={<Contact />} />
           <Route path="/instructors"     element={<Instructors />} />
-          <Route path="/live-sessions"   element={<LiveSessions />} />
           <Route path="/help"            element={<Help />} />
           <Route path="/privacy"         element={<Privacy />} />
           <Route path="/terms"           element={<Terms />} />

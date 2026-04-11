@@ -31,7 +31,7 @@ const SOCIALS = [
 
 const STATS = [
   { num: '50K+', label: 'Learners'   },
-  { num: '100+',  label: 'Courses'    },
+  { num: '30+',  label: 'Courses'    },
   { num: '4.7★', label: 'Rating'     },
   { num: '98%',  label: 'Completion' },
 ];

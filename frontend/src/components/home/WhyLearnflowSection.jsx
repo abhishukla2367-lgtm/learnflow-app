@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Star, ChevronRight } from 'lucide-react';
 import { FadeIn } from '../ui/FadeIn';
 import { FEATURES } from '../../data/homeData';
+import { useAuth } from '../../context/AuthContext';
 
 const AVATAR_INITIALS = ['AS', 'RG', 'MP', 'NK'];
 const AVATAR_COLORS = [
@@ -17,6 +18,7 @@ const AUTO_ADVANCE_MS = 5000;
 const BULLET_DELAYS = ['delay-0', 'delay-75', 'delay-150', 'delay-[225ms]'];
 
 export default function WhyLearnflowSection() {
+  const { user } = useAuth();
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
   const [animKey, setAnimKey] = useState(0);
@@ -172,53 +174,14 @@ export default function WhyLearnflowSection() {
 
                 {/* CTA */}
                 <Link
-                  to="/register"
+                  to={user ? "/courses" : "/register"}
                   className={`group inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] relative overflow-hidden ${f.tw.cta}`}
                 >
                   <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500" />
-                  Get started free
+                  Get started 
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </div>
-            </div>
-          </div>
-        </FadeIn>
-
-        {/* ── Social proof strip ── */}
-        <FadeIn delay={100} className="mt-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-white border border-slate-200 rounded-2xl px-8 py-6 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300">
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-2.5">
-                {AVATAR_INITIALS.map((ini, i) => (
-                  <div key={ini} className={`w-9 h-9 rounded-full bg-gradient-to-br ${AVATAR_COLORS[i]} border-2 border-white flex items-center justify-center text-[11px] font-bold text-white shadow-sm`}>
-                    {ini}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">50,000+ learners already enrolled</p>
-                <p className="text-xs text-slate-400 mt-0.5">Join the fastest-growing tech community in India</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6 flex-shrink-0">
-              <div className="hidden sm:block text-center">
-                <p className="text-xl font-bold text-slate-900 flex items-center gap-1">
-                  4.7 <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                </p>
-                <p className="text-xs text-slate-400">Avg rating</p>
-              </div>
-              <div className="hidden sm:block text-center">
-                <p className="text-xl font-bold text-slate-900">98%</p>
-                <p className="text-xs text-slate-400">Completion rate</p>
-              </div>
-              <Link
-                to="/register"
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700 hover:-translate-y-0.5 transition-all duration-200 shadow-md shadow-cyan-600/25 active:scale-[0.98]"
-              >
-                Join free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
           </div>
         </FadeIn>

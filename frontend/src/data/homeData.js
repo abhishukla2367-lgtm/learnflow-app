@@ -17,7 +17,7 @@ const BASE_IMG = 'https://res.cloudinary.com/db2vju4mv/image/upload/f_auto,q_aut
 
 export const HERO_STATS = [
   { target: 50,  suffix: 'K+', label: 'Active Learners', decimals: 0 },
-  { target: 100,  suffix: '+',  label: 'Expert Courses',  decimals: 0 },
+  { target: 30,  suffix: '+',  label: 'Expert Courses',  decimals: 0 },
   { target: 4.7, suffix: '',   label: 'Avg Rating',      decimals: 1 },
   { target: 98,  suffix: '%',  label: 'Completion Rate', decimals: 0 },
 ];
@@ -25,20 +25,18 @@ export const HERO_STATS = [
 // ✅ Single source of truth — ticker component should import and use this
 export const TICKER_STATS = [
   { value: '50K+', label: 'Learners' },
-  { value: '100+',  label: 'Courses'  },
+  { value: '30+',  label: 'Courses'  },
   { value: '4.7★', label: 'Rating'   },
   { value: '98%',  label: 'Completion' },
 ];
 
 export const CATEGORIES = [
-  { label: 'Marketing',       icon: TrendingUp,   count: 12, color: 'orange'  },
-  { label: 'Web Development', icon: Code2,        count: 12, color: 'cyan'    },
-  { label: 'AI / Machine Learning',         icon: Brain,        count: 12, color: 'violet'  },
-  { label: 'Design',          icon: Palette,      count: 12, color: 'amber'   },
-  { label: 'Data Science',    icon: Database,     count: 12, color: 'emerald' },
-  { label: 'Cloud Computing', icon: Cloud,        count: 12, color: 'blue'    },
-  { label: 'Cybersecurity',   icon: ShieldCheck,  count: 12, color: 'indigo'  },
-  { label: 'DSA',             icon: Terminal,     count: 12, color: 'rose'    },
+  { label: 'Marketing',       icon: TrendingUp,   count: 4, color: 'orange'  },
+  { label: 'Web Development', icon: Code2,        count: 4, color: 'cyan'    },
+  { label: 'AI / Machine Learning',         icon: Brain,        count: 4, color: 'violet'  },
+  { label: 'Design',          icon: Palette,      count: 4, color: 'amber'   },
+  { label: 'Data Science',    icon: Database,     count: 4, color: 'emerald' },
+  { label: 'Cloud Computing', icon: Cloud,        count: 4, color: 'blue'    },
 ];
 
 export const COLOR_MAP = {

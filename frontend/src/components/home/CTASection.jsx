@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Shield, Clock, CreditCard } from 'lucide-react';
 import { FadeIn } from '../ui/FadeIn';
+import { useAuth } from '../../context/AuthContext';
 
 const PERKS = [
   { icon: CreditCard, label: 'Secure card payment' },
@@ -9,6 +10,7 @@ const PERKS = [
 ];
 
 export default function CTASection() {
+  const { user } = useAuth();
   return (
     <section className="py-24 border-t border-slate-200 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +47,16 @@ export default function CTASection() {
               {/* Buttons */}
               <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
                 <Link
-                  to="/register"
+                  to={user ? "/" : "/register"}
+                  onClick={(e) => {
+    if (user) {
+      // If user is logged in and on the home page, just scroll up
+      if (window.location.pathname === "/") {
+        e.preventDefault(); // Prevent a re-render/navigation
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }}
                   className="group relative inline-flex items-center gap-2 px-9 py-4 text-base rounded-xl bg-white text-cyan-700 font-bold hover:bg-cyan-50 hover:-translate-y-1 active:scale-[0.97] transition-all duration-200 shadow-xl shadow-black/15 overflow-hidden"
                 >
                   <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-cyan-100/60 to-transparent transition-transform duration-500" />

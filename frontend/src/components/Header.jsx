@@ -14,10 +14,7 @@ const COURSE_CATS = [
   { label: 'AI / Machine Learning', icon: Brain,       href: '/courses?category=AI / Machine Learning',         color: 'text-purple-600', bg: 'bg-purple-50' },
   { label: 'Design',          icon: Palette,     href: '/courses?category=Design',          color: 'text-pink-600',   bg: 'bg-pink-50'   },
   { label: 'Data Science',          icon: Database ,    href: '/courses?category=Data Science',    color: 'text-amber-600',  bg: 'bg-amber-50'  },
-  { label: 'Cloud Computing',       icon: Cloud,      href: '/courses?category=Cloud Computing',    color: 'text-cyan-600',   bg: 'bg-cyan-50'   },
-  { label: 'Cybersecurity',         icon: Shield,      href: '/courses?category=Cybersecurity',      color: 'text-rose-600',   bg: 'bg-rose-50'   },
-  
-  { label: 'Data Structures and Algorithms',       icon: Terminal,    href: '/courses?category=DSA',        color: 'text-green-600',  bg: 'bg-green-50'  },
+  { label: 'Cloud Computing',       icon: Cloud,      href: '/courses?category=Cloud Computing',    color: 'text-cyan-600',   bg: 'bg-cyan-50'   }
 ];
 
 const MORE_LINKS = [
@@ -204,15 +201,6 @@ export default function Header() {
             <Link to="/certifications" className={NAV_BTN}>Certifications</Link>
             <Link to="/leaderboard"    className={NAV_BTN}>Leaderboard</Link>
 
-            {/* Live — animated dot */}
-            <Link to="/live-sessions" className={`${NAV_BTN} flex items-center gap-2`}>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-              </span>
-              Live
-            </Link>
-
             {/* More */}
             <NavDropdown label="More" width="w-72">
               <div className="p-2">
@@ -294,14 +282,6 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-
-          <Link to="/live-sessions" className="px-4 py-4 text-lg font-bold text-rose-500 hover:bg-rose-50 rounded-xl border-b border-slate-100 flex items-center gap-3 transition-colors">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-            </span>
-            Live
-          </Link>
 
           {/* Categories grid */}
           <div className="pt-5">
