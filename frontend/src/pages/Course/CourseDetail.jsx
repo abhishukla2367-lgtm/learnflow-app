@@ -4,9 +4,9 @@ import {
   Star, Clock, Users, Award, CheckCircle2, Play, Lock,
   ChevronDown, Loader2, ArrowLeft, Globe, BookOpen
 } from 'lucide-react';
-import api from '../utils/api';
-import { getInstructorPhoto } from '../utils/instructorPhotos';
-import { useAuth } from '../context/AuthContext';
+import api from '../../utils/api';
+import { getInstructorPhoto } from '../../utils/instructorPhotos';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function CourseDetail() {
@@ -82,9 +82,10 @@ export default function CourseDetail() {
         } else {
           toast.success('7-Day Trial Started!');
 // We pass the actual data returned from your updated controller
-navigate('/success', { 
+navigate('/course-success', {
   state: { 
     certId: id, 
+    courseId: id,
     isTrial: true, 
     trialEndsAt: response.data.trialEndsAt, // Crucial for the date fix
     cert: {
@@ -104,7 +105,7 @@ navigate('/success', {
     }
     
     // Paid course — go to checkout
-    navigate(`/checkout/${course._id}`, {
+    navigate(`/course-checkout/${course._id}`, {
       state: {
         cert: {
           id:           course._id,

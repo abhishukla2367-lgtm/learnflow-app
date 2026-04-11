@@ -5,9 +5,9 @@ import { FaFacebook, FaLinkedin, FaXTwitter, FaYoutube, FaInstagram } from 'reac
 const LINKS = {
   Platform: [
     { label: 'Browse Courses', href: '/courses'        },
-    { label: 'Live Sessions',  href: '/live-sessions'  },
     { label: 'Certifications', href: '/certifications' },
-    { label: 'Instructors',    href: '/instructors'    },
+    { label: 'Leaderboard', href: '/leaderboard'    },
+    { label: 'Instructors',    href: '/instructors'    }
   ],
   Company: [
     { label: 'About Us', href: '/about'   },

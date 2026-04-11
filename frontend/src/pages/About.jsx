@@ -27,7 +27,7 @@ const TEAM = [
 
 const STATS = [
  { icon:Users, num:'50,000+', label:'Active Learners' },
- { icon:BookOpen, num:'100+', label:'Courses' },
+ { icon:BookOpen, num:'30+', label:'Courses' },
  { icon:Award, num:'1,200+', label:'Hiring Partners' },
  { icon:MapPin, num:'3', label:'States Reached' },
  { icon:TrendingUp,num:'35%', label:'Avg Salary Hike' },

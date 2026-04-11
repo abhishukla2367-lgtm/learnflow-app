@@ -4,8 +4,6 @@ import {
   CheckCircle, ArrowRight, Download, Share2,
   Play, Layout, BadgeCheck, Award, Users, Zap,
 } from 'lucide-react';
-
-/* ── Deterministic particles (no Math.random) ── */
 const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   id:       i,
   size:     (i % 4) + 2,
@@ -19,16 +17,22 @@ export default function Success() {
   const location = useLocation();
 
   
-  const cert       = location.state?.cert   || null;
-  const certId = location.state?.certId || cert?._id || cert?.id || null;
-  const firstLesson = cert?.lessons?.[0]?._id || cert?.lessons?.[0]?.id || null;
-  const courseName  = cert?.title            || 'Professional Certification';
+  // ── Corrected Logic ──
+  const course = location.state?.course || null;
+  
+  // Use course.id if courseId isn't directly in state
+  const courseId = location.state?.courseId || course?.id || course?._id || '';
+  
+  const firstLesson = course?.lessons?.[0]?._id || course?.lessons?.[0]?.id || null;
+  const courseName = course?.title || 'Professional Certification';
   const isTrial = location.state?.isTrial || false;
   const trialEndsAt = location.state?.trialEndsAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const curriculumTo = certId ? `/learn/${certId}` : '/my-courses';
-  const introVideoTo = `/learn/cert/${certId}/${firstLesson}`;
 
-  /* ── Share handler ── */
+  // Use backticks for template literals
+  const curriculumTo = `/learn/${courseId}`;
+  
+  const introVideoTo = `/learn/course/${courseId}/${firstLesson}`;
+    
   const handleShare = async () => {
     const text = `I just enrolled in "${courseName}" on Learnflow! 🎓`;
     if (navigator.share) {
@@ -99,19 +103,19 @@ export default function Success() {
         )}
         </p>
 
-        {/* What you get — only shown when cert data is available */}
-        {cert && (
+        {/* What you get — only shown when course data is available */}
+        {course && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8 text-left shadow-sm">
             <div className="flex items-center gap-4 mb-5 pb-5 border-b border-slate-100">
               <div
-                className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cert.gradient || 'from-cyan-500 to-blue-600'} flex items-center justify-center text-2xl flex-shrink-0`}
+                className={`w-12 h-12 rounded-xl bg-gradient-to-br ${course.gradient || 'from-cyan-500 to-blue-600'} flex items-center justify-center text-2xl flex-shrink-0`}
               >
-                {cert.emoji || '🎓'}
+                {course.emoji || '🎓'}
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">{cert.title}</p>
+                <p className="text-sm font-bold text-slate-900">{course.title}</p>
                 <p className="text-xs text-slate-500 font-mono mt-0.5">
-                  {cert.duration} · {cert.level}
+                  {course.duration} · {course.level}
                 </p>
               </div>
             </div>
@@ -167,7 +171,7 @@ export default function Success() {
             </span>
           </Link>
 
-          {/* Intro Video → /learn/:certId/:firstLessonId */}
+          {/* Intro Video → /learn/:courseId/:firstLessonId */}
           <Link
             to={introVideoTo}
             className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-violet-50 hover:border-violet-200 transition-all"

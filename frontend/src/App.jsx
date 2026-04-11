@@ -10,8 +10,6 @@ import ScrollToTop from './components/ScrollToTop';
 
 // Core Pages
 import Home           from './pages/Home';
-import Courses        from './pages/Courses';
-import CourseDetail   from './pages/CourseDetail';
 import Dashboard      from './pages/Dashboard';
 import MyCourses    from './pages/MyCourses';
 import Leaderboard    from './pages/Leaderboard';
@@ -22,16 +20,23 @@ import NotFound       from './pages/NotFound';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
 
-// Certification Pages (Inside /Certification folder)
 import Certifications from './pages/Certification/Certifications';
 import CertDetail     from './pages/Certification/CertDetail';
 import Checkout       from './pages/Certification/Checkout';
 import Success        from './pages/Certification/Success'; 
-import CoursePlayer   from './pages/Certification/CoursePlayer';
+import CertCoursePlayer   from './pages/Certification/CertCoursePlayer';
 import Quiz           from './pages/Certification/Quiz';
 import CertificatePage from './pages/Certification/CertificatePage';
 
+import Courses from './pages/Course/Courses';
+import CourseDetail     from './pages/Course/CourseDetail';
+import CourseCheckout   from './pages/Course/CourseCheckout';
+import CourseSuccess    from './pages/Course/CourseSuccess';
+import CoursePlayer     from './pages/Course/CoursePlayer';
+import CourseQuiz       from './pages/Course/CourseQuiz';
+import CourseCertificate from './pages/Course/CourseCertificate';
 // Information & Resource Pages
+
 import Instructors    from './pages/Instructors';
 import About          from './pages/About';
 import Contact        from './pages/Contact';
@@ -75,8 +80,7 @@ function PublicLayout() {
         <Routes>
           {/* Public Routes */}
           <Route path="/"                element={<Home />} />
-          <Route path="/courses"         element={<Courses />} />
-          <Route path="/course/:id"      element={<CourseDetail />} />
+          
           <Route path="/leaderboard"     element={<Leaderboard />} />
           <Route path="/login"           element={<Login />} />
           <Route path="/register"        element={<Register />} />
@@ -95,16 +99,21 @@ function PublicLayout() {
           <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
           <Route path="/profile"     element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-          {/* Certification Logic (Using :certId for consistency) */}
           <Route path="/certifications"         element={<ProtectedRoute><Certifications /></ProtectedRoute>} />
           <Route path="/certifications/:certId" element={<ProtectedRoute><CertDetail /></ProtectedRoute>} />
           <Route path="/checkout/:certId"       element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/success"                element={<ProtectedRoute><Success /></ProtectedRoute>} />
-          
-          <Route path="/learn/:certId/:lessonId?" element={<ProtectedRoute><CoursePlayer /></ProtectedRoute>} />
           <Route path="/quiz/:certId"            element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
           <Route path="/certificate/:certId"     element={<ProtectedRoute><CertificatePage /></ProtectedRoute>} />
-
+          
+          <Route path="/courses"         element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+          <Route path="/courses/:courseId"      element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
+          <Route path="/course-checkout/:courseId"  element={<ProtectedRoute><CourseCheckout /></ProtectedRoute>} />
+          <Route path="/course-success"             element={<ProtectedRoute><CourseSuccess /></ProtectedRoute>} />
+          <Route path="/course-quiz/:courseId"      element={<ProtectedRoute><CourseQuiz /></ProtectedRoute>} />
+          <Route path="/course-certificate/:courseId" element={<ProtectedRoute><CourseCertificate /></ProtectedRoute>} />
+          
+          <Route path="/learn/:type/:id/:lessonId?"  element={<ProtectedRoute><UnifiedPlayer /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

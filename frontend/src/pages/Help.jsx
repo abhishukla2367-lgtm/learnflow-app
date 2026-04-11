@@ -6,7 +6,6 @@ const CATS = [
  { id:'courses', icon:BookOpen, label:'Courses & Learning', color:'bg-cyan-50 border-cyan-200 text-cyan-600', count:8 },
  { id:'billing', icon:CreditCard, label:'Billing & Payments', color:'bg-emerald-50 border-emerald-200 text-emerald-600', count:8 },
  { id:'certs', icon:Award, label:'Certifications', color:'bg-violet-50 border-violet-200 text-violet-600', count:8 },
- { id:'live', icon:Wifi, label:'Live Sessions', color:'bg-amber-50 border-amber-200 text-amber-600', count:8 },
  { id:'account', icon:User, label:'Account & Profile', color:'bg-rose-50 border-rose-200 text-rose-600', count:8 },
  { id:'technical', icon:Settings, label:'Technical Support', color:'bg-slate-50 border-slate-200 text-slate-600', count:8 },
 ];
@@ -119,7 +118,7 @@ export default function Help() {
  {/* Category tiles */}
  <section className="py-12 bg-slate-100 border-b border-slate-200">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
  <button onClick={()=>setActiveCat('all')}
  className={`rounded-2xl border p-5 text-center transition-all ${activeCat==='all'?'bg-cyan-600 border-cyan-600 text-white shadow-sm':'bg-white border-slate-200 text-slate-600 hover:border-cyan-300 hover:bg-cyan-50'}`}>
  <HelpCircle className="w-7 h-7 mx-auto mb-2.5"/>
