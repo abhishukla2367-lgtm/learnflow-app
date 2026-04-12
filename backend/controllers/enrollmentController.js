@@ -30,7 +30,6 @@ exports.enroll = async (req, res) => {
     const existing = await Enrollment.findOne({ student: userId, course: courseId });
     
     if (existing) {
-      // If they are already enrolled (trial or paid), just send them to the course
       return res.status(200).json({ 
         success: true, 
         message: "Redirecting to course...", 
@@ -39,7 +38,8 @@ exports.enroll = async (req, res) => {
       });
     }
 
-    // Build certData snapshot from whichever product we found
+    // Build certData snapshot
+    // We include lessons here so real-time enrollment works immediately
     const certData = {
       title:       product.title       || "",
       thumbnail:   product.thumbnail   || "",
@@ -47,10 +47,12 @@ exports.enroll = async (req, res) => {
       description: product.description || product.desc || "",
       emoji:       product.emoji       || "",
       tag:         product.tag         || product.category || "",
+      lessons:     product.lessons     || [], 
     };
 
     const isTrial = req.body.type === 'trial' || (product.price !== undefined && product.price === 0);
     const trialEndsAt = isTrial ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
+    
     const newEnrollment = await Enrollment.create({
       student:     userId,
       course:      courseId,
@@ -72,7 +74,7 @@ exports.enroll = async (req, res) => {
         io.to(`user:${userId}`).emit('enrollment:confirmed', {
           enrollmentId: newEnrollment._id,
           certId:       courseId,
-          certData,
+          course:       { ...certData, _id: courseId }, // Ensure full object for immediate redirect
           progress:     0,
           enrolledAt:   newEnrollment.enrolledAt,
         });
@@ -85,10 +87,10 @@ exports.enroll = async (req, res) => {
     }
 
     res.status(201).json({ 
-    success: true, 
-    enrollment: newEnrollment, 
-    isTrial: isTrial,
-    trialEndsAt: trialEndsAt 
+      success: true, 
+      enrollment: newEnrollment, 
+      isTrial: isTrial,
+      trialEndsAt: trialEndsAt 
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -103,28 +105,30 @@ exports.getMyEnrollments = async (req, res) => {
       .sort({ enrolledAt: -1 })
       .lean();
 
-    // Normalize each enrollment so MyCourses always gets a usable course object
     const normalized = enrollments.map(e => {
-      // If populate succeeded, merge certData as fallback for missing fields
+      // e.course is the populated document from Course or Certificate collection
       const populated = e.course && typeof e.course === 'object' ? e.course : null;
-      const snap      = e.certData || {};
+      const snap = e.certData || {};
 
       return {
         ...e,
         course: {
-          _id:         (populated?._id || e.course || e._id).toString(),
-          id:          (populated?._id || e.course || e._id).toString(),
-          title:       populated?.title       || snap.title       || 'Untitled',
-          thumbnail:   populated?.thumbnail   || snap.thumbnail   || '',
-          instructor:  populated?.instructor  || snap.instructor  || '',
+          // Spread populated data first to get the lessons array automatically
+          ...(populated || {}),
+          _id: (populated?._id || e.course || e._id).toString(),
+          id: (populated?._id || e.course || e._id).toString(),
+          title: populated?.title || snap.title || 'Untitled',
+          thumbnail: populated?.thumbnail || snap.thumbnail || '',
+          instructor: populated?.instructor || snap.instructor || '',
           description: populated?.description || snap.description || '',
-          emoji:       populated?.emoji       || snap.emoji       || '',
-          tag:         populated?.tag         || populated?.category || snap.tag || '',
+          emoji: populated?.emoji || snap.emoji || '',
+          tag: populated?.tag || populated?.category || snap.tag || '',
+          // Explicitly fallback for lessons to ensure it is never undefined
+          lessons: populated?.lessons || snap.lessons || [], 
         },
       };
     });
 
-    // Return a plain array — frontend does Array.isArray(res.data)
     res.status(200).json(normalized);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -137,10 +141,19 @@ exports.updateProgress = async (req, res) => {
     const { courseId } = req.params;
     const enrollment = await Enrollment.findOne({ student: req.user._id, course: courseId });
 
-    if (!enrollment) return res.status(404).json({ success: false, message: "Enrollment not found" });
+    if (!enrollment) {
+      return res.status(404).json({ success: false, message: "Enrollment not found" });
+    }
 
-    if (req.body.progress !== undefined) enrollment.progress = req.body.progress;
-    if (req.body.progress === 100) { enrollment.isCompleted = true; enrollment.completedAt = new Date(); }
+    if (req.body.progress !== undefined) {
+      enrollment.progress = req.body.progress;
+    }
+    
+    if (req.body.progress === 100) { 
+      enrollment.isCompleted = true; 
+      enrollment.completedAt = new Date(); 
+    }
+    
     enrollment.lastAccessedAt = new Date();
     await enrollment.save();
 

@@ -24,7 +24,12 @@ function CourseRow({ enrollment }) {
   const course   = enrollment.course || {};
   const status   = statusOf(progress);
   const courseId = course._id || course.id || '';
-  const playerLink = `/learn/${enrollment.certId || courseId}`;
+
+  // ── FIX START ──
+  // Check if it's a certification or a single course to build the correct URL
+  const type = enrollment.certId ? 'certification' : 'course';
+  const id = enrollment.certId || courseId;
+  const playerLink = `/learn/${type}/${id}`;
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row shadow-sm">
@@ -114,7 +119,6 @@ export default function MyCourses() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
-    // Show local data immediately (no flash of empty state)
     const local = getLocal();
     if (local.length) setEnrollments(local);
 
@@ -124,19 +128,37 @@ export default function MyCourses() {
         const merged  = merge(apiData, getLocal());
         setEnrollments(merged);
 
-        // Sync cache: update with API data + keep local-only entries
+        // ─── CRITICAL CACHE SYNC ───
         if (lsKey) {
           localStorage.setItem(lsKey, JSON.stringify(merged));
         }
+
+        // Add this specific block to fix the "Loading" screen:
+        try {
+          const globalCache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+          apiData.forEach(enrol => {
+            const courseObj = enrol.course;
+            if (courseObj && (courseObj._id || courseObj.id)) {
+              const cid = courseObj._id || courseObj.id;
+              globalCache[cid] = {
+                ...courseObj,
+                isTrial: enrol.isTrial,
+                trialEndsAt: enrol.trialEndsAt
+              };
+            }
+          });
+          localStorage.setItem('lf_course_cache', JSON.stringify(globalCache));
+        } catch (e) {
+          console.error("Cache sync failed", e);
+        }
+        // ──────────────────────────
       })
       .catch(() => {
-        // API failed — use local cache as full fallback
         setEnrollments(getLocal());
       })
       .finally(() => setLoading(false));
-  }, [user]); // eslint-disable-line
+  }, [user, lsKey, getLocal, merge]);
 
-  // Real-time: socket emits 'enrollment:confirmed' → SocketContext dispatches custom event
   useEffect(() => {
     const handler = (e) => {
       const entry = e.detail;

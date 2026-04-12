@@ -76,12 +76,25 @@ exports.getInstructorCourses = async (req, res) => {
 };
 
 /* ── GET /api/courses/:id ────────────────────────────────────── */
+/* ── GET /api/courses/:id ────────────────────────────────────── */
 exports.getCourse = async (req, res) => {
-  const course = await Course.findById(req.params.id)
-    .populate("instructor", "name avatar bio headline website");
-  if (!course)
-    return res.status(404).json({ success: false, message: "Course not found" });
-  res.json({ success: true, course });
+  const { id } = req.params;
+
+  // NUCLEAR FIX: Prevent database crash on 'undefined' strings
+  if (!id || id === 'undefined' || id === 'null') {
+    return res.status(400).json({ success: false, message: "Invalid Course ID provided" });
+  }
+
+  try {
+    const course = await Course.findById(id)
+      .populate("instructor", "name avatar bio headline website");
+    
+    if (!course) return res.status(404).json({ success: false, message: "Course not found" });
+    
+    res.json({ success: true, course });
+  } catch (error) {
+    res.status(400).json({ success: false, message: "Malformed ID format" });
+  }
 };
 
 /* ── POST /api/courses ───────────────────────────────────────── */

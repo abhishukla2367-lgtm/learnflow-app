@@ -24,7 +24,6 @@ import Certifications from './pages/Certification/Certifications';
 import CertDetail     from './pages/Certification/CertDetail';
 import Checkout       from './pages/Certification/Checkout';
 import Success        from './pages/Certification/Success'; 
-import CertCoursePlayer   from './pages/Certification/CertCoursePlayer';
 import Quiz           from './pages/Certification/Quiz';
 import CertificatePage from './pages/Certification/CertificatePage';
 
@@ -32,7 +31,6 @@ import Courses from './pages/Course/Courses';
 import CourseDetail     from './pages/Course/CourseDetail';
 import CourseCheckout   from './pages/Course/CourseCheckout';
 import CourseSuccess    from './pages/Course/CourseSuccess';
-import CoursePlayer     from './pages/Course/CoursePlayer';
 import CourseQuiz       from './pages/Course/CourseQuiz';
 import CourseCertificate from './pages/Course/CourseCertificate';
 // Information & Resource Pages
@@ -44,6 +42,7 @@ import Help           from './pages/Help';
 import Privacy        from './pages/Privacy';
 import Terms          from './pages/Terms';
 import Cookies        from './pages/Cookies';
+import UnifiedPlayer from './pages/UnifiedPlayer';
 
 // Admin
 import AdminDashboard from './components/admin/AdminDashboard';
@@ -102,14 +101,14 @@ function PublicLayout() {
           <Route path="/certifications"         element={<ProtectedRoute><Certifications /></ProtectedRoute>} />
           <Route path="/certifications/:certId" element={<ProtectedRoute><CertDetail /></ProtectedRoute>} />
           <Route path="/checkout/:certId"       element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-          <Route path="/success"                element={<ProtectedRoute><Success /></ProtectedRoute>} />
+          <Route path="/success/:certId?" element={<ProtectedRoute><Success /></ProtectedRoute>} />
           <Route path="/quiz/:certId"            element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
           <Route path="/certificate/:certId"     element={<ProtectedRoute><CertificatePage /></ProtectedRoute>} />
           
           <Route path="/courses"         element={<ProtectedRoute><Courses /></ProtectedRoute>} />
           <Route path="/courses/:courseId"      element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
           <Route path="/course-checkout/:courseId"  element={<ProtectedRoute><CourseCheckout /></ProtectedRoute>} />
-          <Route path="/course-success"             element={<ProtectedRoute><CourseSuccess /></ProtectedRoute>} />
+          <Route path="/course-success/:courseId?"             element={<ProtectedRoute><CourseSuccess /></ProtectedRoute>} />
           <Route path="/course-quiz/:courseId"      element={<ProtectedRoute><CourseQuiz /></ProtectedRoute>} />
           <Route path="/course-certificate/:courseId" element={<ProtectedRoute><CourseCertificate /></ProtectedRoute>} />
           

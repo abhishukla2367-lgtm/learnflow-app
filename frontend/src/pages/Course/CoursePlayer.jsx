@@ -79,10 +79,6 @@ function normaliseLessons(lessons = []) {
   }));
 }
 
-/* ─────────────────────────────────────────────
-   Resolve the course from CERTS constant OR
-   from the lf_course_cache written at enrolment
-───────────────────────────────────────────── */
 function resolveCourse(courseId) {
   // 1. Static CERTS array (original certifications)
   const fromStatic = COURSES.find((c) => String(c.id) === String(courseId));
@@ -126,60 +122,39 @@ async function syncProgressToBackend(courseId, completedCount, totalCount) {
 /* ═══════════════════════════════════════════
    COURSE PLAYER
 ═══════════════════════════════════════════ */
-export default function CoursePlayer() {
-  const { type, id, lessonId } = useParams();
+export default function CoursePlayer({ courseId: propId, lessonId: propLessonId }) {
+  // 1. Get Params from URL
+  const { type, id: urlId, lessonId: urlLessonId } = useParams();
   const navigate = useNavigate();
 
-  const courseId = id;
+  // 2. Consolidate IDs (use props if they exist, otherwise use URL)
+  const courseId = propId || urlId;
+  const currentLessonId = propLessonId || urlLessonId;
 
-  const course = resolveCourse(courseId, type); 
+  // 3. Resolve Data
+  const course = resolveCourse(courseId);
   const lessons = course?.lessons || [];
 
-  const lessonIdx = lessonId
-    ? lessons.findIndex((l) => String(lid(l)) === String(lessonId))
+  // 4. FIND THE LESSON (This must happen BEFORE any useEffect/useCallback that uses it)
+  const lessonIdx = currentLessonId
+    ? lessons.findIndex((l) => String(lid(l)) === String(currentLessonId))
     : 0;
+  
+  // Define 'lesson' clearly here so line 175 can see it
   const lesson = lessons[lessonIdx === -1 ? 0 : lessonIdx];
 
-  const [progress,       setProgress]       = useState({ completedLessons: [], lastLesson: null });
-  const [sidebarOpen,    setSidebarOpen]    = useState(true);
-  const [notesOpen,      setNotesOpen]      = useState(false);
-  const [noteText,       setNoteText]       = useState('');
-  const [noteSaved,      setNoteSaved]      = useState(false);
-  const [expandedWeeks,  setExpandedWeeks]  = useState({});
-  const [justCompleted,  setJustCompleted]  = useState(false);
+  // 5. State Declarations
+  const [progress, setProgress] = useState({ completedLessons: [], lastLesson: null });
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [expandedWeeks, setExpandedWeeks] = useState({});
+  const [justCompleted, setJustCompleted] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const videoRef = useRef(null);
 
-
-  /* ── Load progress on mount ── */
-  useEffect(() => {
-    if (!course) { navigate('/my-courses'); return; }
-    setProgress(loadProgress(course.id));
-    if (course.isTrial && course.enrolledAt) {
-    const enrollmentDate = new Date(course.enrolledAt);
-    const now = new Date();
-    const diffInDays = (now - enrollmentDate) / (1000 * 60 * 60 * 24);
-
-    if (diffInDays > 7) {
-      setIsExpired(true);
-    }
-  }
-  }, [course?.id]); // eslint-disable-line
-
-  /* ── When lesson changes ── */
-  useEffect(() => {
-    if (!course || !lesson) return;
-    const currentLid = lid(lesson);
-    setNoteText(loadNotes(course.id, currentLid));
-    setNoteSaved(false);
-    setJustCompleted(false);
-    setExpandedWeeks((prev) => ({ ...prev, [lesson.weekLabel]: true }));
-    const p       = loadProgress(course.id);
-    const updated = { ...p, lastLesson: currentLid };
-    saveProgress(course.id, updated);
-    setProgress(updated);
-  }, [course?.id, lid(lesson)]); // eslint-disable-line
-
+  // 6. Define Callbacks AFTER 'lesson' is defined
   const isCompleted = useCallback(
     (id) => progress.completedLessons?.includes(String(id)),
     [progress]
@@ -187,9 +162,9 @@ export default function CoursePlayer() {
 
   /* ── Mark lesson complete ── */
   const markComplete = () => {
-    if (!lesson) return;
-    const currentLid  = String(lid(lesson));
-    const already     = isCompleted(currentLid);
+    if (!lesson) return; // Now 'lesson' is defined and safe to use
+    const currentLid = String(lid(lesson));
+    const already = isCompleted(currentLid);
     const updatedList = already
       ? progress.completedLessons
       : [...(progress.completedLessons || []), currentLid];
@@ -207,7 +182,6 @@ export default function CoursePlayer() {
     }, 1200);
   };
 
-  /* ── Auto-mark complete when mp4 video ends ── */
   const handleVideoEnded = () => {
     if (!isCompleted(lid(lesson))) markComplete();
   };
@@ -220,9 +194,15 @@ export default function CoursePlayer() {
     setTimeout(() => setNoteSaved(false), 2000);
   };
 
-  if (!course || !lesson) return null;
-  /* ── Check Expiry ── */
-  /* ── Check Expiry ── */
+  /* ── 7. Early Returns & Logic ── */
+  if (!course || !lesson) {
+    return (
+      <div className="flex h-screen bg-slate-900 items-center justify-center text-white font-mono">
+        Loading Course Content...
+      </div>
+    );
+  }
+
   const trialEndDate = course.trialEndsAt ? new Date(course.trialEndsAt) : null;
   const expired = course.isTrial && trialEndDate && new Date() > trialEndDate;
 
@@ -256,7 +236,7 @@ export default function CoursePlayer() {
       </div>
     );
   }
-
+  
   const completedCount = progress.completedLessons?.length || 0;
   const pct            = Math.round((completedCount / lessons.length) * 100);
   const allDone        = completedCount >= lessons.length;

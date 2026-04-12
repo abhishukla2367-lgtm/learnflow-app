@@ -114,11 +114,23 @@ export default function CourseCard({ course, className = '' }) {
         <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
   
   <button
-    onClick={(e) => { e.stopPropagation(); navigate(`/course/${courseId}`); }}
-    className="py-2.5 px-5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 tracking-wide whitespace-nowrap"
-  >
-    Enroll Now →
-  </button>
+  onClick={(e) => { 
+    e.stopPropagation(); 
+    
+    // NUCLEAR FIX: Use the plural /courses/ and check for valid ID
+    const finalId = _id || id; 
+    
+    if (!finalId) {
+      console.error("Navigation failed: Course ID is missing", course);
+      return;
+    }
+
+    navigate(`/courses/${finalId}`); 
+  }}
+  className="py-2.5 px-5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 tracking-wide whitespace-nowrap"
+>
+  Enroll Now →
+</button>
 
   <div className="flex items-center gap-3">
     {duration && <span className="flex items-center gap-1 text-xs text-slate-400"><Clock className="w-3.5 h-3.5" />{duration}</span>}

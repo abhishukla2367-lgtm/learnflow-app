@@ -19,14 +19,24 @@ export default function Success() {
   const location = useLocation();
 
   
-  const cert       = location.state?.cert   || null;
-  const certId = location.state?.certId || cert?._id || cert?.id || null;
-  const firstLesson = cert?.lessons?.[0]?._id || cert?.lessons?.[0]?.id || null;
-  const courseName  = cert?.title            || 'Professional Certification';
-  const isTrial = location.state?.isTrial || false;
-  const trialEndsAt = location.state?.trialEndsAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const curriculumTo = certId ? `/learn/${certId}` : '/my-courses';
-  const introVideoTo = `/learn/cert/${certId}/${firstLesson}`;
+  // 1. Unified data source (from state)
+const cert = location.state?.cert || null;
+
+// 2. Identify the unique ID and the content type
+const id = location.state?.certId || cert?._id || cert?.id || '';
+const type = 'certification'; // Hardcoded for this specific file
+
+// 3. Extract the first lesson and metadata
+const firstLesson = cert?.lessons?.[0]?._id || cert?.lessons?.[0]?.id || null;
+const courseName  = cert?.title || 'Professional Certification';
+const isTrial     = location.state?.isTrial || false;
+const trialEndsAt = location.state?.trialEndsAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+// 4. Corrected URL paths to match: /learn/:type/:id/:lessonId?
+const curriculumTo = `/learn/${type}/${id}`;
+const introVideoTo = firstLesson 
+  ? `/learn/${type}/${id}/${firstLesson}` 
+  : `/learn/${type}/${id}`;
 
   /* ── Share handler ── */
   const handleShare = async () => {
@@ -167,7 +177,6 @@ export default function Success() {
             </span>
           </Link>
 
-          {/* Intro Video → /learn/:certId/:firstLessonId */}
           <Link
             to={introVideoTo}
             className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-violet-50 hover:border-violet-200 transition-all"

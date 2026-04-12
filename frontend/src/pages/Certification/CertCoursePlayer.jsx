@@ -11,10 +11,10 @@ import api from '../../utils/api';
 /* ─────────────────────────────────────────────
    localStorage helpers
 ───────────────────────────────────────────── */
-function loadProgress(certId) {
+function loadProgress(id) {
   try {
     return (
-      JSON.parse(localStorage.getItem('lf_progress') || '{}')[certId] || {
+      JSON.parse(localStorage.getItem('lf_progress') || '{}')[id] || {
         completedLessons: [],
         lastLesson: null,
       }
@@ -24,19 +24,19 @@ function loadProgress(certId) {
   }
 }
 
-function saveProgress(certId, data) {
+function saveProgress(id, data) {
   try {
     const all = JSON.parse(localStorage.getItem('lf_progress') || '{}');
-    all[certId] = data;
+    all[id] = data;
     localStorage.setItem('lf_progress', JSON.stringify(all));
   } catch {}
 }
 
-function loadNotes(certId, lessonId) {
+function loadNotes(id, lessonId) {
   try {
     return (
       JSON.parse(localStorage.getItem('lf_notes') || '{}')[
-        `${certId}-${lessonId}`
+        `${id}-${lessonId}`
       ] || ''
     );
   } catch {
@@ -44,10 +44,10 @@ function loadNotes(certId, lessonId) {
   }
 }
 
-function saveNote(certId, lessonId, text) {
+function saveNote(id, lessonId, text) {
   try {
     const all = JSON.parse(localStorage.getItem('lf_notes') || '{}');
-    all[`${certId}-${lessonId}`] = text;
+    all[`${id}-${lessonId}`] = text;
     localStorage.setItem('lf_notes', JSON.stringify(all));
   } catch {}
 }
@@ -83,9 +83,9 @@ function normaliseLessons(lessons = []) {
    Resolve the cert from CERTS constant OR
    from the lf_course_cache written at enrolment
 ───────────────────────────────────────────── */
-function resolveCert(certId) {
+function resolveCert(id) {
   // 1. Static CERTS array (original certifications)
-  const fromStatic = CERTS.find((c) => String(c.id) === String(certId));
+  const fromStatic = CERTS.find((c) => String(c.id) === String(id));
   if (fromStatic) {
     return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
   }
@@ -93,11 +93,11 @@ function resolveCert(certId) {
   // 2. Dynamic courses enrolled via API (saved in cache at enrolment)
   try {
     const cache  = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-    const cached = cache[certId];
+    const cached = cache[id];
     if (cached) {
       return {
         ...cached,
-        id:           certId,
+        id:           id,
         gradient:     cached.gradient     || 'from-cyan-500 to-violet-600',
         accentBg:     cached.accentBg     || 'bg-cyan-900/40',
         accentText:   cached.accentText   || 'text-cyan-400',
@@ -127,10 +127,10 @@ async function syncProgressToBackend(courseId, completedCount, totalCount) {
    COURSE PLAYER
 ═══════════════════════════════════════════ */
 export default function CoursePlayer() {
-  const { certId, lessonId } = useParams();
+  const { id, lessonId } = useParams();
   const navigate = useNavigate();
 
-  const cert    = resolveCert(certId);
+  const cert    = resolveCert(id);
   const lessons = cert?.lessons || [];
 
   const lessonIdx = lessonId

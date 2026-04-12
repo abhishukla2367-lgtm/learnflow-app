@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function CourseDetail() {
-  const { id }       = useParams();
+  const { courseId }       = useParams();
   const { user }     = useAuth();
   const navigate     = useNavigate();
 
@@ -22,12 +22,25 @@ export default function CourseDetail() {
   const [activeLesson, setActiveLesson] = useState(null);
 
   // ── Fetch course ──────────────────────────────────────────
-  useEffect(() => {
-    api.get(`/courses/${id}`)
-      .then(r => setCourse(r.data.course))
-      .catch(() => navigate('/courses'))
-      .finally(() => setLoading(false));
-  }, [id, navigate]);
+ // ── Change this ──
+useEffect(() => {
+  api.get(`/courses/${courseId}`) // <--- ERROR: 'courseId' is undefined
+    .then(r => setCourse(r.data.course))
+    .catch(() => navigate('/courses'))
+    .finally(() => setLoading(false));
+}, [courseId, navigate]);
+
+// ── To this ──
+useEffect(() => {
+  if (!courseId || courseId === 'undefined') {
+    navigate('/courses');
+    return;
+  }
+  api.get(`/courses/${courseId}`) 
+    .then(r => setCourse(r.data.course))
+    .catch(() => navigate('/courses'))
+    .finally(() => setLoading(false));
+}, [courseId, navigate]);
 
   // ── Check enrollment ──────────────────────────────────────
   useEffect(() => {
@@ -44,7 +57,7 @@ export default function CourseDetail() {
   const buildLessons = (c) =>
     (c.sections || []).flatMap(sec =>
       (sec.lessons || []).map(l => ({
-        id:        l._id,
+        courseId:        l._id,
         title:     l.title,
         duration:  l.duration  || 0,
         videoUrl:  l.videoUrl  || '',
@@ -62,18 +75,16 @@ export default function CourseDetail() {
     if (isFree) {
       try {
         setEnrolling(true);
-        // 1. Correct the variable name to 'id' (from useParams)
-        const response = await api.post(`/enrollments/${id}`, { type: 'trial' });
-        
-        // 2. Add enrollment to cache for immediate access
-        const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-        cache[id] = {
-          id: id,
-          title: course.title,
-          lessons: buildLessons(course),
-          enrolledAt: new Date().toISOString(),
-          isTrial: true 
-        };
+        // 1. Correct the variable name to 'courseId' (from useParams)
+        const response = await api.post(`/enrollments/${courseId}`, { type: 'trial' });
+const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+cache[courseId] = {
+  courseId: courseId,
+  title: course.title,
+  lessons: buildLessons(course),
+  enrolledAt: new Date().toISOString(),
+  isTrial: true 
+};
         localStorage.setItem('lf_course_cache', JSON.stringify(cache));
         
         // 3. Logic: If already enrolled (status 200), just go to course. If new, show success.
@@ -82,12 +93,13 @@ export default function CourseDetail() {
         } else {
           toast.success('7-Day Trial Started!');
 // We pass the actual data returned from your updated controller
+// ── Inside handleEnroll success logic ──
 navigate('/course-success', {
   state: { 
-    certId: id, 
-    courseId: id,
+    certId: courseId, 
+    courseId: courseId,
     isTrial: true, 
-    trialEndsAt: response.data.trialEndsAt, // Crucial for the date fix
+    trialEndsAt: response.data.trialEndsAt,
     cert: {
       title: course.title,
       lessons: buildLessons(course)
@@ -108,7 +120,7 @@ navigate('/course-success', {
     navigate(`/course-checkout/${course._id}`, {
       state: {
         cert: {
-          id:           course._id,
+          courseId:           course._id,
           title:        course.title,
           desc:         course.description,
           price:        course.price || 0,
@@ -130,7 +142,7 @@ navigate('/course-success', {
   const openLesson = (lesson) => {
     if (!lesson.isPreview && !enrolled) return;
     setActiveLesson({
-      id:       lesson._id,
+      courseId:       lesson._id,
       title:    lesson.title,
       duration: lesson.duration,
       videoUrl: lesson.videoUrl || '',
@@ -323,11 +335,11 @@ navigate('/course-success', {
 
           {/* ── Inline Lesson Player ── */}
           {activeLesson && (
-            <div id="lesson-player" className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-8 shadow-sm">
+            <div courseId="lesson-player" className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-8 shadow-sm">
               <div className="bg-slate-900 aspect-video flex items-center justify-center relative">
                 {activeLesson.videoUrl ? (
                   <video
-                    key={activeLesson.id}
+                    key={activeLesson.courseId}
                     src={activeLesson.videoUrl}
                     controls
                     autoPlay
