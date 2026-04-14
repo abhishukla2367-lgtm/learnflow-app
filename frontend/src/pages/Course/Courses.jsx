@@ -4,7 +4,7 @@ import { Search, SlidersHorizontal, X, Loader2, BookOpen } from 'lucide-react';
 import api from '../../api/axiosConfig';
 import CourseCard from '../../components/CourseCard';
 
-const CATEGORIES   = ['All', 'Marketing', 'Web Development', 'AI / Machine Learning', 'Design', 'Data Science', 'Cloud Computing', 'Cybersecurity', 'DSA'];
+const CATEGORIES   = ['All', 'Marketing', 'Web Development', 'AI / Machine Learning', 'Design', 'Data Science', 'Cloud Computing'];
 const DIFFICULTIES = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Most Popular' },

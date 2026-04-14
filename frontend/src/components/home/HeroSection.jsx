@@ -6,8 +6,8 @@ import { HERO_STATS, COMPANY_LOGOS } from '../../data/homeData';
 import { useAuth } from '../../context/AuthContext';
 
 const LIVE_SESSIONS = [
-  { title: 'React State Management Deep Dive', instructor: 'Rohan Gupta', viewers: 238, color: 'from-cyan-500 to-cyan-700' },
-  { title: 'ML — Gradient Descent Visualised', instructor: 'Ananya Iyer', viewers: 191, color: 'from-violet-500 to-violet-700' },
+  { title: 'Modern React with Redux Toolkit', instructor: 'Rohan Gupta', viewers: 238, color: 'from-cyan-500 to-cyan-700' },
+  { title: 'Machine Learning with Python', instructor: 'Ananya Iyer', viewers: 191, color: 'from-violet-500 to-violet-700' },
 ];
 
 const TRUST_BADGES = ['Secure card payment', 'Free 7-day trial', '₹2999 avg course price'];
