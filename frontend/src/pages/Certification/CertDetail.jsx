@@ -2,9 +2,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Award, CheckCircle, Clock, BarChart2, Briefcase,
   BadgeCheck, Shield, Download, Star, ChevronDown, ChevronUp,
   PlayCircle, Users, Zap, ArrowRight, Globe } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { CERTS } from '../../data/certsData';
+import api from '../../utils/api';
 
 function SyllabusRow({ item, index }) {
   const [open, setOpen] = useState(false);
@@ -39,7 +40,46 @@ export default function CertDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const cert = CERTS.find(c => String(c.id) === String(certId));
+  // Find cert immediately
+  const cert = useMemo(() => CERTS.find(c => String(c.id) === String(certId)), [certId]);
+
+  // 1. SYNC INITIALIZATION: Determines state before the first paint.
+  const [enrolled, setEnrolled] = useState(() => {
+    if (!user) return false;
+    try {
+      const lsKey = `lf_enrollments_${user._id || user.id}`;
+      const cached = JSON.parse(localStorage.getItem(lsKey) || '[]');
+      return cached.some(e => String(e.course?._id || e.course || '') === String(certId));
+    } catch {
+      return false;
+    }
+  });
+
+  // 2. LOGIC: If guest -> no pulse. If in cache -> no pulse.
+  const [enrollLoading, setEnrollLoading] = useState(user ? !enrolled : false);
+
+  useEffect(() => {
+    if (!user || !cert) {
+      setEnrollLoading(false);
+      return;
+    }
+
+    // Update in background to ensure data integrity
+    api.get('/enrollments')
+      .then(r => {
+        const list = Array.isArray(r.data) ? r.data : [];
+        const ids = list.map(e => String(e.course?._id || e.course || ''));
+        const isEnrolled = ids.includes(String(certId));
+        
+        setEnrolled(isEnrolled);
+        
+        // Update local storage for next visit
+        const lsKey = `lf_enrollments_${user._id || user.id}`;
+        localStorage.setItem(lsKey, JSON.stringify(list));
+      })
+      .catch(() => {})
+      .finally(() => setEnrollLoading(false));
+  }, [user, certId, cert]);
 
   if (!cert) {
     return (
@@ -57,10 +97,36 @@ export default function CertDetail() {
   const disc = Math.round((1 - cert.price / cert.origPrice) * 100);
   const totalLessons = cert.syllabus.reduce((s, w) => s + w.lessons, 0);
 
+  // Sub-component to ensure identical logic in both button locations
+  const ActionButton = ({ extraClasses = "" }) => {
+    if (enrollLoading) {
+      return <div className={`h-11 rounded-xl bg-slate-100 animate-pulse ${extraClasses}`} />;
+    }
+
+    if (enrolled) {
+      return (
+        <button 
+          onClick={() => navigate('/my-courses')}
+          className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:opacity-90 active:scale-[0.98] shadow-sm transition-all ${extraClasses}`}
+        >
+          <CheckCircle className="w-4 h-4" /> Back to My Courses
+        </button>
+      );
+    }
+
+    return (
+      <button 
+        onClick={() => navigate(user ? `/checkout/${certId}` : '/register', { state: { cert } })}
+        className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r ${cert.gradient} text-white font-bold text-sm hover:opacity-90 active:scale-[0.98] shadow-sm transition-all ${extraClasses}`}
+      >
+        Enrol Now <ArrowRight className="w-4 h-4" />
+      </button>
+    );
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen">
-
-      {/* Hero */}
+      {/* Hero Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <button
@@ -71,7 +137,6 @@ export default function CertDetail() {
           </button>
 
           <div className="grid lg:grid-cols-3 gap-10 items-start">
-            {/* Left */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-2 mb-4">
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono ${cert.accentBg} ${cert.accentText} border ${cert.accentBorder}`}>
@@ -90,7 +155,6 @@ export default function CertDetail() {
               <p className="text-slate-500 font-mono text-sm mb-3">{cert.tagline}</p>
               <p className="text-base text-slate-600 leading-relaxed mb-6 max-w-2xl">{cert.desc}</p>
 
-              {/* Stats */}
               <div className="flex flex-wrap gap-4 mb-6">
                 {[
                   { icon: Clock, label: cert.duration },
@@ -104,9 +168,8 @@ export default function CertDetail() {
                 ))}
               </div>
 
-              {/* Hiring companies */}
               <div>
-                <p className="text-xs text-slate-500 font-mono uppercase tracking-widest mb-3">Recognised for hiring by</p>
+                <p className="text-xs text-slate-500 font-mono uppercase tracking-widest mb-3">Recognised by</p>
                 <div className="flex flex-wrap gap-2">
                   {cert.companies.map(c => (
                     <span key={c} className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 font-mono">{c}</span>
@@ -115,33 +178,26 @@ export default function CertDetail() {
               </div>
             </div>
 
-            {/* Sticky enrolment card */}
+            {/* Sidebar Pricing Card */}
             <div className="lg:sticky lg:top-24">
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className={`h-1.5 bg-gradient-to-r ${cert.gradient}`} />
                 <div className="p-6 flex flex-col gap-5">
-                  <div>
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-3xl font-bold text-slate-900">₹{cert.price.toLocaleString('en-IN')}</span>
-                      <span className="text-sm text-slate-400 line-through">₹{cert.origPrice.toLocaleString('en-IN')}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold font-mono ${cert.accentBg} ${cert.accentText} border ${cert.accentBorder}`}>{disc}% off</span>
-                    </div>
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-3xl font-bold text-slate-900">₹{cert.price.toLocaleString('en-IN')}</span>
+                    <span className="text-sm text-slate-400 line-through">₹{cert.origPrice.toLocaleString('en-IN')}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold font-mono ${cert.accentBg} ${cert.accentText} border ${cert.accentBorder}`}>{disc}% off</span>
                   </div>
 
-                  <button
-                    onClick={() => navigate(user ? `/checkout/${certId}` : '/register', { state: { cert } })}
-                    className={`w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r ${cert.gradient} text-white font-bold text-sm transition-all duration-200 hover:opacity-90 active:scale-[0.98] shadow-sm`}
-                  >
-                    Enrol Now <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <ActionButton extraClasses="w-full" />
                   
                   <div className="border-t border-slate-200 pt-4 space-y-2.5">
                     {[
                       [BadgeCheck, 'Blockchain-verified certificate'],
-                      [Shield, 'Tamper-proof QR code for recruiters'],
-                      [Download, 'PDF + LinkedIn-ready badge'],
-                      [Globe, 'Recognised by 1,200+ hiring partners'],
-                      [Zap, '30-day money-back guarantee'],
+                      [Shield, 'Tamper-proof QR code'],
+                      [Download, 'PDF + LinkedIn badge'],
+                      [Globe, '1,200+ hiring partners'],
+                      [Zap, '30-day guarantee'],
                     ].map(([Icon, text]) => (
                       <div key={text} className="flex items-center gap-2.5 text-xs text-slate-600 font-mono">
                         <Icon className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" /> {text}
@@ -155,11 +211,9 @@ export default function CertDetail() {
         </div>
       </div>
 
-      {/* Body */}
+      {/* Course Details Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-3xl space-y-10">
-
-          {/* What you'll learn */}
           <section>
             <h2 className="text-xl font-bold text-slate-900 mb-5">What you'll learn</h2>
             <div className="grid sm:grid-cols-2 gap-3">
@@ -172,7 +226,6 @@ export default function CertDetail() {
             </div>
           </section>
 
-          {/* Skills */}
           <section>
             <h2 className="text-xl font-bold text-slate-900 mb-4">Skills you'll gain</h2>
             <div className="flex flex-wrap gap-2">
@@ -182,11 +235,10 @@ export default function CertDetail() {
             </div>
           </section>
 
-          {/* Syllabus */}
           <section>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-slate-900">Course curriculum</h2>
-              <span className="text-xs text-slate-500 font-mono">{cert.syllabus.length} modules · {totalLessons} lessons · {cert.duration}</span>
+              <span className="text-xs text-slate-500 font-mono">{cert.syllabus.length} modules · {totalLessons} lessons</span>
             </div>
             <div className="space-y-2">
               {cert.syllabus.map((item, i) => (
@@ -195,7 +247,6 @@ export default function CertDetail() {
             </div>
           </section>
 
-          {/* Alumni */}
           <section>
             <h2 className="text-xl font-bold text-slate-900 mb-5">Alumni story</h2>
             <div className="bg-white border border-slate-200 rounded-2xl p-7">
@@ -220,7 +271,7 @@ export default function CertDetail() {
         </div>
       </div>
 
-      {/* Bottom CTA */}
+      {/* Final Bottom CTA */}
       <div className="border-t border-slate-200 bg-white py-10">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <Award className="w-10 h-10 text-cyan-600 mx-auto mb-4" />
@@ -229,19 +280,13 @@ export default function CertDetail() {
             Join 50,000+ professionals who have already levelled up with Learnflow.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <button
-              onClick={() => navigate(user ? `/checkout/${certId}` : '/register', { state: { cert } })}
-              className={`inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r ${cert.gradient} text-white font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm`}
-            >
-              Enrol Now — ₹{cert.price.toLocaleString('en-IN')} <ArrowRight className="w-4 h-4" />
-            </button>
+            <ActionButton extraClasses="px-10" />
             <Link to="/certifications" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-all">
               View all certifications
             </Link>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

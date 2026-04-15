@@ -19,6 +19,7 @@ const enrollmentSchema = new mongoose.Schema({
     description: { type: String, default: "" },
     emoji:       { type: String, default: "" },
     tag:         { type: String, default: "" },
+    lessons:     { type: Array,  default: [] }
   },
 
   status:    { type: String, enum: ["enrolled", "completed", "refunded", "trialing", "expired"], default: "enrolled" },

@@ -9,15 +9,26 @@ import {
 const PASS_SCORE = 4;
 const TOTAL_SECONDS = 15 * 60; // 15 minutes
 
+/* ── localStorage helpers ── */
 function saveQuizResult(certId, score, passed) {
   try {
     const all = JSON.parse(localStorage.getItem('lf_quiz') || '{}');
     all[certId] = {
-      score, passed,
+      score, 
+      passed,
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
     };
     localStorage.setItem('lf_quiz', JSON.stringify(all));
-  } catch {}
+
+    // Also sync with lf_progress to keep CertCoursePlayer updated
+    const allProgress = JSON.parse(localStorage.getItem('lf_progress') || '{}');
+    if (allProgress[certId]) {
+        allProgress[certId].quizPassed = passed;
+        localStorage.setItem('lf_progress', JSON.stringify(allProgress));
+    }
+  } catch (e) {
+    console.error("Failed to save quiz result", e);
+  }
 }
 
 function Timer({ seconds }) {
@@ -48,15 +59,33 @@ export default function Quiz() {
   const [submitted, setSubmitted] = useState(false);
   const timerRef = useRef(null);
 
+  // 1. SECURITY REDIRECT: If already passed, go to certificate
   useEffect(() => {
-    if (!cert) navigate('/my-courses');
-  }, [cert, navigate]);
+    if (!cert) {
+        navigate('/my-courses');
+        return;
+    }
 
+    try {
+        const allQuiz = JSON.parse(localStorage.getItem('lf_quiz') || '{}');
+        const record = allQuiz[certId];
+        if (record && record.passed) {
+            // Prevent re-taking if already passed
+            navigate(`/certificate/${certId}`, { replace: true });
+        }
+    } catch (e) {}
+  }, [cert, certId, navigate]);
+
+  // 2. TIMER LOGIC
   useEffect(() => {
     if (phase === 'quiz' && !submitted) {
       timerRef.current = setInterval(() => {
         setTimeLeft(t => {
-          if (t <= 1) { clearInterval(timerRef.current); handleSubmit(true); return 0; }
+          if (t <= 1) { 
+            clearInterval(timerRef.current); 
+            handleSubmit(true); 
+            return 0; 
+          }
           return t - 1;
         });
       }, 1000);
@@ -66,7 +95,7 @@ export default function Quiz() {
 
   if (!cert) return null;
 
-  const questions = cert.quiz;
+  const questions = cert.quiz || [];
   const score = questions.filter((q, i) => answers[i] === q.correct).length;
   const passed = score >= PASS_SCORE;
 
@@ -74,7 +103,9 @@ export default function Quiz() {
     clearInterval(timerRef.current);
     setSubmitted(true);
     const finalScore = questions.filter((q, i) => answers[i] === q.correct).length;
-    saveQuizResult(cert.id, finalScore, finalScore >= PASS_SCORE);
+    const isPassed = finalScore >= PASS_SCORE;
+    
+    saveQuizResult(certId, finalScore, isPassed);
     setPhase('result');
   }
 
@@ -85,7 +116,7 @@ export default function Quiz() {
 
   const answeredCount = Object.keys(answers).length;
 
-  /* ── INTRO ── */
+  /* ── INTRO PHASE ── */
   if (phase === 'intro') return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="max-w-lg w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
@@ -123,7 +154,7 @@ export default function Quiz() {
     </div>
   );
 
-  /* ── RESULT ── */
+  /* ── RESULT PHASE ── */
   if (phase === 'result') return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="max-w-lg w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
@@ -139,7 +170,6 @@ export default function Quiz() {
             {passed ? 'Congratulations! You\'ve earned your certificate.' : `You need ${PASS_SCORE}/${questions.length} to pass. Keep trying!`}
           </p>
 
-          {/* Score circle */}
           <div className="my-6">
             <div className={`inline-flex items-center justify-center w-28 h-28 rounded-full border-4 ${passed ? 'border-emerald-500 bg-emerald-50' : 'border-red-400 bg-red-50'}`}>
               <div>
@@ -149,8 +179,7 @@ export default function Quiz() {
             </div>
           </div>
 
-          {/* Answer review */}
-          <div className="text-left space-y-3 mb-6">
+          <div className="text-left space-y-3 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {questions.map((q, i) => {
               const userAns = answers[i];
               const correct = q.correct;
@@ -174,7 +203,7 @@ export default function Quiz() {
           <div className="flex flex-col gap-3">
             {passed ? (
               <button
-                onClick={() => navigate(`/certificate/${cert.id}`)}
+                onClick={() => navigate(`/certificate/${certId}`)}
                 className={`w-full py-3.5 rounded-xl bg-gradient-to-r ${cert.gradient} text-white font-bold text-base transition-all hover:opacity-90`}
               >
                 <span className="flex items-center justify-center gap-2"><Award className="w-5 h-5" /> View My Certificate</span>
@@ -196,13 +225,12 @@ export default function Quiz() {
     </div>
   );
 
-  /* ── QUIZ ── */
+  /* ── QUIZ PHASE ── */
   const q = questions[current];
   const progressPct = ((current + 1) / questions.length) * 100;
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Quiz header */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -214,20 +242,17 @@ export default function Quiz() {
           </div>
           <Timer seconds={timeLeft} />
         </div>
-        {/* Progress bar */}
         <div className="w-full h-1 bg-slate-100">
           <div className={`h-1 bg-gradient-to-r ${cert.gradient} transition-all duration-500`} style={{ width: `${progressPct}%` }} />
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        {/* Question counter */}
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-slate-500 font-mono">Question {current + 1} of {questions.length}</span>
           <span className="text-sm text-slate-500 font-mono">{answeredCount}/{questions.length} answered</span>
         </div>
 
-        {/* Question card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-5 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 leading-relaxed mb-6">{q.q}</h2>
           <div className="space-y-3">
@@ -254,7 +279,6 @@ export default function Quiz() {
           </div>
         </div>
 
-        {/* Navigation */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => setCurrent(c => Math.max(0, c - 1))}
@@ -264,7 +288,6 @@ export default function Quiz() {
             <ArrowLeft className="w-4 h-4" /> Previous
           </button>
 
-          {/* Question dots */}
           <div className="flex gap-1.5">
             {questions.map((_, i) => (
               <button
@@ -297,7 +320,6 @@ export default function Quiz() {
           )}
         </div>
 
-        {/* Warning if unanswered */}
         {current === questions.length - 1 && answeredCount < questions.length && (
           <div className="mt-4 flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
             <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />

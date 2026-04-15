@@ -63,33 +63,48 @@ function normaliseLessons(lessons = []) {
   }));
 }
 
-function resolveCourse(courseId) {
-  if (!courseId) return null;
+function useResolveCourse(courseId) {
+  const [apiFetched, setApiFetched] = useState(null);
 
-  // 1. Search Static Data with strict string matching
-  const fromStatic = COURSES.find((c) => 
-    String(c.id) === String(courseId) || String(c._id) === String(courseId)
-  );
+  // Check static data and cache first
+  const staticOrCached = (() => {
+    if (!courseId) return null;
 
-  if (fromStatic) {
-    return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
-  }
+    const fromStatic = COURSES.find(
+      (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+    );
+    if (fromStatic) return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
 
-  // 2. Search Local Storage Cache
-  try {
-    const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-    const cached = cache[courseId];
-    if (cached) {
-      return {
-        ...cached,
-        id: courseId,
-        lessons: normaliseLessons(cached.lessons),
-      };
+    try {
+      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+      const cached = cache[courseId];
+      if (cached) return { ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) };
+    } catch (e) {
+      console.error("Cache read error:", e);
     }
-  } catch (e) {
-    console.error("Cache read error:", e);
-  }
 
+    return null;
+  })();
+
+  useEffect(() => {
+    if (staticOrCached || apiFetched !== null) return;
+    console.log('Fetching course from API:', courseId); 
+    api.get(`/courses/${courseId}`)
+      .then(res => {
+        const fetched = res.data?.courseData || res.data;
+        const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+        cache[courseId] = fetched;
+        localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+        setApiFetched(fetched);
+      })
+      .catch((err) => {
+         console.error('Course fetch failed:', err);
+        setApiFetched({})
+   });
+  }, [courseId]);
+
+  if (staticOrCached) return staticOrCached;
+  if (apiFetched?._id) return { ...apiFetched, lessons: normaliseLessons(apiFetched.lessons) };
   return null;
 }
 
@@ -113,8 +128,8 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
   const currentLessonId = propLessonId || urlLessonId;
 
   // Data Resolution
-  const course = resolveCourse(courseId);
-  const lessons = course?.lessons || [];
+  const courseData = useResolveCourse(courseId);
+  const lessons = courseData?.lessons || [];
   
   const lessonIdx = currentLessonId
     ? lessons.findIndex((l) => String(lid(l)) === String(currentLessonId))
@@ -132,9 +147,9 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
   const [justCompleted, setJustCompleted] = useState(false);
   const videoRef = useRef(null);
 
-  // Sync state when course/lesson loads
+  // Sync state when courseData/lesson loads
   useEffect(() => {
-    if (!course || !lesson) return;
+    if (!courseData || !lesson) return;
     
     const currentLid = String(lid(lesson));
     const p = loadProgress(courseId);
@@ -174,7 +189,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
       setJustCompleted(false);
       const next = lessons[lessonIdx + 1];
       if (next) {
-        navigate(`/learn/${type || 'course'}/${courseId}/${lid(next)}`);
+        navigate(`/learn/${type || 'courseData'}/${courseId}/${lid(next)}`);
       }
     }, 1200);
   };
@@ -187,7 +202,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
   };
 
   // Error/Loading State
-  if (!course || !lesson) {
+  if (!courseData || !lesson) {
     return (
       <div className="flex flex-col h-screen bg-slate-900 items-center justify-center text-white p-6 text-center">
         <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
@@ -218,14 +233,14 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
           <button onClick={() => navigate('/my-courses')} className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-mono mb-3 transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" /> My Learning
           </button>
-          <h2 className="text-sm font-bold text-white leading-tight line-clamp-2">{course.title}</h2>
+          <h2 className="text-sm font-bold text-white leading-tight line-clamp-2">{courseData.title}</h2>
           <div className="mt-3">
             <div className="flex justify-between mb-1 font-mono text-[10px]">
               <span className="text-slate-400 uppercase tracking-tighter">{completedCount}/{lessons.length} Lessons</span>
               <span className="text-white font-bold">{pct}%</span>
             </div>
             <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-              <div className={`h-1.5 rounded-full bg-gradient-to-r ${course.gradient || 'from-cyan-500 to-blue-500'} transition-all duration-500`} style={{ width: `${pct}%` }} />
+              <div className={`h-1.5 rounded-full bg-gradient-to-r ${courseData.gradient || 'from-cyan-500 to-blue-500'} transition-all duration-500`} style={{ width: `${pct}%` }} />
             </div>
           </div>
         </div>
@@ -240,7 +255,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
               {expandedWeeks[week] && sectionLessons.map((l) => (
                 <button 
                     key={lid(l)} 
-                    onClick={() => navigate(`/learn/${type || 'course'}/${courseId}/${lid(l)}`)} 
+                    onClick={() => navigate(`/learn/${type || 'courseData'}/${courseId}/${lid(l)}`)} 
                     className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all ${String(lid(l)) === String(lid(lesson)) ? 'bg-slate-700/80 border-l-2 border-cyan-500' : 'hover:bg-slate-700/30 border-l-2 border-transparent'}`}
                 >
                   <div className="flex-shrink-0 mt-0.5">
@@ -263,7 +278,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(v => !v)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all"><Menu className="w-4 h-4" /></button>
             <div className="hidden md:block">
-              <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">{course.emoji} {course.title}</p>
+              <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">{courseData.emoji} {courseData.title}</p>
               <p className="text-sm font-bold text-white truncate max-w-xs">{lesson.title}</p>
             </div>
           </div>
@@ -272,10 +287,10 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
               <StickyNote className="w-4 h-4" /><span className="hidden sm:block text-xs font-bold">Notes</span>
             </button>
             <div className="h-4 w-[1px] bg-slate-700 mx-1" />
-            <button onClick={() => { const p = lessons[lessonIdx - 1]; if (p) navigate(`/learn/${type || 'course'}/${courseId}/${lid(p)}`); }} disabled={lessonIdx === 0} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
+            <button onClick={() => { const p = lessons[lessonIdx - 1]; if (p) navigate(`/learn/${type || 'courseData'}/${courseId}/${lid(p)}`); }} disabled={lessonIdx === 0} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={() => { const n = lessons[lessonIdx + 1]; if (n) navigate(`/learn/${type || 'course'}/${courseId}/${lid(n)}`); }} disabled={lessonIdx === lessons.length - 1} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
+            <button onClick={() => { const n = lessons[lessonIdx + 1]; if (n) navigate(`/learn/${type || 'courseData'}/${courseId}/${lid(n)}`); }} disabled={lessonIdx === lessons.length - 1} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -329,7 +344,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
                   <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]" />
                   <h3 className="text-3xl font-black text-white mb-3 tracking-tight">Course Completed! 🎉</h3>
                   <p className="text-slate-400 mb-8 max-w-md mx-auto text-sm leading-relaxed">You've finished all the modules. Ready to test your knowledge and earn your certificate?</p>
-                  <button onClick={() => navigate(`/course-quiz/${courseId}`)} className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-900/30 transition-all hover:-translate-y-1 active:scale-95">Take Final Quiz</button>
+                  <button onClick={() => navigate(`/courseData-quiz/${courseId}`)} className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-900/30 transition-all hover:-translate-y-1 active:scale-95">Take Final Quiz</button>
                 </div>
               )}
             </div>

@@ -1,6 +1,5 @@
 // controllers/quizController.js
 const Quiz = require("../models/Quiz");
-const Notification = require("../models/Notification");
 
 /* ── GET /api/quizzes/course/:courseId ───────────────────────── */
 exports.getCourseQuizzes = async (req, res) => {

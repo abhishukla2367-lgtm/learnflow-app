@@ -105,29 +105,28 @@ exports.getMyEnrollments = async (req, res) => {
       .sort({ enrolledAt: -1 })
       .lean();
 
-    const normalized = enrollments.map(e => {
-      // e.course is the populated document from Course or Certificate collection
-      const populated = e.course && typeof e.course === 'object' ? e.course : null;
-      const snap = e.certData || {};
+    // ✅ FIXED - explicitly preserve courseModel in response
+const normalized = enrollments.map(e => {
+  const populated = e.course && typeof e.course === 'object' ? e.course : null;
+  const snap = e.certData || {};
 
-      return {
-        ...e,
-        course: {
-          // Spread populated data first to get the lessons array automatically
-          ...(populated || {}),
-          _id: (populated?._id || e.course || e._id).toString(),
-          id: (populated?._id || e.course || e._id).toString(),
-          title: populated?.title || snap.title || 'Untitled',
-          thumbnail: populated?.thumbnail || snap.thumbnail || '',
-          instructor: populated?.instructor || snap.instructor || '',
-          description: populated?.description || snap.description || '',
-          emoji: populated?.emoji || snap.emoji || '',
-          tag: populated?.tag || populated?.category || snap.tag || '',
-          // Explicitly fallback for lessons to ensure it is never undefined
-          lessons: populated?.lessons || snap.lessons || [], 
-        },
-      };
-    });
+  return {
+    ...e,
+    courseModel: e.courseModel,   // ← ADD THIS LINE
+    course: {
+      ...(populated || {}),
+      _id: (populated?._id || e.course || e._id).toString(),
+      id: (populated?._id || e.course || e._id).toString(),
+      title: populated?.title || snap.title || 'Untitled',
+      thumbnail: populated?.thumbnail || snap.thumbnail || '',
+      instructor: populated?.instructor || snap.instructor || '',
+      description: populated?.description || snap.description || '',
+      emoji: populated?.emoji || snap.emoji || '',
+      tag: populated?.tag || populated?.category || snap.tag || '',
+      lessons: populated?.lessons || snap.lessons || [],
+    },
+  };
+});
 
     res.status(200).json(normalized);
   } catch (error) {

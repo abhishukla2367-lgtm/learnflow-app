@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, Users, ClipboardList,
-  BarChart2, GraduationCap, LogOut, Zap, X,
+  BarChart2, GraduationCap, LogOut, X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -31,9 +31,9 @@ function NavContent({ active, onChange, onClose }) {
       {/* Brand */}
       <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600
-            flex items-center justify-center shadow-lg shadow-cyan-500/25">
-            <Zap size={16} className="text-white" />
+          <div className="w-9 h-9 rounded-xl bg-black
+          flex items-center justify-center shadow-lg shadow-black/25 overflow-hidden">
+            <img src="https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp" className="w-9 h-9 object-contain" />
           </div>
           <div>
             <h1 className="font-black text-sm tracking-tight text-slate-900">Learnflow</h1>

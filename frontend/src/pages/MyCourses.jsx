@@ -25,11 +25,25 @@ function CourseRow({ enrollment }) {
   const status   = statusOf(progress);
   const courseId = course._id || course.id || '';
 
-  // ── FIX START ──
-  // Check if it's a certification or a single course to build the correct URL
-  const type = enrollment.certId ? 'certification' : 'course';
-  const id = enrollment.certId || courseId;
-  const playerLink = `/learn/${type}/${id}`;
+  const model = enrollment.courseModel || '';
+  const hasCertData = !!(enrollment.certData && enrollment.certData.title);
+
+  const type = (model.toLowerCase() === 'certification' || hasCertData)
+    ? 'certification'
+    : 'course';
+
+  const lastLesson =
+   (() => {
+    try {
+      const progressKey = type === 'certification' ? 'lf_progress' : 'lf_course_progress';
+      const all = JSON.parse(localStorage.getItem(progressKey) || '{}');
+      return all[courseId]?.lastLesson || null;
+    } catch { return null; }
+  })();
+
+const playerLink = lastLesson
+  ? `/learn/${type}/${courseId}/${lastLesson}`
+  : `/learn/${type}/${courseId}`;
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row shadow-sm">

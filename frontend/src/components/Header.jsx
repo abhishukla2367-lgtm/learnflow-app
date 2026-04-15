@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, LogOut, Menu, X, ChevronDown,
-  Code2, Brain, Palette, PlayCircle, Shield, Info, Phone, HelpCircle, GraduationCap,
-  ArrowRight, TrendingUp, Terminal, UserCircle, Database, Cloud
+  Code2, Brain, Palette, PlayCircle, Info, Phone, HelpCircle, GraduationCap,
+  ArrowRight, TrendingUp, UserCircle, Database, Cloud
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 

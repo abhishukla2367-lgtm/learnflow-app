@@ -10,7 +10,7 @@ import { useAuth }   from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import toast from "react-hot-toast";
 import {
-  Clock, Wifi, Zap, Menu, Download,
+  Clock, Wifi, Menu, Download,
   RefreshCw, FileText, Loader2,
 } from "lucide-react";
 
@@ -53,6 +53,7 @@ function LiveClock() {
   );
 }
 
+const LOGO_URL = 'https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp';
 
 /* ── Page meta ───────────────────────────────────────────── */
 const PAGE_META = {
@@ -184,7 +185,7 @@ export default function AdminDashboard() {
             </button>
             <div className="lg:hidden flex items-center gap-2 mr-1">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center">
-                <Zap size={13} className="text-white" />
+                <img src={LOGO_URL} className="w-5 h-5 object-contain" />
               </div>
               <span className="font-black text-sm text-slate-900">Learnflow</span>
             </div>

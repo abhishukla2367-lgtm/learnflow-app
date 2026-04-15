@@ -100,14 +100,11 @@ const courseRoutes       = require("./routes/courseRoutes");
 const enrollmentRoutes   = require("./routes/enrollmentRoutes");
 const quizRoutes         = require("./routes/quizRoutes");
 const reviewRoutes       = require("./routes/reviewRoutes");
-const pathRoutes         = require("./routes/pathRoutes");
 const certificateRoutes  = require("./routes/certificateRoutes");
 const adminRoutes        = require("./routes/adminRoutes");
 const userRoutes         = require("./routes/userRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-const discussionRoutes   = require("./routes/discussionRoutes");
 const paymentRoutes      = require("./routes/paymentRoutes");
-const wishlistRoutes     = require("./routes/wishlistRoutes");
 const profileRoutes      = require("./routes/profileRoutes");
 
 app.use("/api/otp",           authLimiter, otpRoutes);
@@ -116,14 +113,11 @@ app.use("/api/courses",       courseRoutes);
 app.use("/api/enrollments",   enrollmentRoutes);
 app.use("/api/quizzes",       quizRoutes);
 app.use("/api/reviews",       reviewRoutes);
-app.use("/api/paths",         pathRoutes);
 app.use("/api/certificates",  certificateRoutes);
 app.use("/api/admin",         adminRoutes);
 app.use("/api/users",         userRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/discussions",   discussionRoutes);
 app.use("/api/payments",      paymentRoutes);
-app.use("/api/wishlist",      wishlistRoutes);
 app.use("/api/profile",       profileRoutes);
 
 // --- 5. HEALTH CHECK ---
