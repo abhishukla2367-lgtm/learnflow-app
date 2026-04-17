@@ -133,11 +133,9 @@ export default function HeroSection() {
             </h1>
 
             <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg animate-fade-up-d2">
-              Live sessions, expert instructors, and blockchain-verified certificates — all designed
+              Recorded sessions, expert instructors, and blockchain-verified certificates — all designed
               for India's working professionals. IST timings. INR pricing. Real careers.
             </p>
-
-            {/* CTA buttons */}
             {/* CTA buttons */}
 <div className="flex flex-wrap gap-4 mb-10 animate-fade-up-d3">
   <Link
