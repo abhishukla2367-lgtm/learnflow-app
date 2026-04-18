@@ -144,12 +144,19 @@ useEffect(() => {
   // --- AUTO-SCROLL LOGIC ---
   // If all lessons are done, wait a split second for the UI to render, then scroll
   const completedCount = p.completedLessons?.length || 0;
-  if (completedCount >= lessons.length && lessons.length > 0) {
-    setTimeout(() => {
-      completionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 500); 
+  const totalCount = lessons.length;
+  if (totalCount > 0 && completedCount >= totalCount) {
+    const scrollTimer = setTimeout(() => {
+      if (completionRef.current) {
+        completionRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }, 600); 
+    return () => clearTimeout(scrollTimer);
   }
-}, [id, lesson?.id, lesson?._id, lessons.length]); 
+}, [id, lesson?.id, lesson?._id, lessons.length, progress.completedLessons.length]);
 
   const isCompleted = useCallback(
     (lId) => progress.completedLessons?.includes(String(lId)),
@@ -297,9 +304,9 @@ useEffect(() => {
           </div>
         </header>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden" autoComplete="off">
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="relative w-full bg-black aspect-video shadow-2xl">
+            <div className="relative w-full bg-black aspect-video shadow-2xl force-magnifier">
               {lesson.videoId ? (
                 <iframe src={`https://www.youtube.com/embed/${lesson.videoId}?rel=0&modestbranding=1&autoplay=0`} className="absolute inset-0 w-full h-full" allow="autoplay; encrypted-media" allowFullScreen />
               ) : lesson.videoUrl ? (

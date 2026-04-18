@@ -33,7 +33,6 @@ import CourseCheckout   from './pages/Course/CourseCheckout';
 import CourseSuccess    from './pages/Course/CourseSuccess';
 import CourseQuiz       from './pages/Course/CourseQuiz';
 import CourseCertificate from './pages/Course/CourseCertificate';
-// Information & Resource Pages
 
 import Instructors    from './pages/Instructors';
 import About          from './pages/About';

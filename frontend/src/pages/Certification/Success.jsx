@@ -24,7 +24,7 @@ const cert = location.state?.cert || null;
 
 // 2. Identify the unique ID and the content type
 const id = location.state?.certId || cert?._id || cert?.id || '';
-const type = 'certification'; // Hardcoded for this specific file
+const type = 'certification'; 
 
 // 3. Extract the first lesson and metadata
 const firstLesson = cert?.lessons?.[0]?._id || cert?.lessons?.[0]?.id || null;

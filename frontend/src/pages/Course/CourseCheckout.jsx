@@ -104,8 +104,10 @@ export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const cert = location.state?.cert || null;
-  if (cert && !cert.origPrice) cert.origPrice = cert.price || 0;
+  const course = location.state?.course || null;
+  if (course && !course.origPrice) {
+    course.origPrice = course.price || 0;
+  }
 
   // State Management
   const [step, setStep] = useState(0);
@@ -134,21 +136,21 @@ export default function Checkout() {
       setTimeout(() => navigate('/login'), 0);
       return;
     }
-    if (!cert) {
+    if (!course) {
       setTimeout(() => navigate('/courses'), 0);
     }
-  }, [user, cert, navigate]);
+  }, [user, course, navigate]);
 
-  if (!cert || !user) return null;
+  if (!course || !user) return null;
 
   /* ── Calculations ── */
-  const basePrice = cert.price;
+  const basePrice = course.price;
   const gst = Math.round(basePrice * 0.18);
   const couponDiscount = appliedCoupon
     ? Math.round(basePrice * (COUPONS[appliedCoupon].discount / 100))
     : 0;
   const total = basePrice + gst - couponDiscount;
-  const savings = Math.max(0, cert.origPrice - total);
+  const savings = Math.max(0, course.origPrice - total);
   const brand = cardBrand(card.number);
 
   /* ── Coupon ── */
@@ -220,81 +222,103 @@ export default function Checkout() {
   };
 
   /* ── Submit ── */
-  const handlePay = async () => {
-    // 1. Validate terms
-    if (!agreeTerms) {
-      setTermsError('Please accept the terms and conditions to continue.');
-      return;
-    }
-    setTermsError('');
+const handlePay = async () => {
+  // 0. Ensure we have the correct ID for the API call
+  const targetId = course?._id || course?.id;
 
-    // 2. Validate payment details based on method
-    let valid = false;
-    if (payMethod === 'card') valid = validateCard();
-    else if (payMethod === 'upi') valid = validateUPI();
-    else if (payMethod === 'netbanking') valid = validateBank();
+  // 1. Validate terms
+  if (!agreeTerms) {
+    setTermsError('Please accept the terms and conditions to continue.');
+    return;
+  }
+  setTermsError('');
 
-    if (!valid) return;
+  // 2. Validate payment details based on method
+  let valid = false;
+  if (payMethod === 'card') valid = validateCard();
+  else if (payMethod === 'upi') valid = validateUPI();
+  else if (payMethod === 'netbanking') valid = validateBank();
 
-    // 3. Process enrollment
-    setProcessing(true);
+  if (!valid) return;
+
+  // 3. Process enrollment
+  setProcessing(true);
+  try {
+    // API Call to backend
+    let enrollData = {};
     try {
-      // Use axios instance (has auth token injected automatically)
-      let enrollData = {};
-      try {
-        const { data } = await api.post(`/enrollments/${cert.id}`, {
-          status:        'enrolled',
-          paymentMethod: payMethod,
-          amount:        total,
-          type:          'paid',
-        });
-        enrollData = data;
-      } catch (apiErr) {
-        // If backend returns non-2xx, still save locally so MyCourses works
-        console.warn('Enrollment API error:', apiErr?.response?.data?.message || apiErr.message);
-      }
-
-      // Save to user-scoped localStorage immediately (offline-first)
-      const uid   = user._id || user.id;
-      const lsKey = enrollmentKey(uid);
-      const snap  = {
-        _id:        enrollData?.enrollment?._id || enrollData?.data?._id || `local_${cert.id}_${Date.now()}`,
-        course: {
-          _id:         cert.id,
-          id:          cert.id,
-          title:       cert.title,
-          thumbnail:   cert.thumbnail || null,
-          instructor:  cert.instructor || null,
-          description: cert.desc || cert.description || null,
-          emoji:       cert.emoji || null,
-          tag:         cert.tag   || null,
-        },
-        certId:     cert.id,
-        progress:   0,
-        enrolledAt: new Date().toISOString(),
-        type:       'paid',
-      };
-      try {
-        const stored  = JSON.parse(localStorage.getItem(lsKey) || '[]');
-        const deduped = stored.filter(e =>
-          String(e.certId || e.course?._id || e.course?.id) !== String(cert.id)
-        );
-        localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
-      } catch { /* ignore storage errors */ }
-      try {
-     const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-     cache[cert.id] = cert;
-    localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-    } catch {}
-
-      navigate('/course-success', { state: { cert, courseId: cert.id }});
-    } catch (err) {
-      console.error('Payment failed:', err);
-      alert('Something went wrong. Please try again.');
-    } finally {
-      setProcessing(false);
+      const { data } = await api.post(`/enrollments/${targetId}`, {
+        status: 'enrolled',
+        paymentMethod: payMethod,
+        amount: total,
+        type: 'paid', // Matches logic in enrollmentController.js
+      });
+      enrollData = data;
+    } catch (apiErr) {
+      // If backend returns non-2xx, we proceed for local persistence to prevent user frustration
+      console.warn('Enrollment API error:', apiErr?.response?.data?.message || apiErr.message);
     }
-  };
+
+    // 4. Save to user-scoped localStorage immediately (offline-first support)
+    const uid = user._id || user.id;
+    const lsKey = enrollmentKey(uid);
+    
+    // Construct the snapshot using the 'course' object data
+    const snap = {
+      _id: enrollData?.enrollment?._id || enrollData?.data?._id || `local_${targetId}_${Date.now()}`,
+      course: {
+        _id: targetId,
+        id: targetId,
+        title: course.title,
+        thumbnail: course.thumbnail || null,
+        instructor: course.instructor || null,
+        description: course.desc || course.description || null,
+        emoji: course.emoji || null,
+        tag: course.tag || null,
+      },
+      courseId: targetId,
+      progress: 0,
+      enrolledAt: new Date().toISOString(),
+      type: 'paid',
+      courseModel: 'Course' // Crucial for polymorphic backend relations
+    };
+
+    // Update Enrollment List
+    try {
+      const stored = JSON.parse(localStorage.getItem(lsKey) || '[]');
+      const deduped = stored.filter(e =>
+        String(e.courseId || e.course?._id || e.course?.id) !== String(targetId)
+      );
+      localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
+    } catch (lsErr) {
+      console.error('LocalStorage update failed:', lsErr);
+    }
+
+    // Update Course Cache for faster loading
+    try {
+      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+      cache[targetId] = course;
+      localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+    } catch (cacheErr) {
+      console.error('Cache update failed:', cacheErr);
+    }
+
+    // 5. Navigate to success page
+    navigate('/course-success', { 
+      state: { 
+        course: course, 
+        courseId: targetId,
+        isCertification: false 
+      }
+    });
+
+  } catch (err) {
+    console.error('Payment flow failed:', err);
+    alert('Something went wrong. Please try again.');
+  } finally {
+    setProcessing(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -711,24 +735,24 @@ export default function Checkout() {
                 <div className="px-6 pb-5 border-t border-slate-100">
                   <div className="flex items-start gap-4 pt-5">
                     <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cert.gradient} flex items-center justify-center text-2xl flex-shrink-0`}
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${course.gradient} flex items-center justify-center text-2xl flex-shrink-0`}
                     >
-                      {cert.emoji}
+                      {course.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900 leading-snug">{cert.title}</p>
+                      <p className="text-sm font-bold text-slate-900 leading-snug">{course.title}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
                         <span
-                          className={`text-xs font-mono px-2 py-0.5 rounded-full ${cert.accentBg} ${cert.accentText} border ${cert.accentBorder}`}
+                          className={`text-xs font-mono px-2 py-0.5 rounded-full ${course.accentBg} ${course.accentText} border ${course.accentBorder}`}
                         >
-                          {cert.tag}
+                          {course.tag}
                         </span>
-                        <span className="text-xs text-slate-400 font-mono">{cert.level}</span>
+                        <span className="text-xs text-slate-400 font-mono">{course.level}</span>
                       </div>
                       <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 font-mono">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {cert.duration}
+                          {course.duration}
                         </span>
                         <span className="flex items-center gap-1">
                           <Users className="w-3 h-3" />
@@ -769,12 +793,12 @@ export default function Checkout() {
                   <div className="flex justify-between text-sm text-slate-600 font-mono">
                     <span>Original price</span>
                     <span className="line-through text-slate-400">
-                      ₹{cert.origPrice.toLocaleString('en-IN')}
+                      ₹{course.origPrice.toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm text-emerald-700 font-mono">
                     <span>Learnflow discount</span>
-                    <span>−₹{(cert.origPrice - cert.price).toLocaleString('en-IN')}</span>
+                    <span>−₹{(course.origPrice - course.price).toLocaleString('en-IN')}</span>
                   </div>
                   {appliedCoupon && (
                     <div className="flex justify-between text-sm text-emerald-700 font-mono">

@@ -26,11 +26,6 @@ export default function UnifiedPlayer() {
         </div>
       </div>
     }>
-      {/* CRITICAL FIX: 
-          Both players use useParams() internally to get the 'id'. 
-          Passing 'courseId' or 'certId' as props is okay, but we must make 
-          sure we don't confuse the internal logic. 
-      */}
       {normalizedType === 'course' ? (
         <CoursePlayer courseId={id} lessonId={lessonId} />
       ) : (
