@@ -133,22 +133,23 @@ export default function CourseDetail() {
         localStorage.setItem('lf_course_cache', JSON.stringify(cache));
         
         if (response.data.alreadyEnrolled) {
-          navigate(`/my-courses`); 
-        } else {
-          toast.success('7-Day Trial Started!');
-          navigate('/course-success', {
-            state: { 
-              certId: courseId, 
-              courseId: courseId,
-              isTrial: true, 
-              trialEndsAt: response.data.trialEndsAt,
-              cert: {
-                title: course.title,
-                lessons: buildLessons(course)
-              }
-            } 
-          });
-        }
+  navigate(`/my-courses`); 
+} else {
+  toast.success('7-Day Trial Started!');
+  navigate('/course-success', {
+    state: { 
+      courseId: courseId, // Used by the success page to fetch data
+      isTrial: true, 
+      trialEndsAt: response.data.trialEndsAt,
+      // Pass the full course object so the success page doesn't have to re-fetch
+      course: {
+        ...course,
+        id: courseId,
+        lessons: buildLessons(course)
+      }
+    } 
+  });
+}
       } catch (err) {
         toast.error(err.response?.data?.message || 'Enrollment failed');
       } finally {
@@ -159,7 +160,7 @@ export default function CourseDetail() {
     
     navigate(`/course-checkout/${course._id}`, {
       state: {
-        cert: {
+        course: {
           courseId: course._id,
           title: course.title,
           desc: course.description,

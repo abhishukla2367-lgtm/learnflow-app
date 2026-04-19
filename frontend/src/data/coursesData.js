@@ -1,7 +1,7 @@
 export const COURSES = [
   // ─── MARKETING (4 courses) ────────────────────────────────────────────────
   {
-    id: "mkt-001",
+    id: "69d9301719ab4505458555ba",
     category: "Marketing",
     title: "Marketing Masterclass: Beginner Level",
     emoji: "📣",
@@ -108,7 +108,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "mkt-002",
+    id: "69d9301719ab4505458555bd",
     category: "Marketing",
     title: "Digital Advertising & PPC Strategy",
     emoji: "🎯",
@@ -203,7 +203,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "mkt-003",
+    id: "69d9301719ab4505458555c0",
     category: "Marketing",
     title: "Social Media ROI & Analytics",
     emoji: "📊",
@@ -298,7 +298,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "mkt-004",
+    id: "69d9301719ab4505458555c3",
     category: "Marketing",
     title: "Content Marketing for Brand Growth",
     emoji: "✍️",
@@ -395,7 +395,7 @@ export const COURSES = [
 
   // ─── WEB DEVELOPMENT (4 courses) ─────────────────────────────────────────
   {
-    id: "webdev-001",
+    id: "69d9301719ab4505458555c6",
     category: "Web Development",
     title: "Modern React with Redux Toolkit",
     emoji: "⚛️",
@@ -490,7 +490,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "webdev-002",
+    id: "69d9301719ab4505458555c9",
     category: "Web Development",
     title: "Full-Stack Web Development Boot Camp",
     emoji: "🖥️",
@@ -585,7 +585,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "webdev-003",
+    id: "69d9301719ab4505458555cc",
     category: "Web Development",
     title: "Advanced CSS & Sass Frameworks",
     emoji: "🎨",
@@ -680,7 +680,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "webdev-004",
+    id: "69d9301719ab4505458555cf",
     category: "Web Development",
     title: "JavaScript: The Hard Parts & Deep Dive",
     emoji: "📜",
@@ -777,7 +777,7 @@ export const COURSES = [
 
   // ─── AI / MACHINE LEARNING (4 courses) ───────────────────────────────────
   {
-    id: "aiml-001",
+    id: "69d9301719ab4505458555d2",
     category: "AI / Machine Learning",
     title: "Machine Learning with Python",
     emoji: "🤖",
@@ -872,7 +872,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "aiml-002",
+    id: "69d9301719ab4505458555d5",
     category: "AI / Machine Learning",
     title: "Deep Learning Specialization",
     emoji: "🧠",
@@ -967,7 +967,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "aiml-003",
+    id: "69d9301719ab4505458555d8",
     category: "AI / Machine Learning",
     title: "Generative AI & LLM Engineering",
     emoji: "✨",
@@ -1062,7 +1062,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "aiml-004",
+    id: "69d9301719ab4505458555db",
     category: "AI / Machine Learning",
     title: "Natural Language Processing (NLP)",
     emoji: "💬",
@@ -1159,7 +1159,7 @@ export const COURSES = [
 
   // ─── DESIGN (4 courses) ───────────────────────────────────────────────────
   {
-    id: "design-001",
+    id: "69d9301719ab4505458555de",
     category: "Design",
     title: "UI/UX Design Essentials",
     emoji: "🎨",
@@ -1265,7 +1265,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "design-002",
+    id: "69d9301719ab4505458555e1",
     category: "Design",
     title: "Graphic Design Theory",
     emoji: "🖼️",
@@ -1360,7 +1360,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "design-003",
+    id: "69d9301719ab4505458555e4",
     category: "Design",
     title: "Figma for Professional Designers",
     emoji: "🛠️",
@@ -1455,7 +1455,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "design-004",
+    id: "69d9301719ab4505458555e7",
     category: "Design",
     title: "Motion Graphics with After Effects",
     emoji: "🎬",
@@ -1552,7 +1552,7 @@ export const COURSES = [
 
   // ─── DATA SCIENCE (4 courses) ─────────────────────────────────────────────
   {
-    id: "ds-001",
+    id: "69d9301719ab4505458555ea",
     category: "Data Science",
     title: "Probability for Data Science",
     emoji: "🎲",
@@ -1647,7 +1647,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "ds-002",
+    id: "69d9301719ab4505458555ed",
     category: "Data Science",
     title: "Python for Data Analysis",
     emoji: "🐍",
@@ -1742,7 +1742,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "ds-003",
+    id: "69d9301719ab4505458555f0",
     category: "Data Science",
     title: "Statistical Data Modeling",
     emoji: "📐",
@@ -1837,7 +1837,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "ds-004",
+    id: "69d9301719ab4505458555f3",
     category: "Data Science",
     title: "Data Mining & Exploration",
     emoji: "⛏️",
@@ -1934,7 +1934,7 @@ export const COURSES = [
 
   // ─── CLOUD COMPUTING (4 courses) ─────────────────────────────────────────
   {
-    id: "cloud-001",
+    id: "69d9301719ab4505458555f6",
     category: "Cloud Computing",
     title: "AWS Solutions Architect Pro",
     emoji: "☁️",
@@ -2029,7 +2029,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "cloud-002",
+    id: "69d9301719ab4505458555f9",
     category: "Cloud Computing",
     title: "Google Cloud Platform (GCP) Fundamentals",
     emoji: "🌐",
@@ -2124,7 +2124,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "cloud-003",
+    id: "69d9301719ab4505458555fc",
     category: "Cloud Computing",
     title: "Cloud Security & Compliance",
     emoji: "🔐",
@@ -2219,7 +2219,7 @@ export const COURSES = [
     ],
   },
   {
-    id: "cloud-004",
+    id: "69d9301719ab4505458555ff",
     category: "Cloud Computing",
     title: "Serverless Architecture with AWS Lambda",
     emoji: "⚡",

@@ -29,8 +29,8 @@ function CourseRow({ enrollment }) {
   const hasCertData = !!(enrollment.certData && enrollment.certData.title);
 
   const type = (model.toLowerCase() === 'certification' || hasCertData)
-    ? 'certification'
-    : 'course';
+  ? 'certification'
+  : 'course';
 
   const lastLesson =
    (() => {
@@ -41,10 +41,10 @@ function CourseRow({ enrollment }) {
     } catch { return null; }
   })();
 
-const playerLink = lastLesson
-  ? `/learn/${type}/${courseId}/${lastLesson}`
+const playerLink = courseId 
+  ? `/learn/${type}/${courseId}${lastLesson ? `/${lastLesson}` : ''}`
   : `/learn/${type}/${courseId}`;
-
+  
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row shadow-sm">
       <div className="relative sm:w-48 h-36 sm:h-auto bg-gradient-to-br from-cyan-400 to-violet-500 flex-shrink-0">

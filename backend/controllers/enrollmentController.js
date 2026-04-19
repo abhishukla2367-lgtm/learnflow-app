@@ -138,7 +138,14 @@ const normalized = enrollments.map(e => {
 exports.updateProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const enrollment = await Enrollment.findOne({ student: req.user._id, course: courseId });
+    // Ensure your backend query looks like this:
+const enrollment = await Enrollment.findOne({ 
+  student: req.user._id, 
+  $or: [
+    { course: req.params.courseId },
+    { certId: req.params.courseId }
+  ]
+}).populate('course');
 
     if (!enrollment) {
       return res.status(404).json({ success: false, message: "Enrollment not found" });

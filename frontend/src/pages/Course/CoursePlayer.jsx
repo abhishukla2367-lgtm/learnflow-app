@@ -54,15 +54,19 @@ function normaliseLessons(lessons = []) {
 }
 
 /* ── Custom hook ── */
-function useResolveCert(courseId) {
+function useResolveCert(courseId, type) { // Added 'type' as an argument
   const [apiFetched, setApiFetched] = useState(null);
 
   const staticOrCached = (() => {
     if (!courseId) return null;
-    const fromStatic = COURSES.find(
-      (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
-    );
-    if (fromStatic) return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
+
+    // ONLY check static data if it's NOT a certification
+    if (type !== 'certification') {
+      const fromStatic = COURSES.find(
+        (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+      );
+      if (fromStatic) return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
+    }
 
     try {
       const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
@@ -72,18 +76,24 @@ function useResolveCert(courseId) {
     return null;
   })();
 
-  useEffect(() => {
-    if (staticOrCached || apiFetched !== null) return;
-    api.get(`/courses/${courseId}`)
-      .then(res => {
-        const fetched = res.data?.courseData || res.data;
-        const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-        cache[courseId] = fetched;
-        localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-        setApiFetched(fetched);
-      })
-      .catch(() => setApiFetched({}));
-  }, [courseId, staticOrCached, apiFetched]);
+useEffect(() => {
+  if (staticOrCached || apiFetched !== null) return;
+
+  // Use the enrollment detail path - it's the most reliable for 'My Courses'
+  const apiPath = `/enrollments/${courseId}/detail`; 
+
+  api.get(apiPath)
+    .then(res => {
+      // Extract the course object from the enrollment response
+      const fetched = res.data?.enrollment?.course || res.data?.courseData || res.data;
+      
+      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+      cache[courseId] = fetched;
+      localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+      setApiFetched(fetched);
+    })
+    .catch(() => setApiFetched({}));
+}, [courseId, type, staticOrCached, apiFetched]);
 
   if (staticOrCached) return staticOrCached;
   if (apiFetched?._id || apiFetched?.id) return { ...apiFetched, id: courseId, lessons: normaliseLessons(apiFetched.lessons) };
@@ -103,7 +113,7 @@ export default function CertCoursePlayer({ courseId: propId, lessonId: propLesso
   const lessonId = propLessonId || paramLessonId;
   const navigate = useNavigate();
 
-  const course = useResolveCert(id);
+  const course = useResolveCert(id, type);
   const lessons = course?.lessons || [];
 
   const lessonIdx = lessonId ? lessons.findIndex((l) => String(lid(l)) === String(lessonId)) : 0;
@@ -364,11 +374,13 @@ useEffect(() => {
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         {hasPassed ? (
-          <button onClick={() => navigate(`/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
+          <button 
+          onClick={() => navigate(type === 'certification' ? `/certificate/${id}` : `/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
             <Award className="w-5 h-5" /> View Certificate
           </button>
         ) : (
-          <button onClick={() => navigate(`/quiz/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
+          <button 
+          onClick={() => navigate(type === 'certification' ? `/quiz/${id}` : `/course-quiz/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
             Take Final Quiz
           </button>
         )}

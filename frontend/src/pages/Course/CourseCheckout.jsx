@@ -240,20 +240,24 @@ const handlePay = async () => {
   else if (payMethod === 'netbanking') valid = validateBank();
 
   if (!valid) return;
-
-  // 3. Process enrollment
+  const finalCourseId = course?._id || course?.id || course?.courseId;
+  if (!finalCourseId) {
+    console.error("CRITICAL ERROR: No Course ID found");
+    alert("Error: Course ID missing. Please go back and try again.");
+    return;
+  }
   setProcessing(true);
   try {
     // API Call to backend
     let enrollData = {};
     try {
-      const { data } = await api.post(`/enrollments/${targetId}`, {
-        status: 'enrolled',
-        paymentMethod: payMethod,
-        amount: total,
-        type: 'paid', // Matches logic in enrollmentController.js
-      });
-      enrollData = data;
+    // 2. USE THE DEFINED ID IN THE API CALL
+    const { data: enrollData } = await api.post(`/enrollments/${finalCourseId}`, {
+      status: 'enrolled',
+      paymentMethod: payMethod,
+      amount: total,
+      type: 'paid'
+    });
     } catch (apiErr) {
       // If backend returns non-2xx, we proceed for local persistence to prevent user frustration
       console.warn('Enrollment API error:', apiErr?.response?.data?.message || apiErr.message);
@@ -307,8 +311,8 @@ const handlePay = async () => {
     navigate('/course-success', { 
       state: { 
         course: course, 
-        courseId: targetId,
-        isCertification: false 
+        courseId: finalCourseId,
+        isTrial: false 
       }
     });
 
