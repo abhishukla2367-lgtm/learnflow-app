@@ -54,49 +54,61 @@ function normaliseLessons(lessons = []) {
 }
 
 /* ── Custom hook ── */
-function useResolveCert(courseId, type) { // Added 'type' as an argument
+/* ── Custom hook for Courses ── */
+function useResolveCourse(courseId) { 
   const [apiFetched, setApiFetched] = useState(null);
 
   const staticOrCached = (() => {
     if (!courseId) return null;
 
-    // ONLY check static data if it's NOT a certification
-    if (type !== 'certification') {
-      const fromStatic = COURSES.find(
-        (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
-      );
-      if (fromStatic) return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
-    }
-
-    try {
-      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-      const cached = cache[courseId];
-      if (cached) return { ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) };
-    } catch (e) { console.error('Cache read error:', e); }
+    // 1. Check local static data first
+    const fromStatic = COURSES.find(
+      (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+    );
+    if (fromStatic) return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
+try {
+  const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+  const cached = cache[courseId];
+  if (cached?.lessons?.length) return { ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) };
+} catch (e) { console.error('Cache read error:', e); }
     return null;
   })();
 
-useEffect(() => {
-  if (staticOrCached || apiFetched !== null) return;
+  useEffect(() => {
+    if (staticOrCached || apiFetched !== null) return;
 
-  // Use the enrollment detail path - it's the most reliable for 'My Courses'
-  const apiPath = `/enrollments/${courseId}/detail`; 
+    // THE NUCLEAR LINE: Fetch from the enrollment detail route
+    // This ensures you get the course snapshot (certData) and populated lessons
+    // Try course-specific endpoint first, fall back to enrollment detail
+const apiPath = `/courses/${courseId}`;
 
-  api.get(apiPath)
-    .then(res => {
-      // Extract the course object from the enrollment response
-      const fetched = res.data?.enrollment?.course || res.data?.courseData || res.data;
-      
-      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-      cache[courseId] = fetched;
-      localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-      setApiFetched(fetched);
-    })
-    .catch(() => setApiFetched({}));
-}, [courseId, type, staticOrCached, apiFetched]);
+api.get(apiPath)
+  .then(res => {
+    const fetched = res.data?.course || res.data;
+    
+    if (!fetched?.lessons?.length) {
+      // fallback: try enrollment detail route
+      return api.get(`/enrollments/${courseId}/detail`)
+        .then(r => r.data?.enrollment?.course || r.data);
+    }
+    return fetched;
+  })
+  .then(fetched => {
+    const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+    cache[courseId] = fetched;
+    localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+    setApiFetched(fetched);
+  })
+  .catch((err) => {
+    console.error("Course Fetch Error:", err);
+    setApiFetched({});
+  });
+  }, [courseId, staticOrCached, apiFetched]);
 
   if (staticOrCached) return staticOrCached;
-  if (apiFetched?._id || apiFetched?.id) return { ...apiFetched, id: courseId, lessons: normaliseLessons(apiFetched.lessons) };
+  if (apiFetched?._id || apiFetched?.id) {
+    return { ...apiFetched, id: courseId, lessons: normaliseLessons(apiFetched.lessons) };
+  }
   return null;
 }
 
@@ -107,13 +119,13 @@ async function syncProgressToBackend(courseId, completedCount, totalCount) {
   } catch {}
 }
 
-export default function CertCoursePlayer({ courseId: propId, lessonId: propLessonId }) {
-  const { type, id: paramId, lessonId: paramLessonId } = useParams();
+export default function CoursePlayer({ courseId: propId, lessonId: propLessonId }) {
+  const { id: paramId, lessonId: paramLessonId } = useParams();
   const id = propId || paramId;
   const lessonId = propLessonId || paramLessonId;
   const navigate = useNavigate();
 
-  const course = useResolveCert(id, type);
+  const course = useResolveCourse(id); 
   const lessons = course?.lessons || [];
 
   const lessonIdx = lessonId ? lessons.findIndex((l) => String(lid(l)) === String(lessonId)) : 0;
@@ -186,7 +198,7 @@ useEffect(() => {
     setTimeout(() => {
       setJustCompleted(false);
       const next = lessons[lessonIdx + 1];
-      if (next) navigate(`/learn/${type || 'course'}/${id}/${lid(next)}`);
+      if (next) navigate(`/learn/course/${id}/${lid(next)}`);
     }, 1200);
   };
 
@@ -268,7 +280,7 @@ useEffect(() => {
               {expandedWeeks[week] && sectionLessons.map((l) => (
                 <button
                   key={lid(l)}
-                  onClick={() => navigate(`/learn/${type || 'course'}/${id}/${lid(l)}`)}
+                  onClick={() => navigate(`/learn/course/${id}/${lid(l)}`)}
                   className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all ${String(lid(l)) === String(lid(lesson)) ? 'bg-slate-700/80 border-l-2 border-cyan-500' : 'hover:bg-slate-700/30 border-l-2 border-transparent'}`}
                 >
                   <div className="flex-shrink-0 mt-0.5">
@@ -302,10 +314,10 @@ useEffect(() => {
               <StickyNote className="w-4 h-4" /><span className="hidden sm:block text-xs font-bold">Notes</span>
             </button>
             <div className="h-4 w-[1px] bg-slate-700 mx-1" />
-            <button onClick={() => { const p = lessons[lessonIdx - 1]; if (p) navigate(`/learn/${type || 'course'}/${id}/${lid(p)}`); }} disabled={lessonIdx === 0} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
+            <button onClick={() => { const p = lessons[lessonIdx - 1]; if (p) navigate(`/learn/course/${id}/${lid(p)}`)}} disabled={lessonIdx === 0} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={() => { const n = lessons[lessonIdx + 1]; if (n) navigate(`/learn/${type || 'course'}/${id}/${lid(n)}`); }} disabled={lessonIdx === lessons.length - 1} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
+            <button onClick={() => { const n = lessons[lessonIdx + 1]; if (n) navigate(`/learn/course/${id}/${lid(n)}`) }} disabled={lessonIdx === lessons.length - 1} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -375,12 +387,12 @@ useEffect(() => {
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         {hasPassed ? (
           <button 
-          onClick={() => navigate(type === 'certification' ? `/certificate/${id}` : `/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
+          onClick={() => navigate(`/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
             <Award className="w-5 h-5" /> View Certificate
           </button>
         ) : (
           <button 
-          onClick={() => navigate(type === 'certification' ? `/quiz/${id}` : `/course-quiz/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
+          onClick={() => navigate(`/course-quiz/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
             Take Final Quiz
           </button>
         )}

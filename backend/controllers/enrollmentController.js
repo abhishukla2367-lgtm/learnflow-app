@@ -6,7 +6,7 @@ function getBroadcast() {
   try { return require('../socket').broadcast; } catch { return null; }
 }
 
-// ─── 1. Enroll ───────────────────────────────────────────────────────────────
+// ─── 1. Enroll (Handle Trial & Paid) ─────────────────────────────────────────
 exports.enroll = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -23,6 +23,7 @@ exports.enroll = async (req, res) => {
       product = await Certificate.findById(courseId);
       courseModel = "Certificate";
     }
+    
     if (!product) {
       return res.status(404).json({ success: false, message: "Course or Certification not found." });
     }
@@ -38,8 +39,7 @@ exports.enroll = async (req, res) => {
       });
     }
 
-    // Build certData snapshot
-    // We include lessons here so real-time enrollment works immediately
+    // Build certData snapshot for safety (Lessons fallback)
     const certData = {
       title:       product.title       || "",
       thumbnail:   product.thumbnail   || "",
@@ -59,14 +59,14 @@ exports.enroll = async (req, res) => {
       courseModel,
       certData,
       amount:      req.body.amount || product.price || 0,
-      type: isTrial ? 'trial' : (product.price > 0 ? 'paid' : 'free'),
-      status: isTrial ? 'trialing' : 'enrolled',
-      isTrial: isTrial,
+      type:        isTrial ? 'trial' : (product.price > 0 ? 'paid' : 'free'),
+      status:      isTrial ? 'trialing' : 'enrolled',
+      isTrial:     isTrial,
       trialEndsAt: trialEndsAt,
       enrolledAt:  Date.now(),
     });
     
-    // ── Real-time: notify the student's socket room
+    // Real-time: notify the student's socket room
     const broadcast = getBroadcast();
     if (broadcast) {
       const io = (() => { try { return require('../socket').getIO(); } catch { return null; } })();
@@ -74,7 +74,7 @@ exports.enroll = async (req, res) => {
         io.to(`user:${userId}`).emit('enrollment:confirmed', {
           enrollmentId: newEnrollment._id,
           certId:       courseId,
-          course:       { ...certData, _id: courseId }, // Ensure full object for immediate redirect
+          course:       { ...certData, _id: courseId },
           progress:     0,
           enrolledAt:   newEnrollment.enrolledAt,
         });
@@ -89,6 +89,7 @@ exports.enroll = async (req, res) => {
     res.status(201).json({ 
       success: true, 
       enrollment: newEnrollment, 
+      courseId: courseId, // Ensure frontend gets the ID explicitly
       isTrial: isTrial,
       trialEndsAt: trialEndsAt 
     });
@@ -97,7 +98,7 @@ exports.enroll = async (req, res) => {
   }
 };
 
-// ─── 2. Get My Enrollments ────────────────────────────────────────────────────
+// ─── 2. Get My Enrollments (For Dashboard) ───────────────────────────────────
 exports.getMyEnrollments = async (req, res) => {
   try {
     const enrollments = await Enrollment.find({ student: req.user._id })
@@ -105,28 +106,27 @@ exports.getMyEnrollments = async (req, res) => {
       .sort({ enrolledAt: -1 })
       .lean();
 
-    // ✅ FIXED - explicitly preserve courseModel in response
-const normalized = enrollments.map(e => {
-  const populated = e.course && typeof e.course === 'object' ? e.course : null;
-  const snap = e.certData || {};
+    const normalized = enrollments.map(e => {
+      const populated = e.course && typeof e.course === 'object' ? e.course : null;
+      const snap = e.certData || {};
 
-  return {
-    ...e,
-    courseModel: e.courseModel,   // ← ADD THIS LINE
-    course: {
-      ...(populated || {}),
-      _id: (populated?._id || e.course || e._id).toString(),
-      id: (populated?._id || e.course || e._id).toString(),
-      title: populated?.title || snap.title || 'Untitled',
-      thumbnail: populated?.thumbnail || snap.thumbnail || '',
-      instructor: populated?.instructor || snap.instructor || '',
-      description: populated?.description || snap.description || '',
-      emoji: populated?.emoji || snap.emoji || '',
-      tag: populated?.tag || populated?.category || snap.tag || '',
-      lessons: populated?.lessons || snap.lessons || [],
-    },
-  };
-});
+      return {
+        ...e,
+        courseModel: e.courseModel, // Tells frontend if it's 'Course' or 'Certificate'
+        course: {
+          ...(populated || {}),
+          _id: (populated?._id || e.course || e._id).toString(),
+          id: (populated?._id || e.course || e._id).toString(),
+          title: populated?.title || snap.title || 'Untitled',
+          thumbnail: populated?.thumbnail || snap.thumbnail || '',
+          instructor: populated?.instructor || snap.instructor || '',
+          description: populated?.description || snap.description || '',
+          emoji: populated?.emoji || snap.emoji || '',
+          tag: populated?.tag || populated?.category || snap.tag || '',
+          lessons: populated?.lessons || snap.lessons || [],
+        },
+      };
+    });
 
     res.status(200).json(normalized);
   } catch (error) {
@@ -134,18 +134,47 @@ const normalized = enrollments.map(e => {
   }
 };
 
-// ─── 3. Update Progress ───────────────────────────────────────────────────────
+// ─── 3. Get Enrollment Detail (For the Course Player) ────────────────────────
+exports.getEnrollmentDetail = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user._id;
+
+    const enrollment = await Enrollment.findOne({ 
+      student: userId, 
+      course: courseId 
+    }).populate('course').lean();
+
+    if (!enrollment) {
+      return res.status(404).json({ success: false, message: "Enrollment not found" });
+    }
+
+    // Fallback logic: Ensure 'course' object always has lessons for the player
+    if (!enrollment.course || !enrollment.course.lessons) {
+      enrollment.course = {
+        ...(enrollment.course || {}),
+        _id: courseId,
+        lessons: enrollment.certData?.lessons || [],
+        title: enrollment.certData?.title || "Untitled Course"
+      };
+    }
+
+    res.status(200).json({ success: true, enrollment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch detail", error: error.message });
+  }
+};
+
+// ─── 4. Update Progress ──────────────────────────────────────────────────────
 exports.updateProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
-    // Ensure your backend query looks like this:
-const enrollment = await Enrollment.findOne({ 
-  student: req.user._id, 
-  $or: [
-    { course: req.params.courseId },
-    { certId: req.params.courseId }
-  ]
-}).populate('course');
+    const userId = req.user._id;
+
+    const enrollment = await Enrollment.findOne({ 
+      student: userId, 
+      course: courseId 
+    });
 
     if (!enrollment) {
       return res.status(404).json({ success: false, message: "Enrollment not found" });

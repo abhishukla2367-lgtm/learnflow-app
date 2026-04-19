@@ -1,3 +1,4 @@
+import { COURSES } from '../data/coursesData';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Play, ChevronRight } from 'lucide-react';
@@ -28,9 +29,15 @@ function CourseRow({ enrollment }) {
   const model = enrollment.courseModel || '';
   const hasCertData = !!(enrollment.certData && enrollment.certData.title);
 
-  const type = (model.toLowerCase() === 'certification' || hasCertData)
-  ? 'certification'
-  : 'course';
+  const isStaticCourse = COURSES.some(
+  c => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+);
+
+const type = isStaticCourse
+  ? 'course'
+  : (model.toLowerCase() === 'certification' || hasCertData)
+    ? 'certification'
+    : 'course';
 
   const lastLesson =
    (() => {
@@ -40,11 +47,29 @@ function CourseRow({ enrollment }) {
       return all[courseId]?.lastLesson || null;
     } catch { return null; }
   })();
-
-const playerLink = courseId 
+  
+  const playerLink = courseId 
   ? `/learn/${type}/${courseId}${lastLesson ? `/${lastLesson}` : ''}`
   : `/learn/${type}/${courseId}`;
   
+   const handleNavigate = () => {
+  if (!courseId || !course) return;
+  try {
+    const globalCache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+    // Only prime if we have lessons, otherwise let player fetch fresh
+    if (!globalCache[courseId] && course.lessons?.length) {
+      globalCache[courseId] = {
+        ...course,
+        isTrial: enrollment.isTrial,
+        trialEndsAt: enrollment.trialEndsAt,
+      };
+      localStorage.setItem('lf_course_cache', JSON.stringify(globalCache));
+    }
+  } catch (e) {
+    console.error('Cache prime failed', e);
+  }
+};
+
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row shadow-sm">
       <div className="relative sm:w-48 h-36 sm:h-auto bg-gradient-to-br from-cyan-400 to-violet-500 flex-shrink-0">
@@ -89,7 +114,8 @@ const playerLink = courseId
           </div>
           <div className="flex justify-end pt-1">
             <Link
-              to={playerLink}
+            to={playerLink}      
+            onClick={handleNavigate}
               className="inline-flex items-center gap-1.5 text-sm font-bold text-cyan-600 hover:text-cyan-700 transition-colors"
             >
               <Play size={13} />
