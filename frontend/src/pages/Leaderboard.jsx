@@ -81,7 +81,7 @@ export default function Leaderboard() {
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-5 leading-tight">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-violet-600">Leaderboard</span>
           </h1>
-          <p className="text-slate-500 text-lg font-sans">Complete lessons, finish courses, and hold your streak to climb the ranks.</p>
+          <p className="text-slate-500 text-lg font-sans">Complete lessons, finish courses and hold your streak to climb the ranks.</p>
         </div>
       </section>
 

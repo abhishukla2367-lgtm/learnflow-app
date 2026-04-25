@@ -57,10 +57,27 @@ exports.adminDashboard = async (req, res) => {
     Enrollment.find().sort({ createdAt: -1 }).limit(6)
       .populate("student", "name avatar")
       .populate("course",  "title category"),
-    Course.find({ isPublished: true })
-      .sort({ enrollmentCount: -1 }).limit(5)
-      .populate("instructor", "name")
-      .select("title thumbnail enrollmentCount averageRating price category instructor"),
+    Enrollment.aggregate([
+  { $match: { isDeleted: { $ne: true } } },
+  { $group: { _id: "$course", enrollments: { $sum: 1 } } },
+  { $sort: { enrollments: -1 } },
+  { $limit: 5 },
+  { $lookup: { from: "courses", localField: "_id", foreignField: "_id", as: "course" } },
+  { $unwind: "$course" },
+  { $match: { "course.isPublished": true } },
+  { $lookup: { from: "users", localField: "course.instructor", foreignField: "_id", as: "instructorDoc" } },
+  { $unwind: { path: "$instructorDoc", preserveNullAndEmpty: true } },
+  { $project: {
+    _id:         "$course._id",
+    title:       "$course.title",
+    thumbnail:   "$course.thumbnail",
+    instructor:  "$instructorDoc.name",
+    enrollments: 1,
+    revenue:     { $multiply: ["$course.price", "$enrollments"] },
+    rating:      "$course.averageRating",
+    category:    "$course.category",
+  }},
+]),
     Enrollment.countDocuments({ isCompleted: true }),
   ]);
 
@@ -87,16 +104,7 @@ exports.adminDashboard = async (req, res) => {
       totalInstructors,
       avgCompletion,
     },
-    topCourses: topCourses.map((c) => ({
-      _id:         c._id,
-      title:       c.title,
-      thumbnail:   c.thumbnail,
-      instructor:  c.instructor?.name,
-      enrollments: c.enrollmentCount,
-      revenue:     c.price * c.enrollmentCount,
-      rating:      c.averageRating,
-      category:    c.category,
-    })),
+    topCourses,
     recentEnrollments: recentEnrollments.map((e) => ({
       _id:           e._id,
       studentName:   e.student?.name   || "Unknown",

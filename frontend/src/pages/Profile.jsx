@@ -5,7 +5,7 @@ import {
   Eye, EyeOff, Github, Linkedin, Globe, MapPin,
   Sparkles, AlertCircle, ChevronRight, Trash2, X,
   Upload, Check, Info, FileText, Link2,
-  Save, KeyRound, BellRing, ShieldCheck, LogOut
+  Save, KeyRound, ShieldCheck, LogOut
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
@@ -14,28 +14,44 @@ import api from '../utils/api';
 const TABS = [
   { key: 'profile',       icon: User,        label: 'Profile',       desc: 'Personal information' },
   { key: 'password',      icon: KeyRound,    label: 'Security',      desc: 'Password & access' },
-  { key: 'notifications', icon: BellRing,    label: 'Notifications', desc: 'Alerts & reminders' },
   { key: 'privacy',       icon: ShieldCheck, label: 'Privacy',       desc: 'Visibility & data' },
 ];
 
 const INDIAN_CITIES = [
-  'Bengaluru','Mumbai','Delhi','Hyderabad','Chennai',
-  'Pune','Kolkata','Ahmedabad','Jaipur','Lucknow','Kochi','Chandigarh',
-  'Nagpur','Surat','Indore','Bhopal','Visakhapatnam','Thiruvananthapuram',
-];
-
-const NOTIF_CONFIG = [
-  { k: 'email_sessions',    label: 'Live session reminders',     desc: '30 min before every live class',               emoji: '🔔', color: 'from-blue-500 to-cyan-500' },
-  { k: 'email_assignments', label: 'Assignment deadlines',        desc: '24 hours before assignments are due',          emoji: '📋', color: 'from-violet-500 to-purple-500' },
-  { k: 'whatsapp',          label: 'WhatsApp notifications',      desc: 'Session links and updates on WhatsApp',        emoji: '💬', color: 'from-green-500 to-emerald-500' },
-  { k: 'weekly_summary',    label: 'Weekly progress summary',     desc: 'Your learning recap every Sunday morning',     emoji: '📊', color: 'from-amber-500 to-orange-500' },
-  { k: 'email_offers',      label: 'Course offers & promotions',  desc: 'New launches, discounts, and recommendations', emoji: '🎁', color: 'from-pink-500 to-rose-500' },
-];
+  // Maharashtra
+  'Mumbai','Pune','Nagpur','Thane','Nashik','Aurangabad','Solapur',
+  'Dombivli','Kalyan','Navi Mumbai','Amravati','Kolhapur','Sangli',
+  // Karnataka
+  'Bengaluru','Mysuru','Hubli','Mangaluru','Belagavi','Davangere',
+  // Delhi NCR
+  'Delhi','Noida','Gurugram','Faridabad','Ghaziabad',
+  // Tamil Nadu
+  'Chennai','Coimbatore','Madurai','Tiruchirappalli','Salem','Tirunelveli',
+  // Telangana & AP
+  'Hyderabad','Visakhapatnam','Vijayawada','Warangal','Guntur',
+  // Gujarat
+  'Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar','Bhavnagar',
+  // Rajasthan
+  'Jaipur','Jodhpur','Udaipur','Kota','Ajmer','Bikaner',
+  // UP & Uttarakhand
+  'Lucknow','Kanpur','Agra','Varanasi','Prayagraj','Meerut','Dehradun',
+  // West Bengal
+  'Kolkata','Howrah','Durgapur','Siliguri','Asansol',
+  // Punjab, Haryana & Chandigarh
+  'Chandigarh','Ludhiana','Amritsar','Jalandhar','Patiala','Ambala',
+  // Kerala
+  'Kochi','Thiruvananthapuram','Kozhikode','Thrissur','Kollam',
+  // MP & Chhattisgarh
+  'Bhopal','Indore','Gwalior','Jabalpur','Raipur','Bhilai',
+  // Bihar & Jharkhand
+  'Patna','Gaya','Ranchi','Jamshedpur','Dhanbad',
+  // Other major cities
+  'Bhubaneswar','Guwahati','Jammu','Srinagar','Shimla','Imphal',
+].sort();
 
 const PRIVACY_CONFIG = [
   { label: 'Public profile',                      desc: 'Allow anyone to view your profile and courses',          color: 'from-cyan-500 to-blue-500' },
-  { label: 'Show in leaderboard',                 desc: 'Appear in course completion leaderboards',               color: 'from-violet-500 to-purple-500' },
-  { label: 'Share progress with hiring partners', desc: "Let Learnflow's hiring partners see your skills",        color: 'from-emerald-500 to-teal-500' },
+  { label: 'Share progress with hiring partners', desc: "Let Learnflow's hiring partners see your skills",        color: 'from-emerald-500 to-teal-500' }
 ];
 
 /* ─── password strength ──────────────────────────────────── */
@@ -185,7 +201,9 @@ function AvatarUpload({ name, avatarUrl, onUpload }) {
         </span>
       </div>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => handle(e.target.files[0])} />
+      {!preview && (
       <p className="text-[11px] text-slate-400 text-center leading-tight">Click or drag to upload<br/><span className="text-slate-300">JPG, PNG, GIF up to 5MB</span></p>
+      )}
     </div>
   );
 }
@@ -251,14 +269,7 @@ export default function Profile() {
   const [pwSaved, setPwSaved]   = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
 
-  const [notifs, setNotifs] = useState({
-    email_sessions: true, email_assignments: true,
-    email_offers: false,  whatsapp: true, weekly_summary: true,
-  });
-  const [notifSaved, setNotifSaved] = useState(false);
-  const [notifLoading, setNotifLoading] = useState(false);
-
-  const [privacy, setPrivacy]         = useState([true, true, false]);
+  const [privacy, setPrivacy]         = useState([true, false]);
   const [privacySaved, setPrivacySaved] = useState(false);
   const [privacyLoading, setPrivacyLoading] = useState(false);
 
@@ -268,12 +279,10 @@ export default function Profile() {
   // Cleanup refs to prevent setState after unmount
   const savedTimer       = useRef(null);
   const pwSavedTimer     = useRef(null);
-  const notifSavedTimer  = useRef(null);
   const privacySavedTimer = useRef(null);
   useEffect(() => () => {
     clearTimeout(savedTimer.current);
     clearTimeout(pwSavedTimer.current);
-    clearTimeout(notifSavedTimer.current);
     clearTimeout(privacySavedTimer.current);
   }, []);
 
@@ -291,22 +300,23 @@ export default function Profile() {
     const fallbackEmail = user?.email ?? '';
     api.get('/profile')
       .then(res => {
-        const d = res.data?.user || res.data;
-        setForm({
-          name:     d.name             ?? fallbackName,
-          email:    d.email            ?? fallbackEmail,
-          bio:      d.bio              ?? '',
-          phone:    d.phone            ?? '',
-          city:     d.city             ?? '',
-          headline: d.headline         ?? '',
-          website:  d.website          ?? '',
-          linkedin: d.social?.linkedin ?? '',
-          github:   d.social?.github   ?? '',
-        });
-        if (d.notifications) setNotifs(prev => ({ ...prev, ...d.notifications }));
-        if (Array.isArray(d.privacy)) setPrivacy(d.privacy);
-        if (d.avatarUrl) setAvatarUrl(d.avatarUrl);
-      })
+  const d = res.data?.user || res.data;
+  setForm({
+    name:     d.name              ?? fallbackName,
+    email:    d.email             ?? fallbackEmail,
+    bio:      d.bio               ?? '',
+    phone:    d.phone             ?? '',
+    city:     d.city              ?? '',
+    headline: d.headline          ?? '',
+    website:  d.website           ?? '',
+    linkedin: d.social?.linkedin  ?? '',
+    github:   d.social?.github    ?? '',
+  });
+  if (Array.isArray(d.privacy) && d.privacy.length === 2) {
+    setPrivacy(d.privacy);
+  }
+  if (d.avatar) setAvatarUrl(d.avatar);
+})
       .catch(() => setForm(p => ({ ...p, name: fallbackName, email: fallbackEmail })))
       .finally(() => setFetching(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -341,6 +351,7 @@ export default function Profile() {
         city:     form.city,
         headline: form.headline,
         website:  form.website,
+        avatar:   avatarUrl ?? '',
         social:   { linkedin: form.linkedin, github: form.github },
       });
       setSaved(true);
@@ -377,28 +388,6 @@ export default function Profile() {
     }
   };
 
-  /* ── save notifications ──
-   * NOTE: Your backend profileController ALLOWED array must include
-   * 'notifications' and 'privacy' fields, or add them to your User model.
-   * Currently ALLOWED = ["name","bio","avatar","headline","website","social"]
-   * Add "notifications" and "privacy" to that array.
-   */
-  const saveNotifs = async () => {
-    setNotifLoading(true);
-    try {
-      await api.put('/profile/update', { notifications: notifs });
-      setNotifSaved(true);
-      toast.success('Notification preferences saved ✓');
-      clearTimeout(notifSavedTimer.current);
-      notifSavedTimer.current = setTimeout(() => setNotifSaved(false), 2500);
-    } catch (err) {
-      toast.error(err?.response?.data?.message ?? 'Failed to save notifications');
-    } finally {
-      setNotifLoading(false);
-    }
-  };
-
-  /* ── save privacy ── */
   const savePrivacy = async () => {
     setPrivacyLoading(true);
     try {
@@ -469,17 +458,40 @@ export default function Profile() {
               <p className="text-[11px] text-slate-400 hidden sm:block">Manage your profile, security &amp; preferences</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className={`hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors ${completion === 100 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
-                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${completion === 100 ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                {completion === 100 ? 'Profile complete' : `${completion}% complete`}
-              </div>
-              <button
-                onClick={() => logout?.()}
-                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 px-3 py-1.5 rounded-xl transition-all font-medium"
-              >
-                <LogOut className="w-3.5 h-3.5" /> Sign out
-              </button>
-            </div>
+  <div className={`hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors ${completion === 100 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
+    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${completion === 100 ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+    {completion === 100 ? 'Profile complete' : `${completion}% complete`}
+  </div>
+
+  {/* ── NEW: Update Profile button shown only on profile tab ── */}
+  {tab === 'profile' && (
+    <button
+      onClick={save}
+      disabled={loading}
+      className={`
+        hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold text-xs shadow-sm transition-all duration-200 active:scale-95 disabled:opacity-60
+        ${saved
+          ? 'bg-emerald-500 text-white'
+          : 'bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white hover:shadow-md hover:shadow-cyan-200/60'}
+      `}
+    >
+      {loading ? (
+        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+      ) : saved ? (
+        <><Check className="w-3.5 h-3.5" /> Saved!</>
+      ) : (
+        <><Save className="w-3.5 h-3.5" /> Update Profile</>
+      )}
+    </button>
+  )}
+
+  <button
+    onClick={() => logout?.()}
+    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 px-3 py-1.5 rounded-xl transition-all font-medium"
+  >
+    <LogOut className="w-3.5 h-3.5" /> Sign out
+  </button>
+        </div>
           </div>
         </header>
 
@@ -789,64 +801,6 @@ export default function Profile() {
                   </Section>
                 </div>
               )}
-
-              {/* ╔════════════════════════════════════╗ */}
-              {/* ║  NOTIFICATIONS TAB                 ║ */}
-              {/* ╚════════════════════════════════════╝ */}
-              {tab === 'notifications' && (
-                <div className="fade-in">
-                  <Section title="Notification Preferences" subtitle="Choose how and when Learnflow contacts you" icon={BellRing} accent="from-amber-500 to-orange-500">
-                    <div className="p-5 space-y-2.5">
-                      {NOTIF_CONFIG.map(({ k, label, desc, emoji, color }) => (
-                        <div
-                          key={k}
-                          className={`
-                            flex items-center justify-between gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-200 select-none
-                            ${notifs[k]
-                              ? 'bg-cyan-50/60 border-cyan-200/80 shadow-sm'
-                              : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
-                          `}
-                          onClick={() => setNotifs(n => ({ ...n, [k]: !n[k] }))}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-lg flex-shrink-0 shadow-sm`}>
-                              {emoji}
-                            </div>
-                            <div className="min-w-0">
-                              <p className={`text-sm font-bold truncate ${notifs[k] ? 'text-cyan-900' : 'text-slate-700'}`}>{label}</p>
-                              <p className="text-[11px] text-slate-400 mt-0.5 truncate">{desc}</p>
-                            </div>
-                          </div>
-                          <Toggle value={notifs[k]} onChange={v => setNotifs(n => ({ ...n, [k]: v }))} />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="px-5 pb-5 flex justify-end border-t border-slate-100 pt-4">
-                      <button
-                        onClick={saveNotifs} disabled={notifLoading}
-                        className={`
-                          inline-flex items-center gap-2.5 px-7 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all duration-200 active:scale-95 disabled:opacity-60
-                          ${notifSaved
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white hover:shadow-md hover:shadow-amber-200/60'}
-                        `}
-                      >
-                        {notifLoading ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                        ) : notifSaved ? (
-                          <><Check className="w-4 h-4" /> Saved!</>
-                        ) : (
-                          <><BellRing className="w-4 h-4" /> Save Preferences</>
-                        )}
-                      </button>
-                    </div>
-                  </Section>
-                </div>
-              )}
-
-              {/* ╔════════════════════════════════════╗ */}
-              {/* ║  PRIVACY TAB                       ║ */}
-              {/* ╚════════════════════════════════════╝ */}
               {tab === 'privacy' && (
                 <div className="fade-in space-y-4">
                   <Section title="Privacy Settings" subtitle="Control your visibility and data sharing" icon={ShieldCheck} accent="from-emerald-500 to-teal-500">

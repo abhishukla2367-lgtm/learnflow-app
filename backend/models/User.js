@@ -10,11 +10,17 @@ const userSchema = new mongoose.Schema({
   bio:      { type: String, default: "", maxlength: 500 },
   headline: { type: String, default: "" },
   website:  { type: String, default: "" },
+  phone:    { type: String, default: "", trim: true },
+  city:     { type: String, default: "" },
   social: {
     twitter:  { type: String, default: "" },
     linkedin: { type: String, default: "" },
     github:   { type: String, default: "" },
   },
+privacy: {
+  type: [Boolean],
+  default: [true, false]
+},
   enrolledCourses:  [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
   createdCourses:   [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
   completedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],

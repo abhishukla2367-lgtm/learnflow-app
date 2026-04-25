@@ -144,11 +144,10 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
-    /* ── validate privacy shape if provided ── */
     if (updates.privacy !== undefined) {
       if (
         !Array.isArray(updates.privacy) ||
-        updates.privacy.length !== 3 ||
+        updates.privacy.length !== 2 ||
         updates.privacy.some(v => typeof v !== 'boolean')
       ) {
         return res.status(400).json({ success: false, message: 'privacy must be an array of 3 booleans' });

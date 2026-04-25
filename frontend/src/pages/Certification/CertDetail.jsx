@@ -1,7 +1,10 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Award, CheckCircle, Clock, BarChart2, Briefcase,
   BadgeCheck, Shield, Download, Star, ChevronDown, ChevronUp,
-  PlayCircle, Users, Zap, ArrowRight, Globe } from 'lucide-react';
+  PlayCircle, Users, ArrowRight } from 'lucide-react';
+import { HiReceiptRefund } from 'react-icons/hi';
+import { FaHandshake } from 'react-icons/fa';
+import { MdQrCodeScanner, MdLibraryBooks } from 'react-icons/md';
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { CERTS } from '../../data/certsData';
@@ -158,7 +161,7 @@ export default function CertDetail() {
               <div className="flex flex-wrap gap-4 mb-6">
                 {[
                   { icon: Clock, label: cert.duration },
-                  { icon: BarChart2, label: `${totalLessons} lessons` },
+                  { icon: MdLibraryBooks, label: `${totalLessons} lessons` },
                   { icon: Users, label: '50,000+ enrolled' },
                   { icon: Briefcase, label: cert.jobs },
                 ].map(({ icon: Icon, label }) => (
@@ -194,10 +197,10 @@ export default function CertDetail() {
                   <div className="border-t border-slate-200 pt-4 space-y-2.5">
                     {[
                       [BadgeCheck, 'Blockchain-verified certificate'],
-                      [Shield, 'Tamper-proof QR code'],
+                      [MdQrCodeScanner, 'Tamper-proof QR code'],
                       [Download, 'PDF + LinkedIn badge'],
-                      [Globe, '1,200+ hiring partners'],
-                      [Zap, '30-day guarantee'],
+                      [FaHandshake, '1,200+ hiring partners'],
+                      [HiReceiptRefund, '30-day guarantee'],
                     ].map(([Icon, text]) => (
                       <div key={text} className="flex items-center gap-2.5 text-xs text-slate-600 font-mono">
                         <Icon className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" /> {text}

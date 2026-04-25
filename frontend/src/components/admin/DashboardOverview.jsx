@@ -181,7 +181,7 @@ export default function DashboardOverview({ downloadReportRef }) {
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated,setLastUpdated]= useState(null);
   const [newEnrolls, setNewEnrolls] = useState([]);
-  const [, setTick] = useState(0); // ← forces re-render every second so timeAgo updates
+  const [, setTick] = useState(0);
   const navigate  = useNavigate();
   const { socket, liveStats } = useSocket();
 
@@ -229,6 +229,8 @@ export default function DashboardOverview({ downloadReportRef }) {
         ...liveStats,
         enrollmentsToday: liveStats.totalEnrollments ?? prev.stats?.enrollmentsToday,
       },
+      // Update top courses if backend pushes fresh ranking
+      topCourses: liveStats.topCourses ?? prev.topCourses,
     } : prev);
     setLastUpdated(new Date());
   }, [liveStats]);
@@ -293,10 +295,19 @@ export default function DashboardOverview({ downloadReportRef }) {
         ...prev,
         stats: { ...prev.stats, enrollmentsToday: (prev.stats?.enrollmentsToday || 0) + 1 },
       } : prev);
+      // Re-fetch to get updated top courses ranking
+      load();
     };
     socket.on("enrollment:new", handler);
     return () => socket.off("enrollment:new", handler);
-  }, [socket]);
+  }, [socket, load]);
+
+  // ── Socket.IO courses updated (ranking change, new course, etc.) ──
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("courses:updated", () => load());
+    return () => socket.off("courses:updated");
+  }, [socket, load]);
 
   if (error) return <ErrorState onRetry={() => load()} />;
 
