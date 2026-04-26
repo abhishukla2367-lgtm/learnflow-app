@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSocket } from "../../../context/SocketContext";
 import {
   Search, Filter, Clock, CheckCircle2, TrendingUp,
@@ -60,7 +61,6 @@ function ProgressRing({ value = 0 }) {
   );
 }
 
-
 function EnrollmentCard({ enrollment, onRemove, onRestore }) {
   const e = enrollment;
   const gradIdx = e.student?.name?.charCodeAt(0)%STUDENT_GRADIENTS.length||0;
@@ -80,22 +80,24 @@ function EnrollmentCard({ enrollment, onRemove, onRestore }) {
         </div>
         <div className="flex items-center gap-2">
           <ProgressRing value={e.progress||0}/>
-          <button
-            onClick={() => onRemove(e._id, e.student?.name, e.course?.title)}
-            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
-            title="Remove enrollment"
-          >
-            <Trash2 size={13}/>
-          </button>
+          {!e.isDeleted && (
+            <button
+              onClick={() => onRemove(e._id, e.student?.name, e.course?.title)}
+              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
+              title="Remove enrollment"
+            >
+              <Trash2 size={13}/>
+            </button>
+          )}
           {e.isDeleted && (
-  <button
-    onClick={() => onRestore(e._id, e.student?.name, e.course?.title)}
-    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 transition-all"
-    title="Restore enrollment"
-  >
-    <RotateCcw size={13}/>
-  </button>
-)}
+            <button
+              onClick={() => onRestore(e._id, e.student?.name, e.course?.title)}
+              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 transition-all"
+              title="Restore enrollment"
+            >
+              <RotateCcw size={13}/>
+            </button>
+          )}
         </div>
       </div>
       <div className="flex items-start gap-3 mb-4 p-3 bg-slate-50 rounded-xl">
@@ -122,8 +124,9 @@ function EnrollmentCard({ enrollment, onRemove, onRestore }) {
   );
 }
 
+// ── Portal-based modals ─────────────────────────────────────
 function ConfirmModal({ name, course, onConfirm, onCancel }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
         <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center mb-4">
@@ -143,18 +146,46 @@ function ConfirmModal({ name, course, onConfirm, onCancel }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
+  );
+}
+
+function RestoreModal({ name, course, onConfirm, onCancel }) {
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
+          <RotateCcw size={20} className="text-emerald-500" />
+        </div>
+        <h3 className="font-black text-slate-900 text-base mb-1">Restore Enrollment?</h3>
+        <p className="text-sm text-slate-500 mb-5">
+          <span className="font-bold text-slate-700">{name}</span> will be re-enrolled in{" "}
+          <span className="font-bold text-slate-700">{course}</span>.
+        </p>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
+            Cancel
+          </button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all">
+            Restore
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
 export default function EnrollmentsAdmin({ downloadReportRef, exportPdfRef }) {
-  const [items,   setItems]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
-  const [search,  setSearch]  = useState("");
-  const [status,  setStatus]  = useState("All");
-  const [total,   setTotal]   = useState(0);
+  const [items,         setItems]         = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState(false);
+  const [search,        setSearch]        = useState("");
+  const [status,        setStatus]        = useState("All");
+  const [total,         setTotal]         = useState(0);
   const [confirmTarget, setConfirmTarget] = useState(null);
+  const [restoreTarget, setRestoreTarget] = useState(null);
   const pageRef = useRef(null);
   usePdfExport(exportPdfRef, pageRef, "enrollments", "Enrollments");
 
@@ -201,20 +232,18 @@ export default function EnrollmentsAdmin({ downloadReportRef, exportPdfRef }) {
     }
   };
 
-  const [restoreTarget, setRestoreTarget] = useState(null);
-
-const handleRestore = async () => {
-  try {
-    await restoreAdminEnrollment(restoreTarget.id);
-    setItems(prev => prev.filter(e => e._id !== restoreTarget.id));
-    setTotal(prev => prev - 1);
-    toast.success("Enrollment restored successfully");
-  } catch {
-    toast.error("Failed to restore enrollment");
-  } finally {
-    setRestoreTarget(null);
-  }
-};
+  const handleRestore = async () => {
+    try {
+      await restoreAdminEnrollment(restoreTarget.id);
+      setItems(prev => prev.filter(e => e._id !== restoreTarget.id));
+      setTotal(prev => prev - 1);
+      toast.success("Enrollment restored successfully");
+    } catch {
+      toast.error("Failed to restore enrollment");
+    } finally {
+      setRestoreTarget(null);
+    }
+  };
 
   useEffect(() => {
     if (downloadReportRef) {
@@ -248,7 +277,6 @@ const handleRestore = async () => {
           enrolled: e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-IN") : "—",
         }));
 
-        // Style header
         ws.getRow(1).eachCell(cell => {
           cell.font      = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
           cell.fill      = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6366F1" } };
@@ -257,7 +285,6 @@ const handleRestore = async () => {
         });
         ws.getRow(1).height = 22;
 
-        // Row styles + status + progress color coding
         for (let i = 2; i <= items.length + 1; i++) {
           const row  = ws.getRow(i);
           const data = items[i - 2];
@@ -293,12 +320,11 @@ const handleRestore = async () => {
   const notStarted = items.filter(e => (e.progress||0)===0).length;
   const avgProgress = items.length ? Math.round(items.reduce((a,e)=>a+(e.progress||0),0)/items.length) : 0;
 
-  // Chart data
   const pieTot = completed + inProgress + notStarted || 1;
   const statusPieData = [
-  { name:"Completed",   value:completed,  fill:"#10b981", percent:Math.round(completed/pieTot*100)  },
-  { name:"In Progress", value:inProgress, fill:"#6366f1", percent:Math.round(inProgress/pieTot*100) },
-  { name:"Not Started", value:notStarted, fill:"#f59e0b", percent:Math.round(notStarted/pieTot*100) },
+    { name:"Completed",   value:completed,  fill:"#10b981", percent:Math.round(completed/pieTot*100)  },
+    { name:"In Progress", value:inProgress, fill:"#6366f1", percent:Math.round(inProgress/pieTot*100) },
+    { name:"Not Started", value:notStarted, fill:"#f59e0b", percent:Math.round(notStarted/pieTot*100) },
   ].filter(d => d.value > 0);
 
   const progressBarData = [
@@ -315,10 +341,10 @@ const handleRestore = async () => {
       {/* Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label:"Total",        value:total,          icon:Users,        color:"bg-indigo-50  border-indigo-200  text-indigo-600"  },
-          { label:"Completed",    value:completed,      icon:CheckCircle2, color:"bg-emerald-50 border-emerald-200 text-emerald-600" },
-          { label:"In Progress",  value:inProgress,     icon:TrendingUp,   color:"bg-amber-50   border-amber-200   text-amber-600"   },
-          { label:"Avg Progress", value:`${avgProgress}%`, icon:Award,     color:"bg-violet-50  border-violet-200  text-violet-600"  },
+          { label:"Total",        value:total,             icon:Users,        color:"bg-indigo-50  border-indigo-200  text-indigo-600"  },
+          { label:"Completed",    value:completed,         icon:CheckCircle2, color:"bg-emerald-50 border-emerald-200 text-emerald-600" },
+          { label:"In Progress",  value:inProgress,        icon:TrendingUp,   color:"bg-amber-50   border-amber-200   text-amber-600"   },
+          { label:"Avg Progress", value:`${avgProgress}%`, icon:Award,        color:"bg-violet-50  border-violet-200  text-violet-600"  },
         ].map(s => (
           <div key={s.label} className={`border rounded-2xl p-4 flex items-center gap-3 ${s.color}`}>
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${s.color}`}><s.icon size={18}/></div>
@@ -330,7 +356,6 @@ const handleRestore = async () => {
       {/* Charts */}
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Completion Status Pie */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-200 hover:shadow-md transition-all">
             <div className="flex items-center gap-2 mb-5"><CheckCircle2 size={15} className="text-emerald-500"/><h3 className="font-black text-slate-900 text-sm">Completion Status</h3></div>
             <div className="flex items-center gap-4">
@@ -356,7 +381,6 @@ const handleRestore = async () => {
             </div>
           </div>
 
-          {/* Progress Distribution Bar */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-200 hover:shadow-md transition-all">
             <div className="flex items-center gap-2 mb-5"><TrendingUp size={15} className="text-amber-500"/><h3 className="font-black text-slate-900 text-sm">Progress Distribution</h3></div>
             <ResponsiveContainer width="100%" height={180}>
@@ -402,13 +426,17 @@ const handleRestore = async () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {items.map(e => (
-        <EnrollmentCard
-  key={e._id}
-  enrollment={e}
-  onRemove={(id, name, course) => setConfirmTarget({ id, name, course })}
-  onRestore={(id, name, course) => setRestoreTarget({ id, name, course })}
-/>
-        ))}
+            <EnrollmentCard
+              key={e._id}
+              enrollment={e}
+              onRemove={(id, name, course) => setConfirmTarget({ id, name, course })}
+              onRestore={(id, name, course) => setRestoreTarget({ id, name, course })}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Modals — rendered via portal directly into document.body */}
       {confirmTarget && (
         <ConfirmModal
           name={confirmTarget.name}
@@ -418,28 +446,12 @@ const handleRestore = async () => {
         />
       )}
       {restoreTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
-              <RotateCcw size={20} className="text-emerald-500" />
-            </div>
-            <h3 className="font-black text-slate-900 text-base mb-1">Restore Enrollment?</h3>
-            <p className="text-sm text-slate-500 mb-5">
-              <span className="font-bold text-slate-700">{restoreTarget.name}</span> will be re-enrolled in{" "}
-              <span className="font-bold text-slate-700">{restoreTarget.course}</span>.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setRestoreTarget(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
-                Cancel
-              </button>
-              <button onClick={handleRestore} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all">
-                Restore
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>  
+        <RestoreModal
+          name={restoreTarget.name}
+          course={restoreTarget.course}
+          onConfirm={handleRestore}
+          onCancel={() => setRestoreTarget(null)}
+        />
       )}
     </div>
   );

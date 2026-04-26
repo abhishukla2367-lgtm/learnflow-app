@@ -19,7 +19,6 @@ async function pushStatsToAdmins() {
   try {
     const User       = require("./models/User");
     const Enrollment = require("./models/Enrollment");
-    const Course     = require("./models/Course");
 
     const [totalStudents, totalEnrollments, revenue] = await Promise.all([
       User.countDocuments({ role: "student" }),
@@ -30,10 +29,6 @@ async function pushStatsToAdmins() {
         { $match: { "c.isFree": { $ne: true } } },
         { $group: { _id: null, total: { $sum: "$c.price" } } },
       ]),
-      Course.find({ isPublished: true })
-        .sort({ enrollmentCount: -1 }).limit(5)
-        .populate("instructor", "name")
-        .select("title thumbnail enrollmentCount averageRating price category instructor")
     ]);
 
     const stats = {
@@ -41,16 +36,6 @@ async function pushStatsToAdmins() {
       totalEnrollments,
       totalRevenue:     revenue[0]?.total ?? 0,
       updatedAt:        new Date().toISOString(),
-      topCourses: topCourses.map(c => ({
-        _id:         c._id,
-        title:       c.title,
-        thumbnail:   c.thumbnail,
-        instructor:  c.instructor?.name,
-        enrollments: c.enrollmentCount,
-        revenue:     c.price * c.enrollmentCount,
-        rating:      c.averageRating,
-        category:    c.category,
-      }))
     };
     io.to("admins").emit("stats:update", stats);
   } catch (err) {

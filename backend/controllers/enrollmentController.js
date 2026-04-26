@@ -101,7 +101,10 @@ exports.enroll = async (req, res) => {
 // ─── 2. Get My Enrollments (For Dashboard) ───────────────────────────────────
 exports.getMyEnrollments = async (req, res) => {
   try {
-    const enrollments = await Enrollment.find({ student: req.user._id })
+    const enrollments = await Enrollment.find({ 
+    student: req.user._id,
+    isDeleted: { $ne: true }
+    })
       .populate('course')
       .sort({ enrolledAt: -1 })
       .lean();
@@ -141,8 +144,9 @@ exports.getEnrollmentDetail = async (req, res) => {
     const userId = req.user._id;
 
     const enrollment = await Enrollment.findOne({ 
-      student: userId, 
-      course: courseId 
+    student: userId, 
+    course: courseId,
+    isDeleted: { $ne: true }
     }).populate('course').lean();
 
     if (!enrollment) {

@@ -71,7 +71,10 @@ function UserCard({ user, onToggle }) {
   const roleStyle = ROLE_STYLES[user.role] || ROLE_STYLES.student;
   const RoleIcon  = roleStyle.icon;
   const joinDate  = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"2-digit"}) : "—";
-  const courses   = (user.enrolledCourses?.length||0)+(user.createdCourses?.length||0);
+  const courses = user.role === "instructor" || user.role === "admin"
+  ? user.coursesCount ?? 0    
+  : user.enrolledCount ?? 0;    
+  
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-50 transition-all duration-300 group flex flex-col">
       <div className="flex items-start justify-between mb-4">

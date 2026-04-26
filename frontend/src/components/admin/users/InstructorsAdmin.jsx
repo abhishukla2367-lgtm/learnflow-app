@@ -2,13 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import toast from "react-hot-toast";
 import usePdfExport from "../shared/usePdfExport";
 import { useSocket } from "../../../context/SocketContext";
-import {
-  Search, Star, BookOpen, Users,
-  Linkedin, XIcon, CheckCircle, Mail,
-  GraduationCap, TrendingUp,
-} from "lucide-react";
+import { Search, Star, BookOpen, Users, Linkedin, XIcon, CheckCircle, Mail, GraduationCap, TrendingUp, Ban, MoreVertical } from "lucide-react";
 import { FaGithub, FaInstagram } from "react-icons/fa";
-import { fetchAdminUsers } from "../../../api/adminApi";
+import { fetchAdminUsers, toggleUser } from "../../../api/adminApi";
 import EmptyState from "../shared/EmptyState";
 import ErrorState from "../shared/ErrorState";
 import { SkeletonInstructorCard } from "../shared/SkeletonCard";
@@ -90,7 +86,15 @@ function getSocialLinks(instructor) {
 }
 
 /* ── Instructor Card ── */
-function InstructorCard({ instructor }) {
+function InstructorCard({ instructor, onToggle }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+const menuRef = useRef(null);
+useEffect(() => {
+  if (!menuOpen) return;
+  const h = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+  document.addEventListener("mousedown", h);
+  return () => document.removeEventListener("mousedown", h);
+}, [menuOpen]);
   const idx        = instructor.name?.charCodeAt(0) % BANNER_GRADIENTS.length || 0;
   const bannerGrad = BANNER_GRADIENTS[idx];
   const courses  = instructor.coursesCount  || 0;
@@ -108,18 +112,24 @@ function InstructorCard({ instructor }) {
         <div className="absolute inset-0 opacity-10
           [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)]
           [background-size:16px_16px]" />
-        <div className="absolute top-3 right-3">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-            text-[10px] font-black backdrop-blur-sm border leading-none
-            ${instructor.isActive
-              ? "bg-emerald-500/90 text-white border-emerald-400/30"
-              : "bg-slate-800/70 text-slate-300 border-slate-600/30"
-            }`}>
-            <span className={`w-1.5 h-1.5 rounded-full
-              ${instructor.isActive ? "bg-white animate-pulse" : "bg-slate-500"}`} />
-            {instructor.isActive ? "Active" : "Suspended"}
-          </span>
-        </div>
+        <div className="absolute top-3 right-3" ref={menuRef}>
+  <button
+    onClick={() => setMenuOpen(v => !v)}
+    className="w-8 h-8 rounded-xl bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition-all opacity-0 group-hover:opacity-100"
+  >
+    <MoreVertical size={14}/>
+  </button>
+  {menuOpen && (
+    <div className="absolute right-0 top-10 z-20 w-40 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+      <button
+        onClick={() => { onToggle(instructor._id, instructor.isActive); setMenuOpen(false); }}
+        className={`flex items-center gap-2.5 w-full px-4 py-3 text-sm font-semibold transition-colors ${instructor.isActive ? "text-rose-500 hover:bg-rose-50" : "text-emerald-600 hover:bg-emerald-50"}`}
+      >
+        {instructor.isActive ? <><Ban size={13}/> Suspend</> : <><CheckCircle size={13}/> Reactivate</>}
+      </button>
+    </div>
+  )}
+</div>
       </div>
 
       {/* Avatar */}
@@ -260,7 +270,16 @@ export default function InstructorsAdmin({ exportPdfRef }) {
 
   const active    = instructors.filter(i => i.isActive).length;
   const suspended = instructors.filter(i => !i.isActive).length;
-
+  
+  const handleToggle = async (id, current) => {
+  try {
+    await toggleUser(id);
+    setInstructors(p => p.map(u => u._id === id ? { ...u, isActive: !current } : u));
+    toast.success(`Instructor ${current ? "suspended" : "reactivated"} successfully`);
+  } catch {
+    toast.error("Failed to update instructor. Please try again.");
+  }
+};
   return (
     <div ref={pageRef} className="space-y-6">
 
@@ -310,7 +329,7 @@ export default function InstructorsAdmin({ exportPdfRef }) {
         <EmptyState title="No instructors found" message="No instructors match your search." />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {instructors.map(ins => <InstructorCard key={ins._id} instructor={ins} />)}
+          {instructors.map(ins => <InstructorCard key={ins._id} instructor={ins} onToggle={handleToggle} />)}
         </div>
       )}
 

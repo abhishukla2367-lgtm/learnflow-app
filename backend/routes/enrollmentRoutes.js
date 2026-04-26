@@ -14,17 +14,12 @@ const { Enrollment } = require("../models/index");
 // GET /api/enrollments 
 // Fetch all enrollments for the logged-in student (used by MyCourses dashboard)
 router.get("/", protect, getMyEnrollments);
-
-
-// ─── 2. STATUS & CHECK ROUTES ──────────────────────────────────────────────
-
-// GET /api/enrollments/check/:courseId
-// Quick check to see if user is already enrolled before showing payment buttons
 router.get("/check/:courseId", protect, async (req, res) => {
   try {
     const enrollment = await Enrollment.findOne({
-      student: req.user._id,
-      course:  req.params.courseId,
+    student: req.user._id,
+    course:  req.params.courseId,
+    isDeleted: { $ne: true }
     });
     res.json({ 
       success: true, 

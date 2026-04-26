@@ -88,7 +88,7 @@ function CourseCard({ course, onToggle, onDelete }) {
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-10 z-20 w-44 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-              <button onClick={() => { navigate(`/course/${course._id}`); setMenuOpen(false); }} className="flex items-center gap-2.5 w-full px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"><Eye size={14} className="text-indigo-500"/> View Course</button>
+              <button onClick={() => { navigate(`/courses/${course._id}`); setMenuOpen(false); }} className="flex items-center gap-2.5 w-full px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"><Eye size={14} className="text-indigo-500"/> View Course</button>
               <button onClick={() => { onToggle(course._id, course.isPublished); setMenuOpen(false); }} className="flex items-center gap-2.5 w-full px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
                 {course.isPublished ? <><ToggleLeft size={14} className="text-amber-500"/> Unpublish</> : <><ToggleRight size={14} className="text-emerald-500"/> Publish</>}
               </button>
@@ -117,7 +117,7 @@ function CourseCard({ course, onToggle, onDelete }) {
             {course.difficulty}
           </span>
           {course.isFree
-            ? <span className="inline-flex items-center leading-none text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Free</span>
+            ? <span className="inline-flex items-center leading-none text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Free for 7 days</span>
             : <span className="inline-flex items-center leading-none text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">₹{course.price?.toLocaleString("en-IN")}</span>
           }
         </div>
@@ -148,9 +148,8 @@ export default function CoursesAdmin({ downloadReportRef, exportPdfRef }) {
   const pageRef = useRef(null);
   usePdfExport(exportPdfRef, pageRef, "courses", "Course Management");
 
-  const CATEGORIES   = ["All","Marketing","Web Development","AI / Machine Learning","Design","Data Science","Cloud Computing","Cybersecurity","DSA"];
+  const CATEGORIES   = ["All","Marketing","Web Development","AI / Machine Learning","Design","Data Science","Cloud Computing"];
   const DIFFICULTIES = ["All","Beginner","Intermediate","Advanced"];
-
   const load = useCallback(async () => {
     setError(false); setLoading(true);
     try {
@@ -159,7 +158,7 @@ export default function CoursesAdmin({ downloadReportRef, exportPdfRef }) {
       if (category !== "All") params.category   = category;
       if (diff !== "All")     params.difficulty = diff;
       if (status !== "All")   params.status     = status;
-      const { data } = await fetchAdminCourses(params);
+      const { data } = await fetchAdminCourses({ ...params, limit: 100 });
       setCourses(data.courses||[]); setTotal(data.total||0);
     } catch { setError(true); }
     finally { setLoading(false); }
