@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Mail, Phone, MapPin, Clock, ArrowRight, MessageCircle,
@@ -6,7 +6,7 @@ import {
   Star, ThumbsUp, Quote, X, Loader2, CheckCircle2, Copy, Check,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../firebase'; // Adjust path to your firebase.js
+import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, limit, where } from 'firebase/firestore';
 
 
@@ -32,6 +32,12 @@ const AVATAR_COLORS = [
 ];
 
 const MAX_MESSAGE = 1000;
+
+/* ─── Nuclear autocomplete: randomise field name on each mount ─ */
+function useRandomId(prefix) {
+  const id = useRef(`${prefix}_${Math.random().toString(36).slice(2, 9)}`);
+  return id.current;
+}
 
 /* ─── Copy-to-clipboard hook ──────────────────────────────── */
 function useCopy() {
@@ -95,14 +101,12 @@ function ReviewCard({ review, onHelpful }) {
   const [count, setCount] = useState(review.helpful || 0);
   const handle = () => { if (voted) return; setVoted(true); setCount(c => c + 1); onHelpful?.(review.id); };
   
-  // Deterministic color based on the review ID or name to keep it consistent
   const colorIdx = typeof review.id === 'number' 
     ? review.id % AVATAR_COLORS.length 
     : review.name.length % AVATAR_COLORS.length;
 
   return (
     <article className="relative bg-white border border-slate-200 rounded-2xl p-7 flex flex-col gap-5 shadow-sm hover:border-cyan-200 hover:shadow-md transition-all duration-300">
-      {/* ── Header: Avatar, Info, and Stars ── */}
       <div className="flex items-center gap-3">
         <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${AVATAR_COLORS[colorIdx]} flex items-center justify-center font-bold text-white text-sm flex-shrink-0 shadow-sm`}>
           {review.avatar}
@@ -114,14 +118,12 @@ function ReviewCard({ review, onHelpful }) {
         <StarRow rating={review.overallRating} />
       </div>
 
-      {/* ── Review Text: Italicized and exactly like seed reviews ── */}
       {review.overallDetail && (
         <p className="text-sm text-slate-600 leading-relaxed italic">
           "{review.overallDetail}"
         </p>
       )}
 
-      {/* ── Detailed Ratings Grid ── */}
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: 'Course', val: review.courseRating },
@@ -139,11 +141,10 @@ function ReviewCard({ review, onHelpful }) {
         ))}
       </div>
 
-      {/* ── Footer: Badge and Helpful Button ── */}
       <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-      <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold font-mono">
-      <CheckCircle className="w-3 h-3" /> Verified Learner
-      </span>
+        <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold font-mono">
+          <CheckCircle className="w-3 h-3" /> Verified Learner
+        </span>
         <button onClick={handle} disabled={voted}
           className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all font-medium
             ${voted
@@ -154,6 +155,104 @@ function ReviewCard({ review, onHelpful }) {
         </button>
       </div>
     </article>
+  );
+}
+
+/* ─── NoAutoFill input/textarea wrappers ──────────────────── */
+/**
+ * NUCLEAR STRATEGY (all layers combined):
+ * 1. autoComplete="off"  on <form> — baseline
+ * 2. autoComplete="new-password" on every input — Chrome/Safari respect this even when they ignore "off"
+ * 3. Randomised `name` attribute via useRandomId — defeats browser heuristics that key on "email", "phone", etc.
+ * 4. Dummy hidden inputs above each real one — confuses autofill scanning
+ * 5. readOnly + onFocus remove readOnly — prevents pre-population before user interaction
+ * 6. data-lpignore="true" — disables LastPass
+ * 7. data-1p-ignore — disables 1Password
+ * 8. data-bwignore — disables Bitwarden
+ */
+function NoFillInput({ value, onChange, type = 'text', placeholder, className, required, maxLength }) {
+  const randName = useRandomId('lf');
+  const [ready, setReady] = useState(false);
+
+  return (
+    <>
+      {/* Dummy trap input — absorbs autofill before the real one */}
+      <input
+        type={type}
+        name={`trap_${randName}`}
+        style={{ display: 'none' }}
+        tabIndex="-1"
+        aria-hidden="true"
+        readOnly
+      />
+      <input
+        type={type}
+        name={randName}
+        autoComplete="new-password"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-bwignore="true"
+        data-form-type="other"
+        readOnly={!ready}
+        onFocus={() => setReady(true)}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={className}
+        required={required}
+        maxLength={maxLength}
+      />
+    </>
+  );
+}
+
+function NoFillTextarea({ value, onChange, rows, placeholder, className, required, maxLength }) {
+  const randName = useRandomId('lft');
+  const [ready, setReady] = useState(false);
+
+  return (
+    <textarea
+      name={randName}
+      autoComplete="new-password"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck="false"
+      data-lpignore="true"
+      data-1p-ignore="true"
+      data-bwignore="true"
+      data-form-type="other"
+      readOnly={!ready}
+      onFocus={() => setReady(true)}
+      rows={rows}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={className}
+      required={required}
+      maxLength={maxLength}
+    />
+  );
+}
+
+function NoFillSelect({ value, onChange, className, required, children }) {
+  const randName = useRandomId('lfs');
+  return (
+    <select
+      name={randName}
+      autoComplete="off"
+      data-lpignore="true"
+      data-1p-ignore="true"
+      data-form-type="other"
+      value={value}
+      onChange={onChange}
+      className={className}
+      required={required}
+    >
+      {children}
+    </select>
   );
 }
 
@@ -178,10 +277,7 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (honeypot.length > 0) {
-      console.log("Bot detected.");
-      return; 
-    }
+    if (honeypot.length > 0) { console.log("Bot detected."); return; }
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
@@ -206,7 +302,8 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col gap-6 shadow-sm">
+    /* autoComplete="off" on the form element as the first layer */
+    <form onSubmit={handleSubmit} autoComplete="off" className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col gap-6 shadow-sm">
       <div>
         <h3 className="text-xl font-bold text-slate-900 mb-1">Share your Learnflow experience</h3>
         <p className="text-sm text-slate-500">Your review helps thousands of learners make better decisions.</p>
@@ -214,31 +311,23 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
 
       {/* Basic info */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div style={{ display: 'none' }} aria-hidden="true">
-        <input 
-          type="text" 
-          name="website" 
-          value={honeypot} 
-          onChange={(e) => setHoneypot(e.target.value)} 
-          tabIndex="-1" 
-          autoComplete="off" 
-        />
-      </div>
+        {/* Honeypot */}
+        <div style={{ display: 'none' }} aria-hidden="true">
+          <input type="text" name="website" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex="-1" autoComplete="off" />
+        </div>
+
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Name *</label>
-          <input placeholder="Rahul Sharma" value={form.name}
-            onChange={e => set('name', e.target.value)} className={inputCls} />
+          <NoFillInput placeholder="Rahul Sharma" value={form.name} onChange={e => set('name', e.target.value)} className={inputCls} />
           {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Role / Job Title</label>
-          <input placeholder="Frontend Developer" value={form.role}
-            onChange={e => set('role', e.target.value)} className={inputCls} />
+          <NoFillInput placeholder="Frontend Developer" value={form.role} onChange={e => set('role', e.target.value)} className={inputCls} />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">City</label>
-          <input placeholder="Pune" value={form.city}
-            onChange={e => set('city', e.target.value)} className={inputCls} />
+          <NoFillInput placeholder="Pune" value={form.city} onChange={e => set('city', e.target.value)} className={inputCls} />
         </div>
       </div>
 
@@ -252,7 +341,7 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
       {/* What did you like */}
       <div className="space-y-1.5">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">What did you like most?</label>
-        <textarea rows={2} placeholder="The IST-friendly live sessions, certificate quality, instructors…"
+        <NoFillTextarea rows={2} placeholder="The IST-friendly live sessions, certificate quality, instructors…"
           value={form.likedDetail} onChange={e => set('likedDetail', e.target.value)}
           className={`${inputCls} resize-none`} />
       </div>
@@ -260,7 +349,7 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
       {/* Suggestions */}
       <div className="space-y-1.5">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Suggestions for improvement</label>
-        <textarea rows={2} placeholder="What could we do better?"
+        <NoFillTextarea rows={2} placeholder="What could we do better?"
           value={form.improveDetail} onChange={e => set('improveDetail', e.target.value)}
           className={`${inputCls} resize-none`} />
       </div>
@@ -271,7 +360,7 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
         {errors.overallRating && <p className="text-red-500 text-xs -mt-2">{errors.overallRating}</p>}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Overall Experience *</label>
-          <textarea rows={4}
+          <NoFillTextarea rows={4}
             placeholder="Share your overall experience — how Learnflow helped your career…"
             value={form.overallDetail}
             onChange={e => set('overallDetail', e.target.value)}
@@ -297,101 +386,81 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
 
 /* ─── Main Component ──────────────────────────────────────── */
 export default function Contact() {
-  /* Contact form */
-  const [form, setForm]   = useState({ name: '', email: '', phone: '', subject: 'General Enquiry', message: '' });
+  const [form, setForm]       = useState({ name: '', email: '', phone: '', subject: 'General Enquiry', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent]       = useState(false);
-  const handle = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
   const submit = async e => {
-  e.preventDefault();
-  if (!form.name || !form.email || !form.message) { 
-    toast.error('Please fill in all required fields.'); 
-    return; 
-  }
-  
-  setSending(true);
-  try {
-    // Save to "messages" collection
-    await addDoc(collection(db, "messages"), {
-      ...form,
-      createdAt: serverTimestamp()
-    });
-    
-    setSending(false); 
-    setSent(true);
-    toast.success("Message sent! We'll reply within 24 hours.");
-  } catch (error) {
-    setSending(false);
-    toast.error("Something went wrong. Please try again.");
-    console.error("Firestore Error:", error);
-  }
-};
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+    setSending(true);
+    try {
+      await addDoc(collection(db, "messages"), { ...form, createdAt: serverTimestamp() });
+      setSending(false);
+      setSent(true);
+      toast.success("Message sent! We'll reply within 24 hours.");
+    } catch (error) {
+      setSending(false);
+      toast.error("Something went wrong. Please try again.");
+      console.error("Firestore Error:", error);
+    }
+  };
+
   /* Reviews State */
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews]       = useState([]);
   const [submittingR, setSubmittingR] = useState(false);
-  const [reviewSent, setReviewSent] = useState(false);
+  const [reviewSent, setReviewSent]   = useState(false);
 
   useEffect(() => {
     const q = query(
-    collection(db, "reviews"),
-    where("status", "==", "approved"),
-    where("overallRating", ">=", 4), 
-    orderBy("overallRating", "desc"),
-    orderBy("createdAt", "desc"),
-    limit(3)
-  );
-    
+      collection(db, "reviews"),
+      where("status", "==", "approved"),
+      where("overallRating", ">=", 4),
+      orderBy("overallRating", "desc"),
+      orderBy("createdAt", "desc"),
+      limit(3)
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const remoteReviews = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      // This merges the live Firestore data with your initial hardcoded data
-      setReviews(remoteReviews);
+      setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-
     return () => unsubscribe();
   }, []);
-   const submitReview = async (formData) => {
-  setSubmittingR(true);
-  try {
-    // 1. Prepare the review object
-    const newReview = {
-      name: formData.name.trim(),
-      role: formData.role.trim() || 'Learnflow Learner',
-      city: formData.city.trim() || 'India',
-      avatar: formData.name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
-      courseRating: formData.courseRating,
-      instructorRating: formData.instructorRating,
-      platformRating: formData.platformRating,
-      overallRating: formData.overallRating,
-      overallDetail: formData.overallDetail.trim(),
-      likedDetail: formData.likedDetail.trim(),
-      improveDetail: formData.improveDetail.trim(),
-      helpful: 0,
-      isVerified: true,
-      status: 'pending',
-      createdAt: serverTimestamp(), // Vital for the orderBy("createdAt", "desc") query
-    };
 
-    // 2. Save to "reviews" collection
-    await addDoc(collection(db, "reviews"), newReview);
+  const submitReview = async (formData) => {
+    setSubmittingR(true);
+    try {
+      await addDoc(collection(db, "reviews"), {
+        name: formData.name.trim(),
+        role: formData.role.trim() || 'Learnflow Learner',
+        city: formData.city.trim() || 'India',
+        avatar: formData.name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
+        courseRating: formData.courseRating,
+        instructorRating: formData.instructorRating,
+        platformRating: formData.platformRating,
+        overallRating: formData.overallRating,
+        overallDetail: formData.overallDetail.trim(),
+        likedDetail: formData.likedDetail.trim(),
+        improveDetail: formData.improveDetail.trim(),
+        helpful: 0,
+        isVerified: true,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      setReviewSent(true);
+      toast.success('Review submitted successfully!');
+      setTimeout(() => setReviewSent(false), 5000);
+    } catch (error) {
+      console.error("Error adding review: ", error);
+      toast.error('Failed to submit review. Please try again.');
+    } finally {
+      setSubmittingR(false);
+    }
+  };
 
-    // 3. Update UI state
-    setReviewSent(true);
-    toast.success('Review submitted successfully!');
-    
-    // Reset the "sent" view after a few seconds if you want them to be able to post again
-    setTimeout(() => setReviewSent(false), 5000);
-  } catch (error) {
-    console.error("Error adding review: ", error);
-    toast.error('Failed to submit review. Please try again.');
-  } finally {
-    setSubmittingR(false);
-  }
-};
-  // FIX: Safe avgRating — no NaN
-  const avgRating = reviews.length
+  const avgRating  = reviews.length
     ? (reviews.reduce((s, r) => s + r.overallRating, 0) / reviews.length).toFixed(1)
     : null;
   const roundedAvg = avgRating ? Math.round(parseFloat(avgRating)) : 0;
@@ -454,45 +523,86 @@ export default function Contact() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={submit} className="space-y-6">
+                /*
+                 * NUCLEAR LAYER 1: autoComplete="off" on the <form> element.
+                 * This is the first line of defence — all child inputs inherit it.
+                 */
+                <form onSubmit={submit} autoComplete="off" className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-bold text-slate-700 font-sans mb-2">Full Name *</label>
-                      <input name="name" value={form.name} onChange={handle} type="text" placeholder="Rahul Sharma" className={inputCls} required />
+                      {/*
+                       * NUCLEAR LAYERS 2-7 applied via NoFillInput:
+                       *   • autoComplete="new-password"  — Chrome/Safari/Firefox respect this
+                       *   • randomised name attr         — defeats heuristic matching on "name", "email"…
+                       *   • data-lpignore / data-1p-ignore / data-bwignore — disables password managers
+                       *   • readOnly until focus         — prevents pre-population on load
+                       *   • data-form-type="other"       — signals non-standard form to autofill engines
+                       */}
+                      <NoFillInput
+                        placeholder="Rahul Sharma"
+                        value={form.name}
+                        onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                        className={inputCls}
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-slate-700 font-sans mb-2">Email Address *</label>
-                      <input name="email" value={form.email} onChange={handle} type="email" placeholder="rahul@example.com" className={inputCls} required />
+                      <NoFillInput
+                        type="email"
+                        placeholder="rahul@example.com"
+                        value={form.email}
+                        onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                        className={inputCls}
+                        required
+                      />
                     </div>
                   </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-bold text-slate-700 font-sans mb-2">Phone (optional)</label>
-                      {/* FIX: Proper border-join with matching border-radius */}
                       <div className="flex">
                         <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-500 text-sm font-mono select-none">+91</span>
-                        <input name="phone" value={form.phone} onChange={handle} type="tel" placeholder="98765 43210"
-                          className={`${inputCls} rounded-l-none border-l-0 focus:border-l focus:ring-0 focus:border-cyan-400`} />
+                        <NoFillInput
+                          type="tel"
+                          placeholder="98765 43210"
+                          value={form.phone}
+                          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                          className={`${inputCls} rounded-l-none border-l-0 focus:border-l focus:ring-0 focus:border-cyan-400`}
+                        />
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-slate-700 font-sans mb-2">Subject *</label>
-                      <select name="subject" value={form.subject} onChange={handle} className={`${inputCls} cursor-pointer`} required>
+                      <NoFillSelect
+                        value={form.subject}
+                        onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                        className={`${inputCls} cursor-pointer`}
+                        required
+                      >
                         {['General Enquiry','Learner Support','Corporate Training','Hiring Partnership','Instructor Application','Billing & Payments','Technical Issue'].map(o => <option key={o}>{o}</option>)}
-                      </select>
+                      </NoFillSelect>
                     </div>
                   </div>
+
                   <div>
                     <label className="block text-sm font-bold text-slate-700 font-sans mb-2">Message *</label>
-                    <textarea name="message" value={form.message} onChange={handle} rows={5}
+                    <NoFillTextarea
+                      rows={5}
                       maxLength={MAX_MESSAGE}
                       placeholder="Tell us how we can help you…"
-                      className={`${inputCls} resize-none`} required />
-                    {/* FIX: Character counter */}
+                      value={form.message}
+                      onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                      className={`${inputCls} resize-none`}
+                      required
+                    />
                     <p className={`text-xs text-right mt-1 font-mono ${form.message.length >= MAX_MESSAGE ? 'text-red-500' : 'text-slate-400'}`}>
                       {form.message.length}/{MAX_MESSAGE}
                     </p>
                   </div>
+
                   <button type="submit" disabled={sending}
                     className="inline-flex items-center gap-2 px-9 py-4 rounded-lg bg-cyan-600 text-white font-semibold text-base transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] shadow-sm disabled:opacity-60">
                     {sending
@@ -514,7 +624,6 @@ export default function Contact() {
                       <h3 className="text-lg font-bold text-slate-900">{city}</h3>
                     </div>
                     <div className="space-y-2.5 text-sm">
-                      {/* FIX: Copy-to-clipboard on phone and email */}
                       <p className="flex gap-2.5 text-slate-600 text-sm leading-relaxed">
                         <MapPin className="w-4 h-4 text-cyan-500 flex-shrink-0 mt-0.5" />{address}
                       </p>
@@ -548,11 +657,10 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* ── Learner Reviews Section (always visible, inline form) ── */}
+      {/* ── Learner Reviews Section ── */}
       <section id="reviews" className="py-24 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Section header */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
             <div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold font-mono bg-amber-50 text-amber-700 border border-amber-200 mb-4">
@@ -562,7 +670,6 @@ export default function Contact() {
               <p className="text-slate-500 text-sm">Real stories from real learners across India — verified enrollments only.</p>
             </div>
 
-            {/* FIX: Safe avgRating badge — no NaN */}
             {avgRating && (
               <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex-shrink-0">
                 <div className="text-center">
@@ -578,44 +685,40 @@ export default function Contact() {
             )}
           </div>
 
-          {/* Main container for reviews and stats */}
-<div className="flex flex-col">
+          <div className="flex flex-col">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              {reviews.length > 0 ? (
+                reviews.map(r => <ReviewCard key={r.id} review={r} />)
+              ) : (
+                <div className="col-span-full py-16 text-center bg-white border border-dashed border-slate-200 rounded-2xl">
+                  <p className="text-slate-400">Loading top reviews...</p>
+                </div>
+              )}
+            </div>
 
-  {/* Reviews Grid: Changed to md:grid-cols-3 to force 3 in one row */}
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    {reviews.length > 0 ? (
-      reviews.map(r => <ReviewCard key={r.id} review={r} />)
-    ) : (
-      <div className="col-span-full py-16 text-center bg-white border border-dashed border-slate-200 rounded-2xl">
-        <p className="text-slate-400">Loading top reviews...</p>
-      </div>
-    )}
-  </div>
-
-  {/* Stats strip - now centered below the row of 3 */}
-  <div className="flex flex-wrap items-center justify-center gap-8 py-6 px-8 bg-white border border-slate-200 rounded-2xl mb-16 shadow-sm">
-    <div className="flex items-center gap-2">
-      <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}</div>
-      <span className="text-sm font-bold text-slate-900">{avgRating ?? '—'} / 5</span>
-      <span className="text-xs text-slate-400 font-mono">avg rating</span>
-    </div>
-    <div className="w-px h-6 bg-slate-200 hidden sm:block" />
-    <div className="text-sm text-slate-600">
-      Based on <span className="font-bold text-slate-900">{reviews.length}</span> verified reviews
-    </div>
-    <div className="w-px h-6 bg-slate-200 hidden sm:block" />
-    <div className="text-sm text-slate-600"><span className="font-bold text-slate-900">98%</span> would recommend Learnflow</div>
-  </div>
-</div>
-            {/* FIX: Always-visible inline review form — no modal needed */}
-            <div className="max-w-4xl mx-auto w-full">
-              <ReviewForm
-                onSubmit={submitReview}
-                submitting={submittingR}
-                submitted={reviewSent}
-              />
+            <div className="flex flex-wrap items-center justify-center gap-8 py-6 px-8 bg-white border border-slate-200 rounded-2xl mb-16 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}</div>
+                <span className="text-sm font-bold text-slate-900">{avgRating ?? '—'} / 5</span>
+                <span className="text-xs text-slate-400 font-mono">avg rating</span>
+              </div>
+              <div className="w-px h-6 bg-slate-200 hidden sm:block" />
+              <div className="text-sm text-slate-600">
+                Based on <span className="font-bold text-slate-900">{reviews.length}</span> verified reviews
+              </div>
+              <div className="w-px h-6 bg-slate-200 hidden sm:block" />
+              <div className="text-sm text-slate-600"><span className="font-bold text-slate-900">98%</span> would recommend Learnflow</div>
             </div>
           </div>
+
+          <div className="max-w-4xl mx-auto w-full">
+            <ReviewForm
+              onSubmit={submitReview}
+              submitting={submittingR}
+              submitted={reviewSent}
+            />
+          </div>
+        </div>
       </section>
 
       {/* ── Help centre CTA ── */}
@@ -624,8 +727,8 @@ export default function Contact() {
           <h2 className="text-2xl font-bold text-slate-900 mb-3">Looking for quick answers?</h2>
           <p className="text-base text-slate-600 font-sans mb-6">Browse our help centre — most questions answered in seconds.</p>
           <Link to="/help"
-           className="inline-flex items-center gap-2 px-9 py-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-base transition-all duration-200 active:scale-[0.98]">
-           Visit Help Centre <ArrowRight className="w-5 h-5 text-white" />
+            className="inline-flex items-center gap-2 px-9 py-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-base transition-all duration-200 active:scale-[0.98]">
+            Visit Help Centre <ArrowRight className="w-5 h-5 text-white" />
           </Link>
         </div>
       </section>

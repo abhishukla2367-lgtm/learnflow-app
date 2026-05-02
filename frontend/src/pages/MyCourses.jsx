@@ -20,6 +20,33 @@ const STATUS_STYLE = {
   'Not Started': 'bg-slate-100 text-slate-500 border border-slate-200',
 };
 
+/* ─── Canonical ID extractor ───────────────────────────────────
+ * This is the single source of truth for "what is the unique ID
+ * of this enrollment?" — used everywhere to prevent duplicates.
+ * It checks every possible shape the object might have.
+ * ─────────────────────────────────────────────────────────── */
+function enrollmentId(e) {
+  return String(
+    e._id ||
+    e.certId ||
+    e.course?._id ||
+    e.course?.id ||
+    e.course ||
+    ''
+  );
+}
+
+/* ─── Dedup a flat array of enrollments by canonical ID ──────── */
+function dedup(list) {
+  const seen = new Set();
+  return list.filter(e => {
+    const id = enrollmentId(e);
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
 function CourseRow({ enrollment }) {
   const progress = enrollment.progress ?? 0;
   const course   = enrollment.course || {};
@@ -30,45 +57,43 @@ function CourseRow({ enrollment }) {
   const hasCertData = !!(enrollment.certData && enrollment.certData.title);
 
   const isStaticCourse = COURSES.some(
-  c => String(c.id) === String(courseId) || String(c._id) === String(courseId)
-);
+    c => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+  );
 
-const type = isStaticCourse
-  ? 'course'
-  : (model.toLowerCase() === 'certification' || hasCertData)
-    ? 'certification'
-    : 'course';
+  const type = isStaticCourse
+    ? 'course'
+    : (model.toLowerCase() === 'certification' || hasCertData)
+      ? 'certification'
+      : 'course';
 
-  const lastLesson =
-   (() => {
+  const lastLesson = (() => {
     try {
       const progressKey = type === 'certification' ? 'lf_progress' : 'lf_course_progress';
       const all = JSON.parse(localStorage.getItem(progressKey) || '{}');
       return all[courseId]?.lastLesson || null;
     } catch { return null; }
   })();
-  
-  const playerLink = courseId 
-  ? `/learn/${type}/${courseId}${lastLesson ? `/${lastLesson}` : ''}`
-  : `/learn/${type}/${courseId}`;
-  
-   const handleNavigate = () => {
-  if (!courseId || !course) return;
-  try {
-    const globalCache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-    // Only prime if we have lessons, otherwise let player fetch fresh
-    if (!globalCache[courseId] && course.lessons?.length) {
-      globalCache[courseId] = {
-        ...course,
-        isTrial: enrollment.isTrial,
-        trialEndsAt: enrollment.trialEndsAt,
-      };
-      localStorage.setItem('lf_course_cache', JSON.stringify(globalCache));
+
+  const playerLink = courseId
+    ? `/learn/${type}/${courseId}${lastLesson ? `/${lastLesson}` : ''}`
+    : `/learn/${type}/${courseId}`;
+
+  const handleNavigate = () => {
+    if (!courseId || !course) return;
+    try {
+      const globalCache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+      if (!globalCache[courseId] && course.lessons?.length) {
+        globalCache[courseId] = {
+          ...course,
+          isTrial: enrollment.isTrial,
+          trialEndsAt: enrollment.trialEndsAt,
+        };
+        localStorage.setItem('lf_course_cache', JSON.stringify(globalCache));
+      }
+    } catch (e) {
+      console.error('Cache prime failed', e);
     }
-  } catch (e) {
-    console.error('Cache prime failed', e);
-  }
-};
+  };
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row shadow-sm">
@@ -114,8 +139,8 @@ const type = isStaticCourse
           </div>
           <div className="flex justify-end pt-1">
             <Link
-            to={playerLink}      
-            onClick={handleNavigate}
+              to={playerLink}
+              onClick={handleNavigate}
               className="inline-flex items-center gap-1.5 text-sm font-bold text-cyan-600 hover:text-cyan-700 transition-colors"
             >
               <Play size={13} />
@@ -137,30 +162,24 @@ export default function MyCourses() {
 
   const lsKey = user ? enrollmentKey(user._id || user.id) : null;
 
-  // Read user-scoped localStorage cache
   const getLocal = useCallback(() => {
     if (!lsKey) return [];
     try { return JSON.parse(localStorage.getItem(lsKey) || '[]'); }
     catch { return []; }
   }, [lsKey]);
 
-  // Merge API + local, deduplicate by course id
+  // Merge API + local, deduplicate using the shared enrollmentId helper
   const merge = useCallback((apiData, localData) => {
-    const apiIds = new Set(
-      apiData.map(e => String(e.course?._id || e.course?.id || e.course || ''))
-              .filter(Boolean)
-    );
-    const localOnly = localData.filter(e =>
-      !apiIds.has(String(e.certId || e.course?._id || e.course?.id || ''))
-    );
-    return [...apiData, ...localOnly];
+    const apiIds = new Set(apiData.map(enrollmentId).filter(Boolean));
+    const localOnly = localData.filter(e => !apiIds.has(enrollmentId(e)));
+    return dedup([...apiData, ...localOnly]);
   }, []);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
     const local = getLocal();
-    if (local.length) setEnrollments(local);
+    if (local.length) setEnrollments(dedup(local));
 
     api.get('/enrollments')
       .then(res => {
@@ -168,12 +187,10 @@ export default function MyCourses() {
         const merged  = merge(apiData, getLocal());
         setEnrollments(merged);
 
-        // ─── CRITICAL CACHE SYNC ───
         if (lsKey) {
           localStorage.setItem(lsKey, JSON.stringify(merged));
         }
 
-        // Add this specific block to fix the "Loading" screen:
         try {
           const globalCache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
           apiData.forEach(enrol => {
@@ -183,18 +200,17 @@ export default function MyCourses() {
               globalCache[cid] = {
                 ...courseObj,
                 isTrial: enrol.isTrial,
-                trialEndsAt: enrol.trialEndsAt
+                trialEndsAt: enrol.trialEndsAt,
               };
             }
           });
           localStorage.setItem('lf_course_cache', JSON.stringify(globalCache));
         } catch (e) {
-          console.error("Cache sync failed", e);
+          console.error('Cache sync failed', e);
         }
-        // ──────────────────────────
       })
       .catch(() => {
-        setEnrollments(getLocal());
+        setEnrollments(dedup(getLocal()));
       })
       .finally(() => setLoading(false));
   }, [user, lsKey, getLocal, merge]);
@@ -203,10 +219,13 @@ export default function MyCourses() {
     const handler = (e) => {
       const entry = e.detail;
       setEnrollments(prev => {
-        const id = String(entry.certId || entry.course?._id || '');
-        const exists = prev.some(p => String(p.certId || p.course?._id || p.course?.id || '') === id);
+        // Use the same enrollmentId extractor — no more weak/mismatched checks
+        const incomingId = enrollmentId(entry);
+        if (!incomingId) return prev;
+        const exists = prev.some(p => enrollmentId(p) === incomingId);
         if (exists) return prev;
-        return [entry, ...prev];
+        // Dedup the whole list just to be safe (handles any race conditions)
+        return dedup([entry, ...prev]);
       });
     };
     window.addEventListener('lf:enrollment:new', handler);
@@ -289,7 +308,7 @@ export default function MyCourses() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filtered.map(e => <CourseRow key={e._id || e.certId} enrollment={e} />)}
+            {filtered.map(e => <CourseRow key={enrollmentId(e)} enrollment={e} />)}
           </div>
         )}
       </div>

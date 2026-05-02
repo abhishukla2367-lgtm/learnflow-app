@@ -53,8 +53,7 @@ export const COURSES = [
         weekLabel: "Week 1",
         title: "Introduction to Marketing Fundamentals",
         duration: "52 min",
-        // Philip Kotler — Marketing Fundamentals (freeCodeCamp)
-        videoId: "nK0S4URMSoQ",
+        videoId: "eug-8wEQlO0",
         description:
           "Learn the core principles of marketing, the 4 Ps framework, and how modern businesses attract and retain customers.",
       },
@@ -63,8 +62,7 @@ export const COURSES = [
         weekLabel: "Week 2",
         title: "Branding & Positioning",
         duration: "44 min",
-        // Brand Master Academy — Branding 101
-        videoId: "fTzCFm4HsT4",
+        videoId: "Rcv-J6534oE",
         description:
           "Understand what makes a brand memorable. Learn positioning strategy, brand identity, and how to communicate value clearly.",
       },
@@ -73,8 +71,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "Understanding Your Target Audience",
         duration: "38 min",
-        // HubSpot — Buyer Persona Tutorial
-        videoId: "dlcLaF0LPfk",
+        videoId: "FzEkHlYt2uA",
         description:
           "Create detailed buyer personas, map customer journeys, and learn segmentation strategies to reach the right people.",
       },
@@ -83,7 +80,6 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Customer Psychology & Persuasion",
         duration: "46 min",
-        // Robert Cialdini — Influence & Persuasion (Official)
         videoId: "cFdCzN7RYbw",
         description:
           "Apply psychological principles like social proof, scarcity, and reciprocity to make marketing messages more persuasive.",
@@ -93,8 +89,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Market Research & Competitive Analysis",
         duration: "40 min",
-        // freeCodeCamp — Market Research Full Guide
-        videoId: "Kn06KMoFa80",
+        videoId: "nV83XG4b-oU",
         description:
           "Conduct primary and secondary market research, perform SWOT analysis, and benchmark against competitors.",
       },
@@ -158,8 +153,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Google Ads Full Course for Beginners",
         duration: "60 min",
-        // Surfside PPC — Google Ads Tutorial 2024
-        videoId: "Yqa7GmASVEw",
+        videoId: "autzRHtt-RM",
         description:
           "Set up and launch Google Search, Display, and Shopping campaigns. Learn keyword match types, Quality Score, and bidding strategies.",
       },
@@ -168,8 +162,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Meta Ads & Audience Targeting",
         duration: "54 min",
-        // Ben Heath — Facebook Ads Tutorial 2024
-        videoId: "YoizJtpjxis",
+        videoId: "dAJyqo6wnq4",
         description:
           "Build Facebook and Instagram ad campaigns from scratch. Master custom audiences, lookalike audiences, retargeting, and the Meta pixel.",
       },
@@ -178,8 +171,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Ad Copywriting That Converts",
         duration: "42 min",
-        // Alex Cattoni — Copywriting Tutorial
-        videoId: "6Aw3gHn9MNA",
+        videoId: "0pb4evBBBDg",
         description:
           "Write compelling ad headlines, descriptions, and CTAs. Learn the AIDA framework, emotional triggers, and split-testing copy.",
       },
@@ -188,8 +180,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "PPC Analytics & Campaign Optimisation",
         duration: "48 min",
-        // Loves Data — Google Analytics for Beginners
-        videoId: "gBeMELnxdIg",
+        videoId: "PPDBldQMWc0",
         description:
           "Track campaign performance with Google Analytics and Ads reports. Optimise bids, cut wasted spend, and scale winning ad sets.",
       },
@@ -253,8 +244,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Social Media Analytics — Metrics That Matter",
         duration: "46 min",
-        // HubSpot — Social Media Analytics Tutorial
-        videoId: "NNDC5EoO8mA",
+        videoId: "aEsWltLmPfc",
         description:
           "Identify vanity metrics vs. business metrics. Learn reach, engagement rate, share of voice, and conversion tracking across platforms.",
       },
@@ -263,8 +253,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "UTM Tracking & Attribution Models",
         duration: "38 min",
-        // Measureschool — UTM Parameters & Google Analytics
-        videoId: "GVhajKqabf0",
+        videoId: "KYFZOg_L7Z0",
         description:
           "Set up UTM parameters for every social post and campaign. Understand first-touch, last-touch, and multi-touch attribution models.",
       },
@@ -273,8 +262,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Instagram & LinkedIn Analytics Deep Dive",
         duration: "42 min",
-        // Later — Instagram Analytics Tutorial
-        videoId: "Gzv5m6YEW5Y",
+        videoId: "bRug-2uCEak",
         description:
           "Extract actionable insights from Instagram Insights and LinkedIn Analytics. Find peak posting times and top-performing content.",
       },
@@ -283,8 +271,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Calculating Social Media ROI & Executive Reporting",
         duration: "50 min",
-        // Sprout Social — Social Media ROI Guide
-        videoId: "RvZv3tFiKaI",
+        videoId: "a5W1KHUoPhI",
         description:
           "Build a social media ROI framework. Create data-driven reports for stakeholders and build a dashboard in Google Data Studio.",
       },
@@ -348,8 +335,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Content Strategy & Planning",
         duration: "48 min",
-        // Neil Patel — Content Marketing Tutorial 2024
-        videoId: "UoSgjZfs9YQ",
+        videoId: "d-a-ScSUdYE",
         description:
           "Develop a content strategy aligned to business goals. Build buyer journey content maps, a content calendar, and a repurposing workflow.",
       },
@@ -358,8 +344,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "SEO Copywriting & Blog Writing",
         duration: "54 min",
-        // Ahrefs — SEO Writing Tutorial
-        videoId: "SYI-GzFPxLI",
+        videoId: "W_EereS0qEs",
         description:
           "Research keywords, write SEO-optimised articles, and structure content so it ranks on page 1. Learn on-page SEO best practices.",
       },
@@ -368,8 +353,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Video & Visual Content Creation",
         duration: "44 min",
-        // Think Media — YouTube Content Strategy
-        videoId: "FWR08-tCzXQ",
+        videoId: "LuUm9D2lb7I",
         description:
           "Script, film, and edit short-form and long-form video content. Learn thumbnail strategy, hooks, and repurposing video for all platforms.",
       },
@@ -378,8 +362,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Email Marketing & Content Analytics",
         duration: "46 min",
-        // Mailchimp — Email Marketing Tutorial
-        videoId: "9Am0mlmFMYA",
+        videoId: "tCL1Xuo06qw",
         description:
           "Build and grow an email newsletter. Write high open-rate subject lines, nurture sequences, and measure content ROI with GA4.",
       },
@@ -445,7 +428,6 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "React Crash Course — Components, Props & State",
         duration: "60 min",
-        // Traversy Media — React Crash Course 2024
         videoId: "LDB4uaJ87e0",
         description:
           "Build your first React application. Learn JSX, functional components, props, state, and event handling from the ground up.",
@@ -455,8 +437,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "React Hooks — useState, useEffect & More",
         duration: "55 min",
-        // Web Dev Simplified — React Hooks Full Tutorial
-        videoId: "O6P86uwfdR0",
+        videoId: "HnXPKtro4SM",
         description:
           "Master all essential React hooks — useState, useEffect, useContext, useRef, useMemo, and useCallback with real-world examples.",
       },
@@ -465,7 +446,6 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Redux Toolkit — Modern State Management",
         duration: "58 min",
-        // Dave Gray — Redux Toolkit Tutorial
         videoId: "NqzdVN2tyvQ",
         description:
           "Learn Redux Toolkit from scratch. Create slices, configure the store, write reducers, and dispatch actions with ease.",
@@ -475,7 +455,6 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "RTK Query — Data Fetching & Caching",
         duration: "50 min",
-        // Dave Gray — RTK Query Full Tutorial
         videoId: "HyZzCHgG3AY",
         description:
           "Simplify API calls with RTK Query. Learn createApi, endpoints, caching, auto-refetching, and optimistic updates.",
@@ -540,8 +519,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "React Frontend Architecture",
         duration: "55 min",
-        // Academind — React Complete Guide (Trailer / Intro Lesson)
-        videoId: "w7ejDZ8SWv8",
+        videoId: "5hXoIIRoWqQ",
         description:
           "Architect scalable React frontends with folder structure best practices, component design patterns, and Context API.",
       },
@@ -550,7 +528,6 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Node.js & Express REST APIs",
         duration: "58 min",
-        // Traversy Media — Node.js & Express Crash Course
         videoId: "Oe421EPjeBE",
         description:
           "Build production-ready REST APIs with Node.js and Express. Middleware, routing, error handling, and API best practices.",
@@ -560,7 +537,6 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "PostgreSQL & Sequelize ORM",
         duration: "54 min",
-        // Traversy Media — PostgreSQL Tutorial for Beginners
         videoId: "qw--VYLpxG4",
         description:
           "Design relational databases with PostgreSQL. Use Sequelize ORM for migrations, associations, and complex queries.",
@@ -570,8 +546,7 @@ export const COURSES = [
         weekLabel: "Week 7–8",
         title: "JWT Authentication & Cloud Deployment",
         duration: "52 min",
-        // Web Dev Simplified — JWT Authentication Tutorial
-        videoId: "7Q17ubqLfaM",
+        videoId: "-zAbsLnFlvc",
         description:
           "Implement JWT-based auth with refresh tokens and deploy the full stack to a cloud provider with CI/CD via GitHub Actions.",
       },
@@ -635,8 +610,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "CSS Grid — Complete Mastery",
         duration: "52 min",
-        // Kevin Powell — CSS Grid Tutorial
-        videoId: "EiNiSFIPIQE",
+        videoId: "raCIHJz3f48",
         description:
           "Master CSS Grid completely — grid-template-areas, auto-fill, auto-fit, minmax, named lines, and advanced layout patterns.",
       },
@@ -645,7 +619,6 @@ export const COURSES = [
         weekLabel: "Week 2–3",
         title: "Flexbox & Responsive Design",
         duration: "46 min",
-        // freeCodeCamp — Flexbox Full Course
         videoId: "tXIhdp5R7sc",
         description:
           "Master CSS Flexbox for one-dimensional layouts. Build fully responsive designs with media queries and mobile-first methodology.",
@@ -655,8 +628,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "CSS Animations & Transitions",
         duration: "44 min",
-        // Kevin Powell — CSS Animations Tutorial
-        videoId: "YszONjKpgg4",
+        videoId: "MuWYQ_RM-2Q",
         description:
           "Create engaging UI animations with CSS keyframes, transitions, transform, and animation-delay for orchestrated page effects.",
       },
@@ -665,8 +637,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Sass & CSS Architecture with BEM",
         duration: "50 min",
-        // freeCodeCamp — Sass Tutorial for Beginners
-        videoId: "_a5j7KoflTs",
+        videoId: "jfMHA8SqUL4",
         description:
           "Write modular, maintainable CSS with Sass — variables, nesting, mixins, functions, partials, and the BEM naming convention.",
       },
@@ -730,8 +701,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "JavaScript Execution Context & Closures",
         duration: "60 min",
-        // Will Sentance — JavaScript The Hard Parts
-        videoId: "aXOChLn5ZdQ",
+        videoId: "Efqj3FV2vjE",
         description:
           "Understand how JavaScript executes code — the call stack, execution contexts, scope chain, and closures explained visually.",
       },
@@ -740,8 +710,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "Prototypes & Object-Oriented JavaScript",
         duration: "50 min",
-        // Web Dev Simplified — JavaScript Prototypes
-        videoId: "XskMWBXNbp0",
+        videoId: "8_tFfRj4NE0",
         description:
           "Deep dive into the prototype chain, constructor functions, ES6 classes, and how inheritance really works in JavaScript.",
       },
@@ -750,8 +719,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "The Event Loop, Promises & Async/Await",
         duration: "28 min",
-        // Philip Roberts — What the Heck is the Event Loop (JSConf)
-        videoId: "8aGhZQkoFbQ",
+        videoId: "fOdcuDigxfw",
         description:
           "Visualise the event loop, call stack, callback queue, and microtask queue. Master Promises and async/await patterns.",
       },
@@ -760,8 +728,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Functional Programming in JavaScript",
         duration: "54 min",
-        // freeCodeCamp — Functional Programming in JavaScript
-        videoId: "e-5obm1G_FY",
+        videoId: "XvLMO2wE3OQ",
         description:
           "Apply pure functions, higher-order functions, map/filter/reduce, currying, and immutability in real JavaScript applications.",
       },
@@ -827,8 +794,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Machine Learning with Python — Full Course",
         duration: "65 min",
-        // freeCodeCamp — Machine Learning with Python Full Course
-        videoId: "ukzFI9rgwfU",
+        videoId: "7eh4d6sabA0",
         description:
           "Learn core ML concepts and implement algorithms using Python and Scikit-learn — regression, classification, and model evaluation.",
       },
@@ -837,8 +803,7 @@ export const COURSES = [
         weekLabel: "Week 3–5",
         title: "Supervised Learning — Regression & Classification",
         duration: "54 min",
-        // Krish Naik — Machine Learning Full Course
-        videoId: "7eh4d6sabA0",
+        videoId: "hyb0zKj7EnY",
         description:
           "Deep dive into linear regression, logistic regression, decision trees, random forests, and SVM with real datasets.",
       },
@@ -847,8 +812,7 @@ export const COURSES = [
         weekLabel: "Week 6",
         title: "Unsupervised Learning — Clustering & Dimensionality Reduction",
         duration: "46 min",
-        // StatQuest — K-Means & PCA
-        videoId: "4b5d3muPQmA",
+        videoId: "Z76eLlK5a7U",
         description:
           "Implement K-Means clustering, hierarchical clustering, and PCA for dimensionality reduction with Python.",
       },
@@ -857,8 +821,7 @@ export const COURSES = [
         weekLabel: "Week 7–8",
         title: "Model Evaluation, Tuning & Pipelines",
         duration: "50 min",
-        // Krish Naik — Feature Engineering Full Course
-        videoId: "0B5eIE_1vpU",
+        videoId: "NJTUbCoFwsM",
         description:
           "Evaluate models with cross-validation, tune hyperparameters with GridSearchCV, and build end-to-end Scikit-learn pipelines.",
       },
@@ -922,8 +885,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Neural Networks — How They Really Work",
         duration: "20 min",
-        // 3Blue1Brown — But What is a Neural Network? (Chapter 1)
-        videoId: "aircAruvnKk",
+        videoId: "zxw4bCnTLHA",
         description:
           "Understand neural networks visually — layers, weights, biases, and how backpropagation adjusts them to learn patterns.",
       },
@@ -932,8 +894,7 @@ export const COURSES = [
         weekLabel: "Week 3–5",
         title: "Convolutional Neural Networks for Image Classification",
         duration: "60 min",
-        // freeCodeCamp — Deep Learning with PyTorch
-        videoId: "GIsg-ZUy0MY",
+        videoId: "Rmtr9SY-4VQ",
         description:
           "Build CNNs to classify images — convolution, pooling, batch normalisation, and data augmentation strategies.",
       },
@@ -942,8 +903,7 @@ export const COURSES = [
         weekLabel: "Week 6–8",
         title: "RNNs & LSTMs for Sequential Data",
         duration: "52 min",
-        // Andrej Karpathy — The Unreasonable Effectiveness of RNNs (Stanford)
-        videoId: "iX5V1WpxxkY",
+        videoId: "KBftoy0DPxI",
         description:
           "Understand recurrent architectures — vanilla RNNs, LSTMs, GRUs — and apply them to time series and text generation tasks.",
       },
@@ -952,8 +912,7 @@ export const COURSES = [
         weekLabel: "Week 9–10",
         title: "Transfer Learning with Pretrained Models",
         duration: "50 min",
-        // Sentdex — Transfer Learning Tutorial
-        videoId: "oBklltKXtDE",
+        videoId: "0o45fyiDr2U",
         description:
           "Fine-tune ResNet and VGG on custom datasets. Apply transfer learning strategies to achieve state-of-the-art results with less data.",
       },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth, enrollmentKey } from '../../context/AuthContext';
 import api from '../../utils/api';
@@ -38,6 +38,126 @@ function cardBrand(num) {
   if (/^3[47]/.test(n)) return 'Amex';
   if (/^6/.test(n)) return 'RuPay';
   return null;
+}
+
+/* ── Nuclear AutoComplete killer hook ──
+   Sets every possible attribute combo that blocks autofill,
+   then guards against Chrome re-injecting autocomplete="on"
+   after React hydration via MutationObserver.
+*/
+function useAntiAutofill(inputRef) {
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    const nukeAttrs = () => {
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+      el.setAttribute('data-form-type', 'other');
+      el.setAttribute('data-lpignore', 'true');               // LastPass
+      el.setAttribute('data-1p-ignore', 'true');              // 1Password
+      el.setAttribute('data-bwignore', 'true');               // Bitwarden
+      el.setAttribute('data-dashlane-ignore', 'true');        // Dashlane
+      el.setAttribute('data-np-intersection-state', 'hidden');// NordPass
+    };
+
+    nukeAttrs();
+
+    // Chrome re-applies autofill after mount — MutationObserver catches it
+    const observer = new MutationObserver(nukeAttrs);
+    observer.observe(el, { attributes: true, attributeFilter: ['autocomplete'] });
+
+    return () => observer.disconnect();
+  }, [inputRef]);
+}
+
+/* ── Anti-autofill text input ──
+   Renders an invisible honeypot sibling first so the browser's
+   autofill engine targets that instead of the real field.
+   Random `name` each session defeats browser field-memory.
+*/
+function NoFillInput({ className, type = 'text', overlay, ...props }) {
+  const ref = useRef(null);
+  useAntiAutofill(ref);
+  const [fakeName] = useState(() => `nf_${Math.random().toString(36).slice(2)}`);
+
+  return (
+    <div className="relative">
+      {/* Honeypot — invisible, confuses autofill engines */}
+      <input
+        aria-hidden="true"
+        tabIndex={-1}
+        type={type}
+        name={fakeName}
+        autoComplete="off"
+        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0, top: 0, left: 0 }}
+      />
+      <input
+        ref={ref}
+        type={type}
+        name={fakeName + '_real'}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        data-form-type="other"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-bwignore="true"
+        className={className}
+        {...props}
+      />
+      {/* overlay slot — used for card brand badge */}
+      {overlay}
+    </div>
+  );
+}
+
+/* ── Anti-autofill password input — CVV ── */
+function NoFillPassword({ className, showToggle, onToggle, show, ...props }) {
+  const ref = useRef(null);
+  useAntiAutofill(ref);
+  const [fakeName] = useState(() => `nf_${Math.random().toString(36).slice(2)}`);
+
+  return (
+    <div className="relative">
+      <input
+        aria-hidden="true"
+        tabIndex={-1}
+        type="password"
+        name={fakeName}
+        autoComplete="new-password"
+        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0, top: 0, left: 0 }}
+      />
+      <input
+        ref={ref}
+        type={show ? 'text' : 'password'}
+        name={fakeName + '_real'}
+        autoComplete="new-password"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        data-form-type="other"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-bwignore="true"
+        className={`${className} pr-10`}
+        {...props}
+      />
+      {showToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          aria-label={show ? 'Hide CVV' : 'Show CVV'}
+        >
+          {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /* ── Field wrapper ── */
@@ -98,7 +218,7 @@ function Steps({ current }) {
 }
 
 /* ══════════════════════════════════════════
-   MAIN CHECKOUT COMPONENT
+   MAIN CHECKOUT COMPONENT — CERTIFICATIONS
 ══════════════════════════════════════════ */
 export default function Checkout() {
   const navigate = useNavigate();
@@ -128,7 +248,7 @@ export default function Checkout() {
   const [showSummary, setShowSummary] = useState(true);
 
   // FIX: use setTimeout so navigate() is deferred past the current render cycle,
-  // preventing the "Cannot update BrowserRouter while rendering Success" warning.
+  // preventing the "Cannot update BrowserRouter while rendering" warning.
   useEffect(() => {
     if (!user) {
       setTimeout(() => navigate('/login'), 0);
@@ -150,6 +270,12 @@ export default function Checkout() {
   const total = basePrice + gst - couponDiscount;
   const savings = Math.max(0, cert.origPrice - total);
   const brand = cardBrand(card.number);
+
+  /* ── Shared input class builder ── */
+  const inputCls = (hasError) =>
+    `w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
+      hasError ? 'border-red-300' : 'border-slate-200'
+    }`;
 
   /* ── Coupon ── */
   function applyCoupon() {
@@ -281,11 +407,12 @@ export default function Checkout() {
         );
         localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
       } catch { /* ignore storage errors */ }
+
       try {
-     const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-     cache[cert.id] = cert;
-    localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-    } catch {}
+        const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+        cache[cert.id] = cert;
+        localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+      } catch {}
 
       navigate('/success', { state: { cert, certId: cert.id } });
     } catch (err) {
@@ -330,8 +457,13 @@ export default function Checkout() {
               </p>
             </div>
 
-            {/* ── Payment method selector ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            {/* ── Payment method selector ──
+                role="presentation" + no <form> tag: browsers don't attach
+                their autofill heuristic to this section */}
+            <div
+              role="presentation"
+              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
+            >
               <div className="px-6 pt-5 pb-4 border-b border-slate-100">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide font-mono">
                   Payment method
@@ -369,43 +501,36 @@ export default function Checkout() {
                 {payMethod === 'card' && (
                   <div className="space-y-4">
                     <Field label="Card number" error={cardErrors.number}>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="1234 5678 9012 3456"
-                          value={card.number}
-                          onChange={e =>
-                            setCard(p => ({ ...p, number: formatCard(e.target.value) }))
-                          }
-                          className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-20 ${
-                            cardErrors.number ? 'border-red-300' : 'border-slate-200'
-                          }`}
-                        />
-                        {brand && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded-md">
-                            {brand}
-                          </span>
-                        )}
-                      </div>
+                      <NoFillInput
+                        inputMode="numeric"
+                        placeholder="1234 5678 9012 3456"
+                        value={card.number}
+                        onChange={e =>
+                          setCard(p => ({ ...p, number: formatCard(e.target.value) }))
+                        }
+                        className={inputCls(cardErrors.number) + ' pr-20'}
+                        overlay={
+                          brand && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded-md z-10">
+                              {brand}
+                            </span>
+                          )
+                        }
+                      />
                     </Field>
 
                     <Field label="Cardholder name" error={cardErrors.name}>
-                      <input
-                        type="text"
+                      <NoFillInput
                         placeholder="As printed on card"
                         value={card.name}
                         onChange={e => setCard(p => ({ ...p, name: e.target.value }))}
-                        className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-                          cardErrors.name ? 'border-red-300' : 'border-slate-200'
-                        }`}
+                        className={inputCls(cardErrors.name)}
                       />
                     </Field>
 
                     <div className="grid grid-cols-2 gap-4">
                       <Field label="Expiry date" error={cardErrors.expiry}>
-                        <input
-                          type="text"
+                        <NoFillInput
                           placeholder="MM/YY"
                           value={card.expiry}
                           onChange={e => {
@@ -422,38 +547,22 @@ export default function Checkout() {
                               setCard(p => ({ ...p, expiry: formatExpiry(raw) }));
                             }
                           }}
-                          className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-                            cardErrors.expiry ? 'border-red-300' : 'border-slate-200'
-                          }`}
+                          className={inputCls(cardErrors.expiry)}
                         />
                       </Field>
 
                       <Field label="CVV" error={cardErrors.cvv}>
-                        <div className="relative">
-                          <input
-                            type={showCVV ? 'text' : 'password'}
-                            placeholder="•••"
-                            value={card.cvv}
-                            onChange={e =>
-                              setCard(p => ({ ...p, cvv: formatCVV(e.target.value) }))
-                            }
-                            className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-10 ${
-                              cardErrors.cvv ? 'border-red-300' : 'border-slate-200'
-                            }`}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowCVV(v => !v)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                            aria-label={showCVV ? 'Hide CVV' : 'Show CVV'}
-                          >
-                            {showCVV ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
+                        <NoFillPassword
+                          placeholder="•••"
+                          value={card.cvv}
+                          onChange={e =>
+                            setCard(p => ({ ...p, cvv: formatCVV(e.target.value) }))
+                          }
+                          className={inputCls(cardErrors.cvv)}
+                          show={showCVV}
+                          showToggle
+                          onToggle={() => setShowCVV(v => !v)}
+                        />
                       </Field>
                     </div>
 
@@ -475,14 +584,11 @@ export default function Checkout() {
                 {payMethod === 'upi' && (
                   <div className="space-y-4">
                     <Field label="UPI ID" error={upiError}>
-                      <input
-                        type="text"
+                      <NoFillInput
                         placeholder="yourname@upi"
                         value={upi}
                         onChange={e => setUpi(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-                          upiError ? 'border-red-300' : 'border-slate-200'
-                        }`}
+                        className={inputCls(upiError)}
                       />
                     </Field>
                     <div className="flex flex-wrap gap-2">
@@ -573,8 +679,7 @@ export default function Checkout() {
                     </div>
                   ) : (
                     <div className="mt-4 flex gap-2">
-                      <input
-                        type="text"
+                      <NoFillInput
                         placeholder="Enter coupon code"
                         value={couponInput}
                         onChange={e => {

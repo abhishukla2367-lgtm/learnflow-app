@@ -1,4 +1,4 @@
-import { useState, useEffect, useParams  } from 'react';
+import { useState, useEffect, useRef, useParams } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth, enrollmentKey } from '../../context/AuthContext';
 import api from '../../utils/api';
@@ -38,6 +38,128 @@ function cardBrand(num) {
   if (/^3[47]/.test(n)) return 'Amex';
   if (/^6/.test(n)) return 'RuPay';
   return null;
+}
+
+/* ── Nuclear AutoComplete killer hook ──
+   Renders a fake hidden field first so the browser's autofill
+   targets that instead of the real input. Also sets every
+   possible attribute combination that blocks autofill.
+*/
+function useAntiAutofill(inputRef) {
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    // Bomb every autocomplete attribute string browsers recognise
+    const nukeAttrs = () => {
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+      el.setAttribute('data-form-type', 'other');
+      el.setAttribute('data-lpignore', 'true');          // LastPass
+      el.setAttribute('data-1p-ignore', 'true');         // 1Password
+      el.setAttribute('data-bwignore', 'true');          // Bitwarden
+      el.setAttribute('data-dashlane-ignore', 'true');   // Dashlane
+      el.setAttribute('data-np-intersection-state', 'hidden'); // NordPass
+    };
+
+    nukeAttrs();
+
+    // Chrome re-applies autofill after mount — fight it with a MutationObserver
+    const observer = new MutationObserver(nukeAttrs);
+    observer.observe(el, { attributes: true, attributeFilter: ['autocomplete'] });
+
+    return () => observer.disconnect();
+  }, [inputRef]);
+}
+
+/* ── Anti-autofill input wrapper ──
+   Renders an invisible honeypot sibling so browser targets it
+   instead of the real field, then shows the real one.
+*/
+function NoFillInput({ className, type = 'text', overlay, ...props }) {
+  const ref = useRef(null);
+  useAntiAutofill(ref);
+
+  // Use a random name each render so browsers can't remember the field
+  const [fakeName] = useState(() => `nf_${Math.random().toString(36).slice(2)}`);
+
+  return (
+    <div className="relative">
+      {/* Honeypot — invisible to user, confuses autofill engines */}
+      <input
+        aria-hidden="true"
+        tabIndex={-1}
+        type={type}
+        name={fakeName}
+        autoComplete="off"
+        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0, top: 0, left: 0 }}
+      />
+      <input
+        ref={ref}
+        type={type}
+        name={fakeName + '_real'}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        data-form-type="other"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-bwignore="true"
+        className={className}
+        {...props}
+      />
+      {/* overlay — e.g. card brand badge, rendered inside this relative container */}
+      {overlay}
+    </div>
+  );
+}
+
+/* ── Anti-autofill password input (for CVV) ── */
+function NoFillPassword({ className, showToggle, onToggle, show, ...props }) {
+  const ref = useRef(null);
+  useAntiAutofill(ref);
+  const [fakeName] = useState(() => `nf_${Math.random().toString(36).slice(2)}`);
+
+  return (
+    <div className="relative">
+      <input
+        aria-hidden="true"
+        tabIndex={-1}
+        type="password"
+        name={fakeName}
+        autoComplete="new-password"
+        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0, top: 0, left: 0 }}
+      />
+      <input
+        ref={ref}
+        type={show ? 'text' : 'password'}
+        name={fakeName + '_real'}
+        autoComplete="new-password"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        data-form-type="other"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-bwignore="true"
+        className={`${className} pr-10`}
+        {...props}
+      />
+      {showToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          aria-label={show ? 'Hide CVV' : 'Show CVV'}
+        >
+          {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /* ── Field wrapper ── */
@@ -109,7 +231,6 @@ export default function Checkout() {
     course.origPrice = course.price || 0;
   }
 
-  // State Management
   const [step, setStep] = useState(0);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -129,16 +250,9 @@ export default function Checkout() {
   const [termsError, setTermsError] = useState('');
   const [showSummary, setShowSummary] = useState(true);
 
-  // FIX: use setTimeout so navigate() is deferred past the current render cycle,
-  // preventing the "Cannot update BrowserRouter while rendering Success" warning.
   useEffect(() => {
-    if (!user) {
-      setTimeout(() => navigate('/login'), 0);
-      return;
-    }
-    if (!course) {
-      setTimeout(() => navigate('/courses'), 0);
-    }
+    if (!user) { setTimeout(() => navigate('/login'), 0); return; }
+    if (!course) { setTimeout(() => navigate('/courses'), 0); }
   }, [user, course, navigate]);
 
   if (!course || !user) return null;
@@ -182,8 +296,7 @@ export default function Checkout() {
     if (num.length < 16) errs.number = 'Enter a valid 16-digit card number';
     if (!card.name.trim()) errs.name = 'Cardholder name is required';
     const parts = card.expiry.split('/');
-    const mm = parts[0];
-    const yy = parts[1];
+    const mm = parts[0]; const yy = parts[1];
     if (!mm || !yy || mm.length < 2 || yy.length < 2) {
       errs.expiry = 'Enter a valid expiry date';
     } else {
@@ -198,136 +311,90 @@ export default function Checkout() {
     return Object.keys(errs).length === 0;
   }
 
-  /* ── UPI validation ── */
   function validateUPI() {
     const valid = /^[\w.\-_]+@[\w]+$/.test(upi.trim());
     setUpiError(valid ? '' : 'Enter a valid UPI ID (e.g. name@upi)');
     return valid;
   }
 
-  /* ── Net banking validation ── */
   function validateBank() {
-    if (!bank) {
-      setBankError('Please select a bank to continue');
-      return false;
-    }
+    if (!bank) { setBankError('Please select a bank to continue'); return false; }
     setBankError('');
     return true;
   }
 
-  /* ── UPI suffix helper ── */
   const applyUPISuffix = (suffix) => {
     const base = upi.split('@')[0];
     setUpi(`${base}${suffix}`);
   };
 
   /* ── Submit ── */
-const handlePay = async () => {
-  // 0. Ensure we have the correct ID for the API call
-  const targetId = course?._id || course?.id;
-
-  // 1. Validate terms
-  if (!agreeTerms) {
-    setTermsError('Please accept the terms and conditions to continue.');
-    return;
-  }
-  setTermsError('');
-
-  // 2. Validate payment details based on method
-  let valid = false;
-  if (payMethod === 'card') valid = validateCard();
-  else if (payMethod === 'upi') valid = validateUPI();
-  else if (payMethod === 'netbanking') valid = validateBank();
-
-  if (!valid) return;
-  const finalCourseId = course?._id || course?.id || course?.courseId;
-  if (!finalCourseId) {
-    console.error("CRITICAL ERROR: No Course ID found");
-    alert("Error: Course ID missing. Please go back and try again.");
-    return;
-  }
-  setProcessing(true);
-  try {
-    // API Call to backend
-    let enrollData = {};
+  const handlePay = async () => {
+    const targetId = course?._id || course?.id;
+    if (!agreeTerms) { setTermsError('Please accept the terms and conditions to continue.'); return; }
+    setTermsError('');
+    let valid = false;
+    if (payMethod === 'card') valid = validateCard();
+    else if (payMethod === 'upi') valid = validateUPI();
+    else if (payMethod === 'netbanking') valid = validateBank();
+    if (!valid) return;
+    const finalCourseId = course?._id || course?.id || course?.courseId;
+    if (!finalCourseId) { alert("Error: Course ID missing. Please go back and try again."); return; }
+    setProcessing(true);
     try {
-    // 2. USE THE DEFINED ID IN THE API CALL
-    const { data: enrollData } = await api.post(`/enrollments/${finalCourseId}`, {
-      status: 'enrolled',
-      paymentMethod: payMethod,
-      amount: total,
-      type: 'paid'
-    });
-    } catch (apiErr) {
-      // If backend returns non-2xx, we proceed for local persistence to prevent user frustration
-      console.warn('Enrollment API error:', apiErr?.response?.data?.message || apiErr.message);
-    }
-
-    // 4. Save to user-scoped localStorage immediately (offline-first support)
-    const uid = user._id || user.id;
-    const lsKey = enrollmentKey(uid);
-    
-    // Construct the snapshot using the 'course' object data
-    const snap = {
-      _id: enrollData?.enrollment?._id || enrollData?.data?._id || `local_${targetId}_${Date.now()}`,
-      course: {
-        _id: targetId,
-        id: targetId,
-        title: course.title,
-        thumbnail: course.thumbnail || null,
-        instructor: course.instructor || null,
-        description: course.desc || course.description || null,
-        emoji: course.emoji || null,
-        tag: course.tag || null,
-      },
-      courseId: targetId,
-      progress: 0,
-      enrolledAt: new Date().toISOString(),
-      type: 'paid',
-      courseModel: 'Course' // Crucial for polymorphic backend relations
-    };
-
-    // Update Enrollment List
-    try {
-      const stored = JSON.parse(localStorage.getItem(lsKey) || '[]');
-      const deduped = stored.filter(e =>
-        String(e.courseId || e.course?._id || e.course?.id) !== String(targetId)
-      );
-      localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
-    } catch (lsErr) {
-      console.error('LocalStorage update failed:', lsErr);
-    }
-
-    // Update Course Cache for faster loading
-    try {
-      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-      cache[targetId] = course;
-      localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-    } catch (cacheErr) {
-      console.error('Cache update failed:', cacheErr);
-    }
-
-    // 5. Navigate to success page
-    navigate('/course-success', { 
-      state: { 
-        course: course, 
-        courseId: finalCourseId,
-        isTrial: false 
+      let enrollData = {};
+      try {
+        const { data } = await api.post(`/enrollments/${finalCourseId}`, {
+          status: 'enrolled', paymentMethod: payMethod, amount: total, type: 'paid'
+        });
+        enrollData = data;
+      } catch (apiErr) {
+        console.warn('Enrollment API error:', apiErr?.response?.data?.message || apiErr.message);
       }
-    });
+      const uid = user._id || user.id;
+      const lsKey = enrollmentKey(uid);
+      const snap = {
+        _id: enrollData?.enrollment?._id || enrollData?.data?._id || `local_${targetId}_${Date.now()}`,
+        course: {
+          _id: targetId, id: targetId, title: course.title,
+          thumbnail: course.thumbnail || null, instructor: course.instructor || null,
+          description: course.desc || course.description || null,
+          emoji: course.emoji || null, tag: course.tag || null,
+        },
+        courseId: targetId, progress: 0,
+        enrolledAt: new Date().toISOString(), type: 'paid', courseModel: 'Course'
+      };
+      try {
+        const stored = JSON.parse(localStorage.getItem(lsKey) || '[]');
+        const deduped = stored.filter(e =>
+          String(e.courseId || e.course?._id || e.course?.id) !== String(targetId)
+        );
+        localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
+      } catch (lsErr) { console.error('LocalStorage update failed:', lsErr); }
+      try {
+        const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+        cache[targetId] = course;
+        localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+      } catch (cacheErr) { console.error('Cache update failed:', cacheErr); }
+      navigate('/course-success', { state: { course, courseId: finalCourseId, isTrial: false } });
+    } catch (err) {
+      console.error('Payment flow failed:', err);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
+  };
 
-  } catch (err) {
-    console.error('Payment flow failed:', err);
-    alert('Something went wrong. Please try again.');
-  } finally {
-    setProcessing(false);
-  }
-};
+  /* ── Shared input class builder ── */
+  const inputCls = (hasError) =>
+    `w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
+      hasError ? 'border-red-300' : 'border-slate-200'
+    }`;
 
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* ── Top bar ── */}
+      {/* Top bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button
@@ -346,11 +413,8 @@ const handlePay = async () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid lg:grid-cols-5 gap-8 items-start">
 
-          {/* ════════════════════════════════
-              LEFT — Payment form
-          ════════════════════════════════ */}
+          {/* ════ LEFT — Payment form ════ */}
           <div className="lg:col-span-3 space-y-5">
-
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Complete your enrollment</h1>
               <p className="text-sm text-slate-500 font-mono mt-1">
@@ -358,8 +422,13 @@ const handlePay = async () => {
               </p>
             </div>
 
-            {/* ── Payment method selector ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            {/* Payment method selector */}
+            {/* ⚠️ NUCLEAR: role="presentation" + no <form> tag so browsers
+                don't attach their autofill heuristic to this section */}
+            <div
+              role="presentation"
+              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
+            >
               <div className="px-6 pt-5 pb-4 border-b border-slate-100">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide font-mono">
                   Payment method
@@ -397,91 +466,62 @@ const handlePay = async () => {
                 {payMethod === 'card' && (
                   <div className="space-y-4">
                     <Field label="Card number" error={cardErrors.number}>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="1234 5678 9012 3456"
-                          value={card.number}
-                          onChange={e =>
-                            setCard(p => ({ ...p, number: formatCard(e.target.value) }))
-                          }
-                          className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-20 ${
-                            cardErrors.number ? 'border-red-300' : 'border-slate-200'
-                          }`}
-                        />
-                        {brand && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded-md">
-                            {brand}
-                          </span>
-                        )}
-                      </div>
+                      {/* NoFillInput already renders a relative div internally;
+                          we pass the brand badge as a child via the overlay prop */}
+                      <NoFillInput
+                        inputMode="numeric"
+                        placeholder="1234 5678 9012 3456"
+                        value={card.number}
+                        onChange={e =>
+                          setCard(p => ({ ...p, number: formatCard(e.target.value) }))
+                        }
+                        className={inputCls(cardErrors.number) + ' pr-20'}
+                        overlay={
+                          brand && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded-md z-10">
+                              {brand}
+                            </span>
+                          )
+                        }
+                      />
                     </Field>
 
                     <Field label="Cardholder name" error={cardErrors.name}>
-                      <input
-                        type="text"
+                      <NoFillInput
                         placeholder="As printed on card"
                         value={card.name}
                         onChange={e => setCard(p => ({ ...p, name: e.target.value }))}
-                        className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-                          cardErrors.name ? 'border-red-300' : 'border-slate-200'
-                        }`}
+                        className={inputCls(cardErrors.name)}
                       />
                     </Field>
 
                     <div className="grid grid-cols-2 gap-4">
                       <Field label="Expiry date" error={cardErrors.expiry}>
-                        <input
-                          type="text"
+                        <NoFillInput
                           placeholder="MM/YY"
                           value={card.expiry}
                           onChange={e => {
                             const raw = e.target.value;
-                            if (
-                              raw.length < card.expiry.length &&
-                              card.expiry.endsWith('/')
-                            ) {
-                              setCard(p => ({
-                                ...p,
-                                expiry: raw.replace(/\/$/, ''),
-                              }));
+                            if (raw.length < card.expiry.length && card.expiry.endsWith('/')) {
+                              setCard(p => ({ ...p, expiry: raw.replace(/\/$/, '') }));
                             } else {
                               setCard(p => ({ ...p, expiry: formatExpiry(raw) }));
                             }
                           }}
-                          className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-                            cardErrors.expiry ? 'border-red-300' : 'border-slate-200'
-                          }`}
+                          className={inputCls(cardErrors.expiry)}
                         />
                       </Field>
 
                       <Field label="CVV" error={cardErrors.cvv}>
-                        <div className="relative">
-                          <input
-                            type={showCVV ? 'text' : 'password'}
-                            placeholder="•••"
-                            value={card.cvv}
-                            onChange={e =>
-                              setCard(p => ({ ...p, cvv: formatCVV(e.target.value) }))
-                            }
-                            className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-10 ${
-                              cardErrors.cvv ? 'border-red-300' : 'border-slate-200'
-                            }`}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowCVV(v => !v)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                            aria-label={showCVV ? 'Hide CVV' : 'Show CVV'}
-                          >
-                            {showCVV ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
+                        <NoFillPassword
+                          placeholder="•••"
+                          value={card.cvv}
+                          onChange={e => setCard(p => ({ ...p, cvv: formatCVV(e.target.value) }))}
+                          className={inputCls(cardErrors.cvv)}
+                          show={showCVV}
+                          showToggle
+                          onToggle={() => setShowCVV(v => !v)}
+                        />
                       </Field>
                     </div>
 
@@ -503,14 +543,11 @@ const handlePay = async () => {
                 {payMethod === 'upi' && (
                   <div className="space-y-4">
                     <Field label="UPI ID" error={upiError}>
-                      <input
-                        type="text"
+                      <NoFillInput
                         placeholder="yourname@upi"
                         value={upi}
                         onChange={e => setUpi(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-xl border text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all ${
-                          upiError ? 'border-red-300' : 'border-slate-200'
-                        }`}
+                        className={inputCls(upiError)}
                       />
                     </Field>
                     <div className="flex flex-wrap gap-2">
@@ -539,10 +576,7 @@ const handlePay = async () => {
                         {['SBI', 'HDFC', 'ICICI', 'Axis', 'Kotak', 'PNB'].map(b => (
                           <button
                             key={b}
-                            onClick={() => {
-                              setBank(b);
-                              setBankError('');
-                            }}
+                            onClick={() => { setBank(b); setBankError(''); }}
                             className={`px-4 py-3 rounded-xl border text-sm font-bold font-mono transition-all ${
                               bank === b
                                 ? 'border-cyan-500 bg-cyan-50 text-cyan-700 ring-2 ring-cyan-200'
@@ -563,7 +597,7 @@ const handlePay = async () => {
               </div>
             </div>
 
-            {/* ── Coupon code ── */}
+            {/* Coupon code */}
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
               <button
                 onClick={() => setShowCoupon(v => !v)}
@@ -572,11 +606,7 @@ const handlePay = async () => {
                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                   <Tag className="w-4 h-4 text-cyan-600" /> Have a coupon code?
                 </div>
-                {showCoupon ? (
-                  <ChevronUp className="w-4 h-4 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
-                )}
+                {showCoupon ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
               </button>
 
               {showCoupon && (
@@ -585,30 +615,19 @@ const handlePay = async () => {
                     <div className="flex items-center justify-between mt-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-bold text-emerald-700 font-mono">
-                          {appliedCoupon}
-                        </span>
-                        <span className="text-xs text-emerald-600 font-mono">
-                          — {COUPONS[appliedCoupon].label} applied
-                        </span>
+                        <span className="text-sm font-bold text-emerald-700 font-mono">{appliedCoupon}</span>
+                        <span className="text-xs text-emerald-600 font-mono">— {COUPONS[appliedCoupon].label} applied</span>
                       </div>
-                      <button
-                        onClick={removeCoupon}
-                        className="text-emerald-500 hover:text-emerald-700 transition-colors"
-                      >
+                      <button onClick={removeCoupon} className="text-emerald-500 hover:text-emerald-700 transition-colors">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
                     <div className="mt-4 flex gap-2">
-                      <input
-                        type="text"
+                      <NoFillInput
                         placeholder="Enter coupon code"
                         value={couponInput}
-                        onChange={e => {
-                          setCouponInput(e.target.value.toUpperCase());
-                          setCouponError('');
-                        }}
+                        onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
                         onKeyDown={e => e.key === 'Enter' && applyCoupon()}
                         className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent uppercase"
                       />
@@ -617,11 +636,7 @@ const handlePay = async () => {
                         disabled={!couponInput || couponLoading}
                         className="px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-bold text-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 font-mono"
                       >
-                        {couponLoading ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          'Apply'
-                        )}
+                        {couponLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
                       </button>
                     </div>
                   )}
@@ -634,24 +649,19 @@ const handlePay = async () => {
               )}
             </div>
 
-            {/* ── Terms & Pay button ── */}
+            {/* Terms & Pay button */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative flex-shrink-0 mt-0.5">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
-                    onChange={e => {
-                      setAgreeTerms(e.target.checked);
-                      if (e.target.checked) setTermsError('');
-                    }}
+                    onChange={e => { setAgreeTerms(e.target.checked); if (e.target.checked) setTermsError(''); }}
                     className="sr-only"
                   />
                   <div
                     className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                      agreeTerms
-                        ? 'bg-cyan-600 border-cyan-600'
-                        : 'border-slate-300 group-hover:border-cyan-400'
+                      agreeTerms ? 'bg-cyan-600 border-cyan-600' : 'border-slate-300 group-hover:border-cyan-400'
                     }`}
                   >
                     {agreeTerms && <CheckCircle className="w-3.5 h-3.5 text-white" />}
@@ -659,15 +669,10 @@ const handlePay = async () => {
                 </div>
                 <p className="text-xs text-slate-500 font-mono leading-relaxed">
                   I agree to Learnflow's{' '}
-                  <Link to="/terms" className="text-cyan-600 hover:underline">
-                    Terms of Service
-                  </Link>{' '}
+                  <Link to="/terms" className="text-cyan-600 hover:underline">Terms of Service</Link>{' '}
                   and{' '}
-                  <Link to="/privacy" className="text-cyan-600 hover:underline">
-                    Privacy Policy
-                  </Link>
-                  . I understand this is a one-time payment with lifetime access and a 30-day
-                  money-back guarantee.
+                  <Link to="/privacy" className="text-cyan-600 hover:underline">Privacy Policy</Link>.
+                  I understand this is a one-time payment with lifetime access and a 30-day money-back guarantee.
                 </p>
               </label>
 
@@ -687,15 +692,9 @@ const handlePay = async () => {
                 }`}
               >
                 {processing ? (
-                  <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    Processing payment…
-                  </>
+                  <><RefreshCw className="w-5 h-5 animate-spin" /> Processing payment…</>
                 ) : (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    Pay ₹{total.toLocaleString('en-IN')} securely
-                  </>
+                  <><Lock className="w-4 h-4" /> Pay ₹{total.toLocaleString('en-IN')} securely</>
                 )}
               </button>
 
@@ -713,68 +712,44 @@ const handlePay = async () => {
             </div>
           </div>
 
-          {/* ════════════════════════════════
-              RIGHT — Order summary
-          ════════════════════════════════ */}
+          {/* ════ RIGHT — Order summary ════ */}
           <div className="lg:col-span-2 space-y-4">
-
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
               <button
                 onClick={() => setShowSummary(v => !v)}
                 className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors lg:cursor-default"
               >
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide font-mono">
-                  Order summary
-                </h2>
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide font-mono">Order summary</h2>
                 <span className="lg:hidden">
-                  {showSummary ? (
-                    <ChevronUp className="w-4 h-4 text-slate-400" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
-                  )}
+                  {showSummary ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </span>
               </button>
 
               <div className={`${showSummary ? 'block' : 'hidden lg:block'}`}>
                 <div className="px-6 pb-5 border-t border-slate-100">
                   <div className="flex items-start gap-4 pt-5">
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${course.gradient} flex items-center justify-center text-2xl flex-shrink-0`}
-                    >
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${course.gradient} flex items-center justify-center text-2xl flex-shrink-0`}>
                       {course.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-900 leading-snug">{course.title}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                        <span
-                          className={`text-xs font-mono px-2 py-0.5 rounded-full ${course.accentBg} ${course.accentText} border ${course.accentBorder}`}
-                        >
+                        <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${course.accentBg} ${course.accentText} border ${course.accentBorder}`}>
                           {course.tag}
                         </span>
                         <span className="text-xs text-slate-400 font-mono">{course.level}</span>
                       </div>
                       <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 font-mono">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {course.duration}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          50k+ enrolled
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-amber-500" fill="currentColor" />
-                          4.9
-                        </span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{course.duration}</span>
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />50k+ enrolled</span>
+                        <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-500" fill="currentColor" />4.9</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
-                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide font-mono mb-3">
-                    What's included
-                  </p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide font-mono mb-3">What's included</p>
                   <div className="space-y-1.5">
                     {[
                       'Blockchain-verified certificate',
@@ -783,10 +758,7 @@ const handlePay = async () => {
                       'LinkedIn badge + PDF download',
                       'Placement support & referrals',
                     ].map(item => (
-                      <div
-                        key={item}
-                        className="flex items-center gap-2 text-xs text-slate-600 font-mono"
-                      >
+                      <div key={item} className="flex items-center gap-2 text-xs text-slate-600 font-mono">
                         <CheckCircle className="w-3 h-3 text-cyan-500 flex-shrink-0" /> {item}
                       </div>
                     ))}
@@ -796,9 +768,7 @@ const handlePay = async () => {
                 <div className="px-6 py-5 border-t border-slate-100 space-y-2.5">
                   <div className="flex justify-between text-sm text-slate-600 font-mono">
                     <span>Original price</span>
-                    <span className="line-through text-slate-400">
-                      ₹{course.origPrice.toLocaleString('en-IN')}
-                    </span>
+                    <span className="line-through text-slate-400">₹{course.origPrice.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-sm text-emerald-700 font-mono">
                     <span>Learnflow discount</span>
@@ -849,9 +819,7 @@ const handlePay = async () => {
 
             <p className="text-center text-xs text-slate-400 font-mono">
               Need help?{' '}
-              <Link to="/help" className="text-cyan-600 hover:underline">
-                Contact support
-              </Link>
+              <Link to="/help" className="text-cyan-600 hover:underline">Contact support</Link>
             </p>
           </div>
         </div>
