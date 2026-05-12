@@ -976,8 +976,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Prompt Engineering for LLMs",
         duration: "58 min",
-        // freeCodeCamp — Prompt Engineering Full Course
-        videoId: "mwNzbRSCMDE",
+        videoId: "_ZvnD73m40o",
         description:
           "Learn zero-shot, few-shot, chain-of-thought, and system prompting techniques to get reliable outputs from GPT and open-source models.",
       },
@@ -986,7 +985,6 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Building LLM Apps with LangChain",
         duration: "62 min",
-        // freeCodeCamp — LangChain Full Course
         videoId: "HSZ_uaif57o",
         description:
           "Use LangChain chains, agents, and tools to build document Q&A, chatbots, and multi-step reasoning applications.",
@@ -996,8 +994,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "RAG — Retrieval Augmented Generation",
         duration: "50 min",
-        // IBM Technology — RAG Explained
-        videoId: "T-D1OfcDW1M",
+        videoId: "swvzKSOEluc",
         description:
           "Build end-to-end RAG pipelines — chunk documents, embed them into a vector database, and retrieve context for LLM responses.",
       },
@@ -1006,8 +1003,7 @@ export const COURSES = [
         weekLabel: "Week 7–8",
         title: "Fine-Tuning & Deploying LLMs",
         duration: "56 min",
-        // Andrej Karpathy — Let's Build GPT From Scratch
-        videoId: "kCc8FmEb1nY",
+        videoId: "7CFjSJxXHKQ",
         description:
           "Understand LLM internals by building one from scratch. Fine-tune open-source models with LoRA and deploy via FastAPI.",
       },
@@ -1071,7 +1067,6 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "NLP with Python — Text Preprocessing & NLTK",
         duration: "52 min",
-        // freeCodeCamp — NLP with Python (spaCy & NLTK)
         videoId: "05ONoGfmKvA",
         description:
           "Tokenise, stem, lemmatise, and clean text. Perform POS tagging and stopword removal using NLTK.",
@@ -1081,8 +1076,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Named Entity Recognition with spaCy",
         duration: "44 min",
-        // Sentdex — spaCy NLP Tutorial
-        videoId: "dIUTsFT2MeQ",
+        videoId: "UxzyD6gVlC8",
         description:
           "Use spaCy's pipeline for NER, dependency parsing, and building custom entity recognisers for domain-specific text.",
       },
@@ -1091,7 +1085,6 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Text Classification & Sentiment Analysis",
         duration: "50 min",
-        // Krish Naik — NLP Text Classification Tutorial
         videoId: "VtRLrQ3Ev-U",
         description:
           "Build text classifiers with TF-IDF, logistic regression, and Naive Bayes. Create a movie sentiment analysis pipeline.",
@@ -1101,8 +1094,7 @@ export const COURSES = [
         weekLabel: "Week 7–8",
         title: "Transformers & Hugging Face for NLP",
         duration: "58 min",
-        // Hugging Face — Transformers Course Overview
-        videoId: "00GKzGyWFEs",
+        videoId: "PXc_SlnT2g0",
         description:
           "Fine-tune BERT for classification, use Hugging Face pipelines for summarisation, translation, and Q&A tasks.",
       },
@@ -1169,7 +1161,6 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "UX Design Fundamentals & Design Thinking",
         duration: "42 min",
-        // AJ&Smart — Design Thinking Full Course
         videoId: "6lmvCqvmjfE",
         description:
           "Understand the UX design process, empathy mapping, user personas, and how design thinking solves real human problems.",
@@ -1179,7 +1170,6 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "User Research Methods",
         duration: "38 min",
-        // Nielsen Norman Group — User Research Methods Overview
         videoId: "kQ_6faxhyIw",
         description:
           "Conduct user interviews, usability tests, and surveys. Synthesise research into actionable insights using affinity diagrams.",
@@ -1189,7 +1179,6 @@ export const COURSES = [
         weekLabel: "Week 4–5",
         title: "Wireframing & Information Architecture",
         duration: "44 min",
-        // Figma — Wireframing in Figma Official Tutorial
         videoId: "qpH7-KFWZRI",
         description:
           "Create low-fidelity wireframes, site maps, and user flows. Learn to structure information for maximum usability.",
@@ -1199,7 +1188,6 @@ export const COURSES = [
         weekLabel: "Week 6–7",
         title: "Figma UI Design for Beginners",
         duration: "60 min",
-        // DesignCourse — Figma UI Design Tutorial for Beginners
         videoId: "FTFaQWZBqQ8",
         description:
           "Master Figma from scratch — auto-layout, components, styles, and building high-fidelity designs.",
@@ -1209,7 +1197,6 @@ export const COURSES = [
         weekLabel: "Week 8",
         title: "Usability Testing & Iteration",
         duration: "36 min",
-        // Figma — Prototyping in Figma Official Tutorial
         videoId: "OlbdIXLunt4",
         description:
           "Build interactive prototypes in Figma. Run usability tests, collect feedback, and iterate your designs based on real user data.",
@@ -1274,8 +1261,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Principles of Visual Design",
         duration: "48 min",
-        // DesignCourse — Graphic Design Theory
-        videoId: "9QTCvayLhCA",
+        videoId: "eXXjq9c2Omw",
         description:
           "Learn the foundational principles of design — balance, contrast, repetition, alignment, and the Gestalt principles.",
       },
@@ -1284,8 +1270,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "Typography — The Art of Type",
         duration: "44 min",
-        // Google Fonts — Typography Tutorial
-        videoId: "hnCmCwoogrQ",
+        videoId: "p0TbED-mn50",
         description:
           "Choose and pair typefaces professionally. Understand kerning, leading, tracking, and creating clear typographic hierarchy.",
       },
@@ -1294,8 +1279,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Colour Theory for Designers",
         duration: "40 min",
-        // Canva — Colour Theory Tutorial
-        videoId: "YeI6Wqn4I78",
+        videoId: "2QTHs7QSR9o",
         description:
           "Master the colour wheel, harmonies, contrast ratios, and psychological effects of colour in digital design.",
       },
@@ -1304,8 +1288,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Composition, Grids & Visual Hierarchy",
         duration: "46 min",
-        // DesignCourse — Layout & Composition
-        videoId: "a5KYlHNKQB8",
+        videoId: "PKfZ1gnVJ44",
         description:
           "Design with purpose — apply grid systems, white space, and the rule of thirds to create powerful visual compositions.",
       },
@@ -1369,8 +1352,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Advanced Components & Variants in Figma",
         duration: "55 min",
-        // Figma — Advanced Component Tutorial
-        videoId: "9iXECZfcuI4",
+        videoId: "Vjw47lNNbeA",
         description:
           "Build nested components, create variant groups, and manage component properties for a scalable UI component library.",
       },
@@ -1379,8 +1361,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "Auto-Layout Mastery",
         duration: "46 min",
-        // Figma — Auto Layout Tutorial
-        videoId: "TyaGpGDFczw",
+        videoId: "5zKmwyWXkQA",
         description:
           "Use auto-layout to build responsive components that adapt to content. Master padding, spacing, and wrapping behaviour.",
       },
@@ -1389,8 +1370,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Figma Variables & Dynamic Theming",
         duration: "44 min",
-        // Figma — Variables Tutorial (Official)
-        videoId: "1ONxxlJnvdM",
+        videoId: "tvObuIcAooE",
         description:
           "Use Figma Variables to build light/dark mode systems, spacing tokens, and dynamic colour themes across your design system.",
       },
@@ -1399,8 +1379,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Design Systems & Developer Handoff",
         duration: "52 min",
-        // Figma — Design Systems Tutorial
-        videoId: "CJyJN0ZdEGA",
+        videoId: "ALkqhXv0GPk",
         description:
           "Build and document a complete design system. Prepare pixel-perfect developer handoff specs using Figma Dev Mode.",
       },
@@ -1464,8 +1443,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "After Effects for Beginners — Full Introduction",
         duration: "54 min",
-        // Motion Array — After Effects for Beginners
-        videoId: "TrNBa1btEk0",
+        videoId: "FgIovTjK59o",
         description:
           "Get comfortable with the After Effects interface — composition settings, timeline, layers, and basic animation workflow.",
       },
@@ -1474,8 +1452,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Keyframing & Motion Principles",
         duration: "48 min",
-        // School of Motion — 12 Principles of Animation
-        videoId: "uDqjIdI4bF4",
+        videoId: "_eSn_16mnT4",
         description:
           "Apply the 12 principles of animation — squash and stretch, anticipation, easing — to create natural, professional motion.",
       },
@@ -1484,8 +1461,7 @@ export const COURSES = [
         weekLabel: "Week 5",
         title: "Typography & Logo Animation",
         duration: "44 min",
-        // MOBOX Graphics — Text Animation After Effects
-        videoId: "l2Az-oMiExM",
+        videoId: "X1sr6B8dpls",
         description:
           "Animate text reveals, kinetic typography, and logo stings. Use the text animator and shape layers for expressive motion.",
       },
@@ -1494,8 +1470,7 @@ export const COURSES = [
         weekLabel: "Week 6",
         title: "Exporting & Delivering Motion Projects",
         duration: "36 min",
-        // Motion Array — After Effects Export Settings
-        videoId: "9BUz8zBs59E",
+        videoId: "ncHvLDcSLV8",
         description:
           "Export animations for social media, web, and video using Media Encoder. Learn codec settings, GIF export, and Lottie JSON for web.",
       },
@@ -1561,8 +1536,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Probability for Data Science — Fundamentals",
         duration: "48 min",
-        // StatQuest — Probability Basics
-        videoId: "KzfWUEJjG18",
+        videoId: "iaeLv-ilMA0",
         description:
           "Learn probability rules, set theory, conditional probability, independence, and the multiplication and addition rules.",
       },
@@ -1571,18 +1545,16 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "Probability Distributions — Normal, Binomial & More",
         duration: "50 min",
-        // StatQuest — Distributions
-        videoId: "qBigTkjLsfo",
+        videoId: "_Hjp6aFJO40",
         description:
           "Understand normal, binomial, Poisson, and exponential distributions and their applications in data science.",
       },
       {
         id: "ds-1-3",
         weekLabel: "Week 4",
-        title: "Bayes' Theorem Explained",
-        duration: "20 min",
-        // 3Blue1Brown — Bayes' Theorem
-        videoId: "HZGCoVF3YvM",
+        title: "Bayes' Theorem",
+        duration: "45 min",
+        videoId: "XifBOZPO5HI",
         description:
           "Understand Bayes' theorem visually. Apply it to spam filtering, medical testing, and Bayesian inference.",
       },
@@ -1591,8 +1563,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Hypothesis Testing & Statistical Significance",
         duration: "52 min",
-        // StatQuest — Hypothesis Testing & p-values
-        videoId: "0oc49DyA3hU",
+        videoId: "QrHH3W4lxR4",
         description:
           "Run t-tests, chi-square tests, and ANOVA. Interpret p-values, confidence intervals, and statistical significance correctly.",
       },
@@ -1656,7 +1627,6 @@ export const COURSES = [
         weekLabel: "Week 1",
         title: "Python for Data Science — Fundamentals",
         duration: "54 min",
-        // freeCodeCamp — Python for Everybody (Dr. Chuck)
         videoId: "HrRA67O-QXI",
         description:
           "Python fundamentals for data science — data types, loops, functions, file I/O, and the scientific Python ecosystem.",
@@ -1666,7 +1636,6 @@ export const COURSES = [
         weekLabel: "Week 2–4",
         title: "Pandas & NumPy — Complete Data Manipulation",
         duration: "58 min",
-        // Keith Galli — Complete Pandas Tutorial
         videoId: "e60ItwlZTKM",
         description:
           "Manipulate, clean, and transform large datasets using Pandas DataFrames and NumPy arrays for high-performance computation.",
@@ -1676,7 +1645,6 @@ export const COURSES = [
         weekLabel: "Week 5",
         title: "Data Visualisation with Matplotlib & Seaborn",
         duration: "46 min",
-        // Corey Schafer — Matplotlib Tutorial Full Series
         videoId: "-jTD74eEy2I",
         description:
           "Create publication-quality charts, heatmaps, and interactive visualisations to communicate data insights effectively.",
@@ -1686,7 +1654,6 @@ export const COURSES = [
         weekLabel: "Week 6",
         title: "End-to-End Exploratory Data Analysis Project",
         duration: "52 min",
-        // Alex The Analyst — EDA with Python Project
         videoId: "Liv6eeb1VfE",
         description:
           "Apply your full Python data stack to a real Kaggle dataset — import, clean, explore, visualise, and present your findings.",
@@ -1751,8 +1718,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Linear & Multiple Regression — Complete Guide",
         duration: "55 min",
-        // StatQuest — Linear Regression
-        videoId: "nk2CQITm_eo",
+        videoId: "jTDWw9iNO7U",
         description:
           "Build linear models, interpret coefficients, handle multicollinearity, and validate assumptions with residual analysis.",
       },
@@ -1761,8 +1727,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Generalised Linear Models — Logistic & Poisson Regression",
         duration: "48 min",
-        // StatQuest — Logistic Regression
-        videoId: "yIYKR4sgzI8",
+        videoId: "emwnRuC6GXY",
         description:
           "Apply logistic regression for classification, Poisson regression for count data, and interpret GLM outputs correctly.",
       },
@@ -1771,8 +1736,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Time Series Analysis & ARIMA Forecasting",
         duration: "58 min",
-        // ritvikmath — Time Series & ARIMA
-        videoId: "e8Yw4alG16Q",
+        videoId: "O5pataOw33Y",
         description:
           "Analyse time series for stationarity, trend, and seasonality. Fit ARIMA and SARIMA models and forecast future values.",
       },
@@ -1781,8 +1745,7 @@ export const COURSES = [
         weekLabel: "Week 7–8",
         title: "Bayesian Statistics & MCMC",
         duration: "52 min",
-        // StatQuest — Bayesian Statistics
-        videoId: "3OJEae7Qb_o",
+        videoId: "bGKgkK9vETQ",
         description:
           "Understand Bayesian inference, priors, posteriors, and Markov Chain Monte Carlo sampling with PyMC3.",
       },
@@ -1846,8 +1809,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Data Mining Fundamentals & EDA",
         duration: "50 min",
-        // freeCodeCamp — Data Analysis with Python Full Course
-        videoId: "r-uOLxNrNk8",
+        videoId: "x0JrcVcXpkg",
         description:
           "Learn the data mining process — CRISP-DM, data collection, cleaning, and exploratory analysis to surface initial patterns.",
       },
@@ -1856,8 +1818,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "Clustering — K-Means & DBSCAN",
         duration: "44 min",
-        // Krish Naik — Clustering Algorithms
-        videoId: "EItlUEPCIzM",
+        videoId: "461Opp1TShk",
         description:
           "Segment customers and data points using K-Means and DBSCAN. Choose the optimal number of clusters with the elbow method.",
       },
@@ -1866,8 +1827,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Association Rule Mining — Market Basket Analysis",
         duration: "42 min",
-        // StatQuest — Association Rules
-        videoId: "WGlMlS_Yydk",
+        videoId: "aqsa-gO_aq4",
         description:
           "Mine frequent itemsets with the Apriori algorithm. Calculate support, confidence, and lift for market basket analysis.",
       },
@@ -1876,8 +1836,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Anomaly Detection & Recommendation Systems",
         duration: "52 min",
-        // Krish Naik — Recommendation System Tutorial
-        videoId: "1YoD0fg3_EM",
+        videoId: "t7LeAYBNRKA",
         description:
           "Detect outliers with Isolation Forest and build a collaborative filtering recommendation system from scratch.",
       },
@@ -1943,8 +1902,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "AWS Cloud Practitioner Essentials",
         duration: "65 min",
-        // freeCodeCamp — AWS Certified Cloud Practitioner Full Course
-        videoId: "3WZzmiAkYBQ",
+        videoId: "RyU1F6NkxBM",
         description:
           "EC2, S3, RDS, VPC, IAM, EKS, CloudFront — architect and deploy cloud infrastructure on AWS following best practices.",
       },
@@ -1953,8 +1911,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "AWS VPC & Networking Deep Dive",
         duration: "54 min",
-        // Stephane Maarek — AWS VPC Tutorial
-        videoId: "g2JOHLHh4rI",
+        videoId: "oR8ZWUXg5Jg",
         description:
           "Design and configure VPCs — subnets, route tables, internet gateways, NAT gateways, security groups, and VPC peering.",
       },
@@ -1963,8 +1920,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "EC2, Auto Scaling & Load Balancing",
         duration: "56 min",
-        // AWS — EC2 Auto Scaling Tutorial
-        videoId: "09ji0vbNkPk",
+        videoId: "9JTzOOlkepY",
         description:
           "Launch and manage EC2 instances, configure auto-scaling groups, and distribute traffic with Application Load Balancers.",
       },
@@ -1973,8 +1929,7 @@ export const COURSES = [
         weekLabel: "Week 7–8",
         title: "AWS Architecture & Cost Optimisation",
         duration: "48 min",
-        // AWS — Well-Architected Framework Overview
-        videoId: "vPEMTd74xHU",
+        videoId: "FAowmVOweO4",
         description:
           "Apply the AWS Well-Architected Framework pillars. Optimise costs with Reserved Instances, Savings Plans, and right-sizing.",
       },
@@ -2038,8 +1993,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Google Cloud Fundamentals — Core Infrastructure",
         duration: "58 min",
-        // Google Cloud — GCP Fundamentals Course Overview
-        videoId: "bOD5MQJq5TE",
+        videoId: "EjO9nR2_fsQ",
         description:
           "Explore GCP's global infrastructure, core services — Compute Engine, Cloud Storage, Cloud SQL — and IAM configuration.",
       },
@@ -2048,8 +2002,7 @@ export const COURSES = [
         weekLabel: "Week 3–4",
         title: "Google Kubernetes Engine (GKE) Deep Dive",
         duration: "62 min",
-        // TechWorld with Nana — Kubernetes Tutorial for Beginners (Full Course)
-        videoId: "X48VuDVv0do",
+        videoId: "KlEk4KMql-0",
         description:
           "Deploy and manage containerised workloads on GKE — pods, services, deployments, Ingress, and horizontal pod autoscaling.",
       },
@@ -2058,8 +2011,7 @@ export const COURSES = [
         weekLabel: "Week 5",
         title: "BigQuery for Data Analysis",
         duration: "50 min",
-        // Google Cloud — BigQuery Tutorial
-        videoId: "ggmVk87FG5Y",
+        videoId: "uSrV2N5H9YA",
         description:
           "Query petabyte-scale datasets with BigQuery SQL. Use partitioned tables, clustered tables, and BI Engine for dashboards.",
       },
@@ -2068,8 +2020,7 @@ export const COURSES = [
         weekLabel: "Week 6",
         title: "GCP Networking & Cloud Monitoring",
         duration: "44 min",
-        // Google Cloud — VPC and Network Tutorial
-        videoId: "kTEQcH60VtE",
+        videoId: "h1gqD0UJNU0",
         description:
           "Configure GCP VPCs, firewall rules, load balancers, and Cloud CDN. Monitor workloads with Cloud Monitoring and Logging.",
       },
@@ -2133,8 +2084,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "Cloud Security Fundamentals",
         duration: "54 min",
-        // freeCodeCamp — Cloud Security Full Course
-        videoId: "M988_fsOSWo",
+        videoId: "M_9hRPVH5SA",
         description:
           "Understand the shared responsibility model, cloud attack surfaces, and implement security controls across compute, storage, and networking.",
       },
@@ -2143,8 +2093,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "IAM Security & Zero Trust Architecture",
         duration: "48 min",
-        // John Savill — Zero Trust Architecture
-        videoId: "8LCmBsRwQew",
+        videoId: "GZqS8RHWLDU",
         description:
           "Implement zero trust principles — never trust, always verify. Configure MFA, conditional access, and least-privilege IAM policies.",
       },
@@ -2153,8 +2102,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "Encryption, KMS & Data Protection",
         duration: "44 min",
-        // AWS — AWS KMS Tutorial
-        videoId: "WIimqYOGVnM",
+        videoId: "Egob_aJ4lMk",
         description:
           "Implement encryption at rest and in transit using AWS KMS and CloudHSM. Manage keys, audit usage, and enforce data protection policies.",
       },
@@ -2163,8 +2111,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Compliance Frameworks & Threat Detection",
         duration: "52 min",
-        // SANS — Cloud Security Compliance
-        videoId: "4CyFoaSQ3lk",
+        videoId: "BWnWS8HxUx4",
         description:
           "Map controls to SOC 2, ISO 27001, and GDPR requirements. Use AWS GuardDuty and Security Hub for real-time threat detection.",
       },
@@ -2228,8 +2175,7 @@ export const COURSES = [
         weekLabel: "Week 1–2",
         title: "AWS Lambda — Serverless Computing from Scratch",
         duration: "56 min",
-        // freeCodeCamp — AWS Lambda Tutorial
-        videoId: "eOBq__h4OJ4",
+        videoId: "m7_53G0LuSE",
         description:
           "Create and deploy Lambda functions, understand invocation models, configure triggers, and manage IAM roles and permissions.",
       },
@@ -2238,8 +2184,7 @@ export const COURSES = [
         weekLabel: "Week 3",
         title: "API Gateway — Building REST APIs on AWS",
         duration: "48 min",
-        // Traversy Media — AWS API Gateway Tutorial
-        videoId: "1_Ia5IL4Uy4",
+        videoId: "obxIF2hgXGs",
         description:
           "Create and secure REST APIs with API Gateway. Integrate with Lambda, configure CORS, throttling, and custom authorisers.",
       },
@@ -2248,8 +2193,7 @@ export const COURSES = [
         weekLabel: "Week 4",
         title: "DynamoDB — NoSQL for Serverless Apps",
         duration: "52 min",
-        // Alex DeBrie — DynamoDB Deep Dive
-        videoId: "DIQVJqiSUkE",
+        videoId: "D1zrPo_q9Oo",
         description:
           "Design DynamoDB schemas with single-table design. Understand partition keys, sort keys, GSIs, and optimise for performance.",
       },
@@ -2258,8 +2202,7 @@ export const COURSES = [
         weekLabel: "Week 5–6",
         title: "Step Functions, S3 Events & CloudWatch",
         duration: "46 min",
-        // AWS — Step Functions Tutorial
-        videoId: "Dh7h3lkpeP4",
+        videoId: "zdmCYPvOHoo",
         description:
           "Orchestrate multi-step workflows with Step Functions. Trigger Lambda from S3 events and monitor with CloudWatch and X-Ray.",
       },

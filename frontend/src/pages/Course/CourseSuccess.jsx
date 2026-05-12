@@ -16,14 +16,7 @@ const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
 
 export default function CourseSuccess() {
   const location = useLocation();
-
-  // 1. Debugging: Helps verify what data actually arrived
-  console.log("Navigation State:", location.state);
-
   const course = location.state?.course || null;
-
-  // 2. NUCLEAR ID DETECTION: This is the fix for your screenshot error.
-  // It checks every possible location for the ID.
   const id = location.state?.courseId || 
              location.state?.course?._id || 
              location.state?.course?.id || 

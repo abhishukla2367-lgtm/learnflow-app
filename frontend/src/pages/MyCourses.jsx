@@ -2,7 +2,6 @@ import { COURSES } from '../data/coursesData';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Play, ChevronRight } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { useAuth, enrollmentKey } from '../context/AuthContext';
 
@@ -20,23 +19,23 @@ const STATUS_STYLE = {
   'Not Started': 'bg-slate-100 text-slate-500 border border-slate-200',
 };
 
-/* ─── Canonical ID extractor ───────────────────────────────────
- * This is the single source of truth for "what is the unique ID
- * of this enrollment?" — used everywhere to prevent duplicates.
- * It checks every possible shape the object might have.
- * ─────────────────────────────────────────────────────────── */
+/* ── Canonical ID extractor ─────────────────────────────────────────────────
+ * Single source of truth for "what is the unique ID of this enrollment?"
+ * Used in merge(), event handler, dedup(), and key prop — everywhere.
+ * Checks every possible shape the object might arrive in.
+ * ───────────────────────────────────────────────────────────────────────── */
 function enrollmentId(e) {
   return String(
-    e._id ||
-    e.certId ||
+    e._id        ||
+    e.certId     ||
     e.course?._id ||
-    e.course?.id ||
-    e.course ||
+    e.course?.id  ||
+    e.course      ||
     ''
   );
 }
 
-/* ─── Dedup a flat array of enrollments by canonical ID ──────── */
+/* ── Dedup a flat array of enrollments by canonical ID ── */
 function dedup(list) {
   const seen = new Set();
   return list.filter(e => {
@@ -53,7 +52,7 @@ function CourseRow({ enrollment }) {
   const status   = statusOf(progress);
   const courseId = course._id || course.id || '';
 
-  const model = enrollment.courseModel || '';
+  const model       = enrollment.courseModel || '';
   const hasCertData = !!(enrollment.certData && enrollment.certData.title);
 
   const isStaticCourse = COURSES.some(
@@ -68,8 +67,10 @@ function CourseRow({ enrollment }) {
 
   const lastLesson = (() => {
     try {
-      const progressKey = type === 'certification' ? 'lf_progress' : 'lf_course_progress';
-      const all = JSON.parse(localStorage.getItem(progressKey) || '{}');
+      // FIX: CoursePlayer saves ALL progress (both course and certification types)
+      // under 'lf_progress' — there is no separate 'lf_course_progress' key.
+      // Using the same key here ensures lastLesson is found correctly.
+      const all = JSON.parse(localStorage.getItem('lf_progress') || '{}');
       return all[courseId]?.lastLesson || null;
     } catch { return null; }
   })();
@@ -85,7 +86,7 @@ function CourseRow({ enrollment }) {
       if (!globalCache[courseId] && course.lessons?.length) {
         globalCache[courseId] = {
           ...course,
-          isTrial: enrollment.isTrial,
+          isTrial:     enrollment.isTrial,
           trialEndsAt: enrollment.trialEndsAt,
         };
         localStorage.setItem('lf_course_cache', JSON.stringify(globalCache));
@@ -99,7 +100,8 @@ function CourseRow({ enrollment }) {
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row shadow-sm">
       <div className="relative sm:w-48 h-36 sm:h-auto bg-gradient-to-br from-cyan-400 to-violet-500 flex-shrink-0">
         {course.thumbnail ? (
-          <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+          <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover"
+            onError={e => { e.target.style.display = 'none'; }} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl opacity-60">
             {course.emoji || '📘'}
@@ -138,11 +140,8 @@ function CourseRow({ enrollment }) {
             />
           </div>
           <div className="flex justify-end pt-1">
-            <Link
-              to={playerLink}
-              onClick={handleNavigate}
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-cyan-600 hover:text-cyan-700 transition-colors"
-            >
+            <Link to={playerLink} onClick={handleNavigate}
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-cyan-600 hover:text-cyan-700 transition-colors">
               <Play size={13} />
               {status === 'Completed' ? 'Review' : status === 'In Progress' ? 'Continue' : 'Start Learning'}
               <ChevronRight size={13} />
@@ -168,9 +167,9 @@ export default function MyCourses() {
     catch { return []; }
   }, [lsKey]);
 
-  // Merge API + local, deduplicate using the shared enrollmentId helper
+  // Merge API + local, dedup using shared enrollmentId helper
   const merge = useCallback((apiData, localData) => {
-    const apiIds = new Set(apiData.map(enrollmentId).filter(Boolean));
+    const apiIds    = new Set(apiData.map(enrollmentId).filter(Boolean));
     const localOnly = localData.filter(e => !apiIds.has(enrollmentId(e)));
     return dedup([...apiData, ...localOnly]);
   }, []);
@@ -191,6 +190,7 @@ export default function MyCourses() {
           localStorage.setItem(lsKey, JSON.stringify(merged));
         }
 
+        // Prime the course cache so the player doesn't hit a loading screen
         try {
           const globalCache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
           apiData.forEach(enrol => {
@@ -199,7 +199,7 @@ export default function MyCourses() {
               const cid = courseObj._id || courseObj.id;
               globalCache[cid] = {
                 ...courseObj,
-                isTrial: enrol.isTrial,
+                isTrial:     enrol.isTrial,
                 trialEndsAt: enrol.trialEndsAt,
               };
             }
@@ -216,15 +216,15 @@ export default function MyCourses() {
   }, [user, lsKey, getLocal, merge]);
 
   useEffect(() => {
-    const handler = (e) => {
+    const handler = e => {
       const entry = e.detail;
       setEnrollments(prev => {
-        // Use the same enrollmentId extractor — no more weak/mismatched checks
+        // Use the shared enrollmentId() extractor — same logic as merge()
+        // Prevents duplicates regardless of which shape the event payload arrives in
         const incomingId = enrollmentId(entry);
         if (!incomingId) return prev;
         const exists = prev.some(p => enrollmentId(p) === incomingId);
         if (exists) return prev;
-        // Dedup the whole list just to be safe (handles any race conditions)
         return dedup([entry, ...prev]);
       });
     };
@@ -253,7 +253,9 @@ export default function MyCourses() {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-black text-slate-900 font-sans">My Courses</h1>
-          <p className="text-sm text-slate-500 font-sans mt-1">Access your purchased certifications and track your learning progress</p>
+          <p className="text-sm text-slate-500 font-sans mt-1">
+            Access your purchased certifications and track your learning progress
+          </p>
         </div>
       </div>
 
@@ -261,15 +263,12 @@ export default function MyCourses() {
         {/* Tabs */}
         <div className="flex gap-1.5 bg-white border border-slate-200 p-1 rounded-2xl w-fit shadow-sm overflow-x-auto">
           {TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+            <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap font-sans ${
                 activeTab === tab
                   ? 'bg-cyan-600 text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
+              }`}>
               {tab}
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-mono ${
                 activeTab === tab ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
@@ -301,13 +300,15 @@ export default function MyCourses() {
                 : 'Try checking another tab to see your progress.'}
             </p>
             {activeTab === 'All' && (
-              <Link to="/certifications" className="inline-flex items-center gap-2 bg-cyan-600 text-white text-sm font-bold px-8 py-3 rounded-xl hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-600/20">
+              <Link to="/certifications"
+                className="inline-flex items-center gap-2 bg-cyan-600 text-white text-sm font-bold px-8 py-3 rounded-xl hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-600/20">
                 Explore Certifications
               </Link>
             )}
           </div>
         ) : (
           <div className="space-y-4">
+            {/* key uses enrollmentId() — consistent with all dedup logic */}
             {filtered.map(e => <CourseRow key={enrollmentId(e)} enrollment={e} />)}
           </div>
         )}

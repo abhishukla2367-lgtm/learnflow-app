@@ -117,6 +117,8 @@ export default function CourseDetail() {
           tag: course.category || 'Course',
           thumbnail: course.thumbnail || '',
           lessons: buildLessons(course),
+          level: course.difficulty || 'All Levels',
+          duration: course.totalDuration ? `${course.totalDuration} min` : '',
         }
       }
     });
