@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import {
   LayoutDashboard, LogOut, Menu, X, ChevronDown,
   Code2, Brain, Palette, PlayCircle, Info, Phone, HelpCircle, GraduationCap,
@@ -226,9 +227,10 @@ export default function Header() {
           {/* ── AUTH ── */}
           <div className="flex items-center justify-end gap-2 flex-1">
             {user ? (
-              <div className="hidden lg:flex items-center gap-2">
-                <UserMenu />
-              </div>
+            <div className="hidden lg:flex items-center gap-2">
+            <NotificationBell />   {/* ← ADD THIS */}
+            <UserMenu />
+            </div>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
                 <Link
@@ -324,6 +326,14 @@ export default function Header() {
                   <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
                   <p className="text-xs text-slate-400 truncate">{user.email}</p>
                 </div>
+                {/* Mobile: Notification bell */}
+<div className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 mb-1">
+  <div>
+    <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+  </div>
+  <NotificationBell />
+</div>
 
                 {isAdmin ? (
                   <Link

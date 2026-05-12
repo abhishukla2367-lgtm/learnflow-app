@@ -15,6 +15,7 @@ import MyCourses    from './pages/MyCourses';
 import Leaderboard    from './pages/Leaderboard';
 import Login          from './pages/Login';
 import Register       from './pages/Register';
+import NotificationsPage from './pages/Notifications';
 import Profile        from './pages/Profile';
 import NotFound       from './pages/NotFound';
 import ForgotPassword from './pages/ForgotPassword';
@@ -94,6 +95,7 @@ function PublicLayout() {
 
           {/* Student Protected Routes */}
           <Route path="/dashboard"   element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>}/>
           <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
           <Route path="/profile"     element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 

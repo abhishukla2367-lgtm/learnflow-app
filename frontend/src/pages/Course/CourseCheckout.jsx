@@ -5,18 +5,11 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
   ShieldCheck, Lock, ChevronDown, ChevronUp, CheckCircle,
-  Tag, X, CreditCard, Smartphone, Building2, ArrowLeft,
-  AlertCircle, Clock, Users, Star, Zap, BadgeCheck,
-  RefreshCw, Eye, EyeOff,
+  CreditCard, Smartphone, Building2, ArrowLeft,
+  AlertCircle, Clock, Users, Star, BadgeCheck,
+  RefreshCw, Eye, EyeOff
 } from 'lucide-react';
-
-/* ── Coupon codes ── */
-const COUPONS = {
-  LEARN20: { discount: 20, label: '20% off' },
-  FIRST50: { discount: 50, label: '50% off — First order' },
-  INDIA10: { discount: 10, label: '10% off' },
-  FLASH30: { discount: 30, label: '30% off — Flash sale' },
-};
+import { MdPlayCircleOutline } from 'react-icons/md';
 
 const TEST_CARDS = [
   { brand: 'Visa',       number: '4111 1111 1111 1111', expiry: '12/26', cvv: '123', name: 'Test User' },
@@ -47,10 +40,7 @@ function cardBrand(num) {
   return null;
 }
 
-/* ── Luhn algorithm — validates card number mathematically ──
-   Every real checkout page does this. Rejects fake 16-digit strings
-   like 1111 1111 1111 1111 that pass a simple length check.
-── */
+/* ── Luhn algorithm ── */
 function luhn(num) {
   const digits = num.replace(/\s/g, '');
   let sum = 0;
@@ -67,7 +57,7 @@ function luhn(num) {
   return sum % 10 === 0;
 }
 
-/* ── Canonical enrollment ID — same helper used in MyCourses ── */
+/* ── Canonical enrollment ID ── */
 function enrollmentId(e) {
   return String(
     e._id ||
@@ -79,10 +69,7 @@ function enrollmentId(e) {
   );
 }
 
-/* ── Nuclear AutoComplete killer hook ──
-   MutationObserver re-applies the kill attributes whenever Chrome
-   tries to sneak autocomplete back on after mount.
-── */
+/* ── Nuclear AutoComplete killer hook ── */
 function useAntiAutofill(inputRef) {
   useEffect(() => {
     const el = inputRef.current;
@@ -203,90 +190,12 @@ function Steps({ current }) {
   );
 }
 
-/* ── Coupon dropdown ── */
-function CouponBox({ couponInput, setCouponInput, setCouponError, appliedCoupon,
-                     setAppliedCoupon, couponError, couponLoading, setCouponLoading,
-                     removeCoupon }) {
-  const [open, setOpen] = useState(false);
-
-  function applyCoupon() {
-    const code = couponInput.trim().toUpperCase();
-    setCouponLoading(true);
-    setTimeout(() => {
-      if (COUPONS[code]) {
-        setAppliedCoupon(code); setCouponError('');
-      } else {
-        setCouponError('Invalid code. Pick one from the list below.');
-        setAppliedCoupon(null);
-      }
-      setCouponLoading(false);
-    }, 700);
-  }
-
-  return (
-    <div className="mt-5 pt-4 border-t border-slate-100">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide font-mono mb-2 flex items-center gap-1.5">
-        <Tag className="w-3.5 h-3.5 text-cyan-500" /> Coupon code
-      </p>
-      {appliedCoupon ? (
-        <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
-            <span className="text-sm font-bold text-emerald-700 font-mono">{appliedCoupon}</span>
-            <span className="text-xs text-emerald-600 font-mono">— {COUPONS[appliedCoupon].label}</span>
-          </div>
-          <button onClick={removeCoupon} className="text-emerald-500 hover:text-emerald-700">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      ) : (
-        <div className="relative">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <NoFillInput
-                placeholder="Enter or pick a code"
-                value={couponInput}
-                onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
-                onKeyDown={e => e.key === 'Enter' && applyCoupon()}
-                onFocus={() => setOpen(true)}
-                onBlur={() => setTimeout(() => setOpen(false), 150)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent uppercase"
-              />
-              {open && (
-                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
-                  {Object.entries(COUPONS).map(([code, { label }]) => (
-                    <button key={code} type="button"
-                      onMouseDown={() => { setCouponInput(code); setCouponError(''); setOpen(false); }}
-                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-cyan-50 transition-colors text-left">
-                      <span className="text-sm font-bold text-slate-700 font-mono">{code}</span>
-                      <span className="text-xs text-cyan-600 font-mono">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <button onClick={applyCoupon} disabled={!couponInput || couponLoading}
-              className="px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-bold text-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 font-mono">
-              {couponLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
-            </button>
-          </div>
-          {couponError && (
-            <p className="mt-1.5 text-xs text-red-500 font-mono flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> {couponError}
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ── Test card picker ── */
 function TestCardPicker({ onPick }) {
   return (
     <div className="mb-4 p-3 rounded-xl border border-dashed border-amber-300 bg-amber-50">
       <p className="text-xs font-bold text-amber-700 font-mono mb-2 flex items-center gap-1.5">
-        <Zap className="w-3 h-3" /> Demo mode — click a test card to fill:
+        <MdPlayCircleOutline  className="w-3 h-3" /> Demo mode — click a test card to fill:
       </p>
       <div className="flex flex-wrap gap-2">
         {TEST_CARDS.map(tc => (
@@ -301,28 +210,22 @@ function TestCardPicker({ onPick }) {
   );
 }
 
+/* ══════════════════════════════════════════
+   MAIN CHECKOUT COMPONENT
+══════════════════════════════════════════ */
 export default function CourseCheckout() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user }  = useAuth();
 
-  // FIX 1: Read course from state — do NOT mutate it.
-  // origPrice is derived safely here instead of mutating the readonly state object.
   const courseState = location.state?.course || null;
   const course = courseState ? {
     ...courseState,
-    // FIX 2: origPrice fallback — if CourseDetail didn't pass it, derive it here.
-    // Also handles the free-course edge case where price === 0.
     origPrice: courseState.origPrice && courseState.origPrice > courseState.price
       ? courseState.origPrice
       : Math.round((courseState.price || 0) * 1.5) || courseState.price || 0,
   } : null;
 
-  const [step,          setStep]          = useState(0);
-  const [couponInput,   setCouponInput]   = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [couponError,   setCouponError]   = useState('');
-  const [couponLoading, setCouponLoading] = useState(false);
   const [payMethod,     setPayMethod]     = useState('card');
   const [card,          setCard]          = useState({ number: '', name: '', expiry: '', cvv: '' });
   const [cardErrors,    setCardErrors]    = useState({});
@@ -345,58 +248,28 @@ export default function CourseCheckout() {
   if (!course || !user) return null;
 
   /* ── Calculations ── */
-  const basePrice      = course.price || 0;
-  const gst            = Math.round(basePrice * 0.18);
-  const couponDiscount = appliedCoupon
-    ? Math.round(basePrice * (COUPONS[appliedCoupon].discount / 100))
-    : 0;
-  const total   = basePrice + gst - couponDiscount;
-  const savings = Math.max(0, course.origPrice - total);
-  const brand   = cardBrand(card.number);
+  const basePrice = course.price || 0;
+  const gst       = Math.round(basePrice * 0.18);
+  const total     = basePrice + gst;
+  const savings   = Math.max(0, course.origPrice - total);
+  const brand     = cardBrand(card.number);
 
-  /* ── Coupon ── */
-  function applyCoupon() {
-    const code = couponInput.trim().toUpperCase();
-    setCouponLoading(true);
-    setTimeout(() => {
-      if (COUPONS[code]) {
-        setAppliedCoupon(code);
-        setCouponError('');
-      } else {
-        setCouponError('Invalid coupon code. Try LEARN20 or FIRST50.');
-        setAppliedCoupon(null);
-      }
-      setCouponLoading(false);
-    }, 700);
-  }
-
-  function removeCoupon() {
-    setAppliedCoupon(null);
-    setCouponInput('');
-    setCouponError('');
-  }
-
-  /* ── Card validation (with Luhn + month range) ── */
+  /* ── Card validation ── */
   function validateCard() {
     const errs = {};
     const num = card.number.replace(/\s/g, '');
-
-    // FIX 3: Luhn check — rejects mathematically invalid card numbers
     if (num.length < 16) {
       errs.number = 'Enter a valid 16-digit card number';
     } else if (!luhn(num)) {
       errs.number = 'Card number is invalid';
     }
-
     if (!card.name.trim()) errs.name = 'Cardholder name is required';
-
     const parts = card.expiry.split('/');
     const mm = parts[0];
     const yy = parts[1];
     if (!mm || !yy || mm.length < 2 || yy.length < 2) {
       errs.expiry = 'Enter a valid expiry date (MM/YY)';
     } else {
-      // FIX 4: Month range check — rejects 00 and 13+
       const month = Number(mm);
       if (month < 1 || month > 12) {
         errs.expiry = 'Month must be between 01 and 12';
@@ -408,16 +281,13 @@ export default function CourseCheckout() {
         }
       }
     }
-
     if (card.cvv.length < 3) errs.cvv = 'Enter a valid CVV';
-
     setCardErrors(errs);
     return Object.keys(errs).length === 0;
   }
 
-  /* ── UPI validation (tightened — 3+ chars after @) ── */
+  /* ── UPI validation ── */
   function validateUPI() {
-    // FIX 5: Require at least 3 chars after @ to match real UPI ID format
     const valid = /^[\w.\-_]+@[\w]{3,}$/.test(upi.trim());
     setUpiError(valid ? '' : 'Enter a valid UPI ID (e.g. name@okaxis)');
     return valid;
@@ -437,20 +307,17 @@ export default function CourseCheckout() {
   /* ── Submit ── */
   const handlePay = async () => {
     setPayError('');
-
     if (!agreeTerms) {
       setTermsError('Please accept the terms and conditions to continue.');
       return;
     }
     setTermsError('');
-
     let valid = false;
-    if (payMethod === 'card')       valid = validateCard();
-    else if (payMethod === 'upi')   valid = validateUPI();
+    if (payMethod === 'card')            valid = validateCard();
+    else if (payMethod === 'upi')        valid = validateUPI();
     else if (payMethod === 'netbanking') valid = validateBank();
     if (!valid) return;
 
-    // FIX 6: Course ID missing — use toast, not alert()
     const finalCourseId = course?._id || course?.id || course?.courseId;
     if (!finalCourseId) {
       toast.error('Course ID missing. Please go back and try again.');
@@ -466,14 +333,11 @@ export default function CourseCheckout() {
         });
         enrollData = data;
       } catch (apiErr) {
-        // Non-fatal — we still write to localStorage and navigate to success.
-        // The backend socket will confirm when it catches up.
         console.warn('Enrollment API error:', apiErr?.response?.data?.message || apiErr.message);
       }
 
-      // Write enrollment snapshot to user-scoped localStorage
-      const uid   = user._id || user.id;
-      const lsKey = enrollmentKey(uid);
+      const uid      = user._id || user.id;
+      const lsKey    = enrollmentKey(uid);
       const targetId = String(finalCourseId);
 
       const snap = {
@@ -487,16 +351,15 @@ export default function CourseCheckout() {
           emoji: course.emoji || null,
           tag: course.tag || null,
         },
-        courseId:   targetId,
-        progress:   0,
-        enrolledAt: new Date().toISOString(),
-        type:       'paid',
+        courseId:    targetId,
+        progress:    0,
+        enrolledAt:  new Date().toISOString(),
+        type:        'paid',
         courseModel: 'Course',
       };
 
       try {
-        const stored = JSON.parse(localStorage.getItem(lsKey) || '[]');
-        // FIX 7: Use shared enrollmentId() helper — consistent with MyCourses dedup
+        const stored  = JSON.parse(localStorage.getItem(lsKey) || '[]');
         const deduped = stored.filter(e => enrollmentId(e) !== targetId);
         localStorage.setItem(lsKey, JSON.stringify([...deduped, snap]));
       } catch (lsErr) {
@@ -517,7 +380,6 @@ export default function CourseCheckout() {
 
     } catch (err) {
       console.error('Payment flow failed:', err);
-      // FIX 8: Inline error UI instead of alert()
       setPayError('Something went wrong. Please try again.');
       toast.error('Payment failed. Please try again.');
     } finally {
@@ -534,6 +396,11 @@ export default function CourseCheckout() {
   return (
     <div className="min-h-screen bg-slate-50">
 
+      {/* Demo banner */}
+      <div className="bg-amber-400 text-amber-900 text-xs font-mono font-bold text-center py-2 tracking-wide">
+        ⚠ DEMO MODE — No real payments processed. Use the test cards provided.
+      </div>
+
       {/* Top bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -541,7 +408,7 @@ export default function CourseCheckout() {
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 font-mono transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <Steps current={step} />
+          <Steps current={1} />
           <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono">
             <Lock className="w-3.5 h-3.5 text-emerald-500" /> Secure checkout
           </div>
@@ -553,15 +420,18 @@ export default function CourseCheckout() {
 
           {/* ════ LEFT — Payment form ════ */}
           <div className="lg:col-span-3 space-y-5">
-            <div>
+
+            {/* FIX: Page heading now lives inside its own white card so it
+                aligns visually with the Order Summary card on the right */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm px-6 py-5">
               <h1 className="text-2xl font-bold text-slate-900">Complete your enrollment</h1>
               <p className="text-sm text-slate-500 font-mono mt-1">
                 Logged in as <span className="text-cyan-600">{user?.email}</span>
               </p>
             </div>
 
-            {/* Payment method selector — role="presentation" prevents browser autofill heuristics */}
-            <div role="presentation" className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            {/* Payment method selector */}
+            <div role="presentation" className="bg-white border border-slate-200 rounded-2xl shadow-sm">
               <div className="px-6 pt-5 pb-4 border-b border-slate-100">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide font-mono">
                   Payment method
@@ -587,10 +457,12 @@ export default function CourseCheckout() {
               </div>
 
               <div className="p-6">
+
                 {/* ── CARD FORM ── */}
                 {payMethod === 'card' && (
                   <div className="space-y-4">
                     <TestCardPicker onPick={tc => setCard({ number: tc.number, name: tc.name, expiry: tc.expiry, cvv: tc.cvv })} />
+
                     <Field label="Card number" error={cardErrors.number}>
                       <NoFillInput
                         inputMode="numeric"
@@ -706,56 +578,8 @@ export default function CourseCheckout() {
                     </div>
                   </div>
                 )}
+
               </div>
-            </div>
-
-            {/* Coupon code */}
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-              <button onClick={() => setShowCoupon(v => !v)}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <Tag className="w-4 h-4 text-cyan-600" /> Have a coupon code?
-                </div>
-                {showCoupon
-                  ? <ChevronUp className="w-4 h-4 text-slate-400" />
-                  : <ChevronDown className="w-4 h-4 text-slate-400" />}
-              </button>
-
-              {showCoupon && (
-                <div className="px-6 pb-5 border-t border-slate-100">
-                  {appliedCoupon ? (
-                    <div className="flex items-center justify-between mt-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-bold text-emerald-700 font-mono">{appliedCoupon}</span>
-                        <span className="text-xs text-emerald-600 font-mono">— {COUPONS[appliedCoupon].label} applied</span>
-                      </div>
-                      <button onClick={removeCoupon} className="text-emerald-500 hover:text-emerald-700 transition-colors">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="mt-4 flex gap-2">
-                      <NoFillInput
-                        placeholder="Enter coupon code"
-                        value={couponInput}
-                        onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
-                        onKeyDown={e => e.key === 'Enter' && applyCoupon()}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent uppercase"
-                      />
-                      <button onClick={applyCoupon} disabled={!couponInput || couponLoading}
-                        className="px-4 py-2.5 rounded-xl bg-cyan-600 text-white font-bold text-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 font-mono">
-                        {couponLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
-                      </button>
-                    </div>
-                  )}
-                  {couponError && (
-                    <p className="mt-2 text-xs text-red-500 font-mono flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {couponError}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Terms & Pay button */}
@@ -786,7 +610,6 @@ export default function CourseCheckout() {
                 </p>
               )}
 
-              {/* FIX 8: Inline payment error — no alert() */}
               {payError && (
                 <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-mono">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {payError}
@@ -808,7 +631,7 @@ export default function CourseCheckout() {
                 {[
                   [ShieldCheck, '256-bit SSL'],
                   [BadgeCheck,  'PCI DSS compliant'],
-                  [Zap,         'Instant access'],
+                  [MdPlayCircleOutline ,         'Instant access'],
                 ].map(([Icon, text]) => (
                   <div key={text} className="flex items-center gap-1 text-xs text-slate-400 font-mono">
                     <Icon className="w-3 h-3 text-emerald-500" /> {text}
@@ -821,8 +644,11 @@ export default function CourseCheckout() {
           {/* ════ RIGHT — Order summary ════ */}
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+
+              {/* FIX: Header height now matches left panel's heading card so
+                  both columns start at the same visual baseline */}
               <button onClick={() => setShowSummary(v => !v)}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors lg:cursor-default">
+                className="w-full flex items-center justify-between px-6 py-5 hover:bg-slate-50 transition-colors lg:cursor-default border-b border-slate-100">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide font-mono">Order summary</h2>
                 <span className="lg:hidden">
                   {showSummary
@@ -832,8 +658,10 @@ export default function CourseCheckout() {
               </button>
 
               <div className={`${showSummary ? 'block' : 'hidden lg:block'}`}>
-                <div className="px-6 pb-5 border-t border-slate-100">
-                  <div className="flex items-start gap-4 pt-5">
+
+                {/* Course info */}
+                <div className="px-6 py-5">
+                  <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${course.gradient || 'from-cyan-500 to-blue-600'} flex items-center justify-center text-2xl flex-shrink-0`}>
                       {course.emoji || '📘'}
                     </div>
@@ -843,7 +671,6 @@ export default function CourseCheckout() {
                         <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${course.accentBg || 'bg-cyan-50'} ${course.accentText || 'text-cyan-700'} border ${course.accentBorder || 'border-cyan-200'}`}>
                           {course.tag}
                         </span>
-                        {/* FIX 9: level and duration fall back gracefully if not passed */}
                         {course.level && (
                           <span className="text-xs text-slate-400 font-mono">{course.level}</span>
                         )}
@@ -861,48 +688,62 @@ export default function CourseCheckout() {
                   </div>
                 </div>
 
-                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
-                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide font-mono mb-3">What's included</p>
-                  <div className="space-y-1.5">
+                {/* What's included — FIX: removed bg-slate-50 stripe to avoid
+                    unintended visual break; uses consistent white background
+                    with a clean top border separator instead */}
+                <div className="px-6 py-4 border-t border-slate-100">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide font-mono mb-3">
+                    What's included
+                  </p>
+                  <div className="space-y-2">
                     {[
                       'Blockchain-verified certificate',
                       'Lifetime access to all content',
                       '30-day money-back guarantee',
                       'LinkedIn badge + PDF download',
-                      'Placement support & referrals',
                     ].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-slate-600 font-mono">
-                        <CheckCircle className="w-3 h-3 text-cyan-500 flex-shrink-0" /> {item}
+                        <CheckCircle className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" /> {item}
                       </div>
                     ))}
                   </div>
                 </div>
 
+                {/* Pricing breakdown — FIX: all label text is now uniformly
+                    slate-600; only the discount VALUE stays emerald so the
+                    two-column layout feels visually balanced */}
                 <div className="px-6 py-5 border-t border-slate-100 space-y-2.5">
-                  <div className="flex justify-between text-sm text-slate-600 font-mono">
-                    <span>Original price</span>
-                    <span className="line-through text-slate-400">₹{course.origPrice.toLocaleString('en-IN')}</span>
+                  {/* Original price */}
+                  <div className="flex items-center justify-between text-sm font-mono">
+                    <span className="text-slate-600">Original price</span>
+                    <span className="text-slate-400 line-through">
+                      ₹{course.origPrice.toLocaleString('en-IN')}
+                    </span>
                   </div>
+
+                  {/* Discount row — only shown when there is an actual discount */}
                   {course.origPrice > course.price && (
-                    <div className="flex justify-between text-sm text-emerald-700 font-mono">
-                      <span>Learnflow discount</span>
-                      <span>−₹{(course.origPrice - course.price).toLocaleString('en-IN')}</span>
+                    <div className="flex items-center justify-between text-sm font-mono">
+                      <span className="text-slate-600">Learnflow discount</span>
+                      <span className="text-emerald-600 font-semibold">
+                        −₹{(course.origPrice - course.price).toLocaleString('en-IN')}
+                      </span>
                     </div>
                   )}
-                  {appliedCoupon && (
-                    <div className="flex justify-between text-sm text-emerald-700 font-mono">
-                      <span>Coupon ({appliedCoupon})</span>
-                      <span>−₹{couponDiscount.toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm text-slate-600 font-mono">
-                    <span>GST (18%)</span>
-                    <span>₹{gst.toLocaleString('en-IN')}</span>
+
+                  {/* GST */}
+                  <div className="flex items-center justify-between text-sm font-mono">
+                    <span className="text-slate-600">GST (18%)</span>
+                    <span className="text-slate-600">₹{gst.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="pt-3 border-t border-slate-200 flex justify-between font-bold text-slate-900">
-                    <span>Total</span>
+
+                  {/* Total */}
+                  <div className="pt-3 border-t border-slate-200 flex items-center justify-between font-bold text-slate-900">
+                    <span className="text-base">Total</span>
                     <span className="text-xl">₹{total.toLocaleString('en-IN')}</span>
                   </div>
+
+                  {/* Savings badge */}
                   {savings > 0 && (
                     <div className="flex items-center justify-end gap-1 text-xs text-emerald-600 font-mono">
                       <CheckCircle className="w-3 h-3" />
@@ -910,6 +751,7 @@ export default function CourseCheckout() {
                     </div>
                   )}
                 </div>
+
               </div>
             </div>
 
@@ -937,6 +779,7 @@ export default function CourseCheckout() {
               <Link to="/help" className="text-cyan-600 hover:underline">Contact support</Link>
             </p>
           </div>
+
         </div>
       </div>
     </div>
