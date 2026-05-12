@@ -1,5 +1,6 @@
 const { Enrollment, Course, Certificate } = require('../models/index');
 const mongoose = require('mongoose');
+const notify   = require('../utils/notify'); // ← ADD THIS
 
 // Helper to get socket broadcast (won't crash if socket not ready)
 function getBroadcast() {
@@ -86,10 +87,21 @@ exports.enroll = async (req, res) => {
       });
     }
 
+    // ── Notify student of successful enrollment ──────────────────────────────
+    await notify(userId, {
+      type:    'enrollment',
+      title:   `You're enrolled in "${product.title}"! 🎉`,
+      message: isTrial
+        ? `Your 7-day free trial has started. Enjoy full access until ${trialEndsAt?.toLocaleDateString('en-IN')}.`
+        : 'Your course is ready. Start learning now and track your progress.',
+      link:    '/my-courses',
+      metadata: { courseId: String(courseId), courseTitle: product.title },
+    });
+
     res.status(201).json({ 
       success: true, 
       enrollment: newEnrollment, 
-      courseId: courseId, // Ensure frontend gets the ID explicitly
+      courseId: courseId,
       isTrial: isTrial,
       trialEndsAt: trialEndsAt 
     });
@@ -115,7 +127,7 @@ exports.getMyEnrollments = async (req, res) => {
 
       return {
         ...e,
-        courseModel: e.courseModel, // Tells frontend if it's 'Course' or 'Certificate'
+        courseModel: e.courseModel,
         course: {
           ...(populated || {}),
           _id: (populated?._id || e.course || e._id).toString(),
@@ -153,7 +165,6 @@ exports.getEnrollmentDetail = async (req, res) => {
       return res.status(404).json({ success: false, message: "Enrollment not found" });
     }
 
-    // Fallback logic: Ensure 'course' object always has lessons for the player
     if (!enrollment.course || !enrollment.course.lessons) {
       enrollment.course = {
         ...(enrollment.course || {}),
@@ -169,7 +180,7 @@ exports.getEnrollmentDetail = async (req, res) => {
   }
 };
 
-// ─── 4. Update Progress ──────────────────────────────────────────────────────
+// ─── 4. Update Progress (with milestone notifications) ───────────────────────
 exports.updateProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -178,14 +189,17 @@ exports.updateProgress = async (req, res) => {
     const enrollment = await Enrollment.findOne({ 
       student: userId, 
       course: courseId 
-    });
+    }).populate('course', 'title');
 
     if (!enrollment) {
       return res.status(404).json({ success: false, message: "Enrollment not found" });
     }
 
+    const prevProgress = enrollment.progress || 0;
+    const newProgress  = req.body.progress !== undefined ? req.body.progress : prevProgress;
+
     if (req.body.progress !== undefined) {
-      enrollment.progress = req.body.progress;
+      enrollment.progress = newProgress;
     }
     
     if (req.body.progress === 100) { 
@@ -195,6 +209,33 @@ exports.updateProgress = async (req, res) => {
     
     enrollment.lastAccessedAt = new Date();
     await enrollment.save();
+
+    // ── Milestone notifications (fire once per milestone) ─────────────────
+    const courseTitle = enrollment.course?.title || enrollment.certData?.title || 'your course';
+    const MILESTONES  = [25, 50, 75, 100];
+
+    for (const milestone of MILESTONES) {
+      if (prevProgress < milestone && newProgress >= milestone) {
+        if (milestone === 100) {
+          await notify(userId, {
+            type:    'progress',
+            title:   `Course Completed! 🎓`,
+            message: `Congratulations! You've completed "${courseTitle}". Your certificate is now available.`,
+            link:    `/course-certificate/${courseId}`,
+            metadata: { courseId: String(courseId), milestone: 100 },
+          });
+        } else {
+          await notify(userId, {
+            type:    'progress',
+            title:   `${milestone}% Complete! 🚀`,
+            message: `Great progress on "${courseTitle}"! Keep going, you're doing amazing.`,
+            link:    '/my-courses',
+            metadata: { courseId: String(courseId), milestone },
+          });
+        }
+        break; // Only fire the highest crossed milestone per update
+      }
+    }
 
     res.status(200).json({ success: true, data: enrollment });
   } catch (error) {

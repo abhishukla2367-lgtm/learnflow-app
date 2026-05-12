@@ -228,7 +228,7 @@ export default function Header() {
           <div className="flex items-center justify-end gap-2 flex-1">
             {user ? (
             <div className="hidden lg:flex items-center gap-2">
-            <NotificationBell />   {/* ← ADD THIS */}
+            {!isAdmin && <NotificationBell />}
             <UserMenu />
             </div>
             ) : (
@@ -273,7 +273,9 @@ export default function Header() {
           {[
             { to: '/courses',        label: 'Explore'        },
             { to: '/certifications', label: 'Certifications' },
-            ...(user ? [{ to: '/my-courses', label: 'My Courses' }] : []),
+            ...(user ? [{ to: '/my-courses', label: 'My Courses' },
+                { to: '/notifications', label: 'Notifications' },
+             ] : []),
             { to: '/leaderboard',    label: 'Leaderboard'    },
           ].map(item => (
             <Link
@@ -332,7 +334,7 @@ export default function Header() {
     <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
     <p className="text-xs text-slate-400 truncate">{user.email}</p>
   </div>
-  <NotificationBell />
+  {!isAdmin && <NotificationBell />}
 </div>
 
                 {isAdmin ? (

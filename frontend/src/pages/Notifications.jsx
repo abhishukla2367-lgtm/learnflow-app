@@ -166,7 +166,7 @@ export default function NotificationsPage() {
             <p className="text-sm text-slate-400 mt-1 font-medium">
               {unreadCount > 0
                 ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`
-                : 'You're all caught up'}
+                : "You're all caught up"}
             </p>
           </div>
           <div className="flex items-center gap-2">

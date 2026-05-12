@@ -16,6 +16,7 @@ import Leaderboard    from './pages/Leaderboard';
 import Login          from './pages/Login';
 import Register       from './pages/Register';
 import NotificationsPage from './pages/Notifications';
+import NotificationToastListener from './components/NotificationToastListener';
 import Profile        from './pages/Profile';
 import NotFound       from './pages/NotFound';
 import ForgotPassword from './pages/ForgotPassword';
@@ -74,6 +75,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
 function PublicLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
+      <NotificationToastListener />
       <Header />
       <main className="flex-1 pt-[110px] lg:pt-[120px]">
         <Routes>

@@ -2,6 +2,7 @@
 const Course     = require("../models/Course");
 const Review     = require("../models/Review");
 const Enrollment = require("../models/Enrollment");
+const notify     = require("../utils/notify"); // ← ADD THIS
 const { broadcast } = require("../socket");
 
 /* ── POST /api/reviews/:courseId ─────────────────────────────── */
@@ -18,6 +19,8 @@ exports.addReview = async (req, res) => {
   const enrolled = await Enrollment.findOne({ student: req.user.id, course: req.params.courseId });
   if (!enrolled)
     return res.status(403).json({ success: false, message: "You must be enrolled to leave a review" });
+
+  const isUpdate = !!await Review.findOne({ course: req.params.courseId, student: req.user.id });
 
   const existing = await Review.findOne({ course: req.params.courseId, student: req.user.id });
   if (existing) {
@@ -46,6 +49,21 @@ exports.addReview = async (req, res) => {
     });
   }
 
+  // ── Notify the course instructor (only on new reviews, not edits) ─────────
+  if (!isUpdate && course.instructor) {
+    const stars = '⭐'.repeat(Math.min(rating, 5));
+    await notify(course.instructor, {
+      type:     'review',
+      title:    `New ${rating}-star review on "${course.title}" ${stars}`,
+      message:  title
+        ? `"${title}" — ${req.user.name || 'A student'} just left you a review.`
+        : `${req.user.name || 'A student'} just rated your course ${rating}/5.`,
+      link:     `/courses/${req.params.courseId}`,
+      senderId: req.user.id,
+      metadata: { courseId: String(req.params.courseId), rating },
+    });
+  }
+
   try { broadcast.refresh("reports"); } catch {}
 
   res.json({ success: true, message: "Review submitted successfully" });
@@ -65,14 +83,12 @@ exports.deleteReview = async (req, res) => {
   if (!review)
     return res.status(404).json({ success: false, message: "Review not found" });
 
-  // Only the reviewer or an admin can delete
   if (review.student.toString() !== req.user.id && req.user.role !== "admin")
     return res.status(403).json({ success: false, message: "Not authorized" });
 
   const courseId = review.course;
   await review.deleteOne();
 
-  // Recalculate course rating
   const stats = await Review.aggregate([
     { $match: { course: courseId } },
     { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },

@@ -2,6 +2,8 @@
 const Course  = require("../models/Course");
 const User    = require("../models/User");
 const Review  = require("../models/Review");
+const notify = require('../utils/notify');
+const Enrollment = require('../models/Enrollment');  
 const { broadcast } = require("../socket");
 
 /* ── GET /api/courses ────────────────────────────────────────── */
@@ -141,15 +143,44 @@ exports.publishCourse = async (req, res) => {
     return res.status(404).json({ success: false, message: "Course not found" });
   if (course.instructor.toString() !== req.user.id && req.user.role !== "admin")
     return res.status(403).json({ success: false, message: "Not authorized" });
-
+ 
+  const wasPublished = course.isPublished;
   course.isPublished = !course.isPublished;
   await course.save();
-
+ 
   try {
     if (course.isPublished) broadcast.coursePublished(course);
     else broadcast.refresh("courses");
   } catch {}
-
+ 
+  // ── Notify all enrolled students when a course is published ──────────────
+  // (only fires when transitioning draft → published, not unpublished)
+  if (!wasPublished && course.isPublished) {
+    try {
+      const Enrollment = require('../models/Enrollment');
+      const notify     = require('../utils/notify');
+ 
+      const enrollments = await Enrollment.find({ course: course._id, isDeleted: { $ne: true } })
+        .select('student')
+        .lean();
+ 
+      const notifyPromises = enrollments.map(e =>
+        notify(e.student, {
+          type:    'course_published',
+          title:   `"${course.title}" is now live! 🎉`,
+          message: 'Your course has been approved and published. Students can now enroll.',
+          link:    `/courses/${course._id}`,
+          metadata: { courseId: String(course._id) },
+        })
+      );
+ 
+      // Fire & forget — don't block the response
+      Promise.allSettled(notifyPromises).catch(() => {});
+    } catch (err) {
+      console.error('[publishCourse] notify error:', err.message);
+    }
+  }
+ 
   res.json({ success: true, course });
 };
 

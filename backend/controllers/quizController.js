@@ -1,5 +1,6 @@
 // controllers/quizController.js
 const Quiz = require("../models/Quiz");
+const notify = require('../utils/notify');
 
 /* ── GET /api/quizzes/course/:courseId ───────────────────────── */
 exports.getCourseQuizzes = async (req, res) => {
@@ -33,37 +34,35 @@ exports.deleteQuiz = async (req, res) => {
 /* ── POST /api/quizzes/:id/submit ────────────────────────────── */
 exports.submitQuiz = async (req, res) => {
   const { answers, timeTaken } = req.body;
-
+ 
   const quiz = await Quiz.findById(req.params.id);
   if (!quiz)
     return res.status(404).json({ success: false, message: "Quiz not found" });
-
+ 
   let correct = 0;
   const results = quiz.questions.map((q, i) => {
     const isCorrect = answers[i] === q.correctAnswer;
     if (isCorrect) correct++;
     return { isCorrect, correctAnswer: q.correctAnswer, explanation: q.explanation };
   });
-
+ 
   const score  = Math.round((correct / quiz.questions.length) * 100);
   const passed = score >= quiz.passingScore;
-
+ 
   quiz.attempts.push({ student: req.user.id, answers, score, passed, timeTaken });
   await quiz.save();
-
-  // Notify on passing a quiz
+ 
+  // ── Notify on passing ──────────────────────────────────────────────────────
   if (passed) {
-    try {
-      await Notification.create({
-        recipient: req.user.id,
-        type:      "quiz_passed",
-        title:     "Quiz Passed! ✅",
-        message:   `You scored ${score}% on "${quiz.title}". Well done!`,
-        link:      `/learn/${quiz.course}`,
-        metadata:  { quizId: quiz._id, score },
-      });
-    } catch {}
+    const notify = require('../utils/notify');
+    await notify(req.user.id, {
+      type:    'quiz_passed',
+      title:   `Quiz Passed! 🏆`,
+      message: `You scored ${score}% on "${quiz.title}". Well done! Keep up the great work.`,
+      link:    `/learn/course/${quiz.course}`,
+      metadata: { quizId: String(quiz._id), score },
+    });
   }
-
+ 
   res.json({ success: true, score, passed, correct, total: quiz.questions.length, results });
 };

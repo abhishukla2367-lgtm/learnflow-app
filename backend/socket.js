@@ -77,13 +77,12 @@ const initSocket = (server) => {
 
     // ── User identifies themselves ──────────────────────────────
     socket.on("user:join", ({ userId, role } = {}) => {
-      if (userId) {
+      if (!socket.user || String(socket.user.id) !== String(userId)) return;
         onlineUsers.set(String(userId), socket.id);
         socket.data.userId = String(userId);
         socket.data.role   = role;
         socket.join(`user:${userId}`);
         broadcastOnlineCount();
-      }
     });
 
     // ── Admin room — JWT-verified admins only ───────────────────
