@@ -394,12 +394,13 @@ export default function CourseCheckout() {
     }`;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-
-      {/* Demo banner */}
-      <div className="bg-amber-400 text-amber-900 text-xs font-mono font-bold text-center py-2 tracking-wide">
-        ⚠ DEMO MODE — No real payments processed. Use the test cards provided.
-      </div>
+     <div className="min-h-screen bg-slate-50">
+      <div className="bg-amber-400 text-amber-900 text-xs font-mono font-bold text-center py-2 tracking-wide uppercase">
+      ⚠ DEMO MODE — No real payments processed. 
+      {payMethod === 'card' && " Use the test cards provided."}
+      {payMethod === 'upi' && " UPI simulation is implemented."}
+      {payMethod === 'netbanking' && " NetBanking simulation is implemented."}
+     </div>
 
       {/* Top bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-30">
