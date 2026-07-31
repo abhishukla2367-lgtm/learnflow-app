@@ -292,7 +292,7 @@ exports.toggleUser = async (req, res) => {
     type:    "announcement",
     title:   user.isActive ? "Your account has been reactivated ✅" : "Your account has been deactivated ⚠️",
     message: user.isActive
-      ? "Your Learnflow account is active again. Welcome back!"
+      ? "Your Learnodays account is active again. Welcome back!"
       : "Your account has been temporarily deactivated by an administrator. Please contact support for assistance.",
     link:    "/",
     metadata: { action: user.isActive ? "activated" : "deactivated" },

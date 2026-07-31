@@ -340,7 +340,7 @@ export default function InstructorsAdmin({ exportPdfRef }) {
         </div>
         <h3 className="font-black text-lg mb-2">Grow the Instructor Team</h3>
         <p className="text-indigo-100 text-sm mb-5 max-w-sm mx-auto">
-          Invite industry experts to teach on LearnFlow and reach thousands of students.
+          Invite industry experts to teach on Learnodays and reach thousands of students.
         </p>
         <button
           onClick={() => toast("Invite feature coming soon! 🚀", { icon: "📧" })}

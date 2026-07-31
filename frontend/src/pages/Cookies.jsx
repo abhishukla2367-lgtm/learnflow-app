@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 const COOKIE_TYPES = [
  { id:'essential', name:'Essential Cookies', icon:'🔒', required:true,
  desc:'Strictly necessary for the Platform to function — session tokens, CSRF protection, and load balancing. Cannot be disabled.',
- examples:['learnflow_session (auth token)','_csrf (security)','lb_route (load balancer)'],
- duration:'Session / 30 days', provider:'Learnflow only' },
+ examples:['Learnodays_session (auth token)','_csrf (security)','lb_route (load balancer)'],
+ duration:'Session / 30 days', provider:'Learnodays only' },
  { id:'analytics', name:'Analytics Cookies', icon:'📊', required:false,
  desc:'Help us understand how learners navigate the Platform — which pages are visited, where users drop off, and how features are used. All data is anonymised.',
  examples:['_ga, _gid (Google Analytics)','mp_session (Mixpanel)','_hjSession (Hotjar)'],
@@ -15,9 +15,9 @@ const COOKIE_TYPES = [
  { id:'preferences', name:'Preference Cookies', icon:'⚙️', required:false,
  desc:'Remember your settings — language preference, video playback quality, and UI state — so you don\'t reconfigure on every visit.',
  examples:['lf_lang (language)','lf_quality (video)','lf_sidebar (collapsed state)'],
- duration:'1 year', provider:'Learnflow only' },
+ duration:'1 year', provider:'Learnodays only' },
  { id:'marketing', name:'Marketing Cookies', icon:'📣', required:false,
- desc:'Used to show you relevant Learnflow ads on Google, Meta, and LinkedIn. We never sell your data to advertisers.',
+ desc:'Used to show you relevant Learnodays ads on Google, Meta, and LinkedIn. We never sell your data to advertisers.',
  examples:['_fbp, _fbc (Meta Pixel)','IDE (Google Ads)','li_fat_id (LinkedIn)'],
  duration:'3 months – 2 years', provider:'Meta Platforms, Google LLC, LinkedIn Corp' },
 ];
@@ -39,8 +39,8 @@ export default function Cookies() {
  <div className="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center mx-auto mb-5"><Cookie className="w-7 h-7 text-cyan-600"/></div>
  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono bg-cyan-50 text-cyan-700 border border-cyan-200 mb-4 mb-4">Legal</span>
  <h1 className=" text-4xl font-bold text-slate-900 mb-3">Cookie Policy</h1>
- <p className="text-sm text-slate-500 font-mono">Learnflow Technologies Pvt Ltd · Last updated: 15 January 2025</p>
- <p className="text-sm text-slate-600 font-sans mt-2 max-w-xl mx-auto">We use cookies to make Learnflow work and improve your experience. Manage your preferences below — you can change them at any time.</p>
+ <p className="text-sm text-slate-500 font-mono">Learnodays Technologies Pvt Ltd · Last updated: 15 January 2025</p>
+ <p className="text-sm text-slate-600 font-sans mt-2 max-w-xl mx-auto">We use cookies to make Learnodays work and improve your experience. Manage your preferences below — you can change them at any time.</p>
  </div>
  </section>
 
@@ -51,7 +51,7 @@ export default function Cookies() {
  <div className="w-8 h-8 rounded-lg bg-cyan-50 border border-cyan-200 flex items-center justify-center"><Info className="w-4 h-4 text-cyan-600"/></div>
  <h2 className=" text-xl font-bold text-slate-900">Cookie Preference Centre</h2>
  </div>
- <p className="text-sm text-slate-600 font-sans mb-8 ml-11">Manage which cookies Learnflow may use. Changes take effect immediately and are stored for 1 year.</p>
+ <p className="text-sm text-slate-600 font-sans mb-8 ml-11">Manage which cookies Learnodays may use. Changes take effect immediately and are stored for 1 year.</p>
 
  <div className="flex flex-col gap-4">
  {COOKIE_TYPES.map(({id,name,icon,required,desc,examples,duration,provider})=>(
@@ -120,7 +120,7 @@ export default function Cookies() {
  </aside>
  <div className="lg:col-span-3 space-y-10">
  {[
- { id:'what', title:'1. What Are Cookies?', body:'Cookies are small text files placed on your device when you visit a website. Learnflow also uses local storage, session storage, and web beacons ("pixels") that function similarly to cookies. References to "cookies" in this Policy include all such technologies.' },
+ { id:'what', title:'1. What Are Cookies?', body:'Cookies are small text files placed on your device when you visit a website. Learnodays also uses local storage, session storage, and web beacons ("pixels") that function similarly to cookies. References to "cookies" in this Policy include all such technologies.' },
  { id:'legal', title:'2. Legal Basis', body:'Our use of cookies is governed by the Information Technology (Reasonable Security Practices) Rules, 2011, the DPDPA 2023, and MEITY guidelines. Essential cookies are used on the basis of our legitimate interest in operating a secure platform. All other cookies are used only with your explicit consent via the Preference Centre above.' },
  { id:'third-party', title:'3. Third-Party Cookies', body:'Some cookies on our Platform are set by trusted third-party service providers including Google (Analytics, Ads), Meta (Facebook Pixel), LinkedIn (Insight Tag), Razorpay (payment security), Hotjar (UX analytics), and Intercom (customer support chat). These third parties have their own privacy policies governing their use of cookie data.' },
  { id:'manage', title:'4. Managing Cookies', body:'You can manage cookie preferences using the Preference Centre above, or through your browser settings. Note that disabling essential cookies will prevent core platform functionality.\n\nChrome: Settings → Privacy and Security → Cookies\nFirefox: Settings → Privacy & Security → Cookies and Site Data\nSafari: Preferences → Privacy → Manage Website Data\nEdge: Settings → Cookies and site permissions' },
@@ -137,7 +137,7 @@ export default function Cookies() {
 
  <section className="py-12 bg-slate-100 border-t border-slate-200">
  <div className="max-w-xl mx-auto px-4 text-center">
- <p className="text-sm text-slate-600 font-sans mb-4">Questions about cookies? Email privacy@learnflow.in — our DPO responds within 3 business days.</p>
+ <p className="text-sm text-slate-600 font-sans mb-4">Questions about cookies? Email privacy@Learnodays.in — our DPO responds within 3 business days.</p>
  <div className="flex flex-wrap justify-center gap-3">
  <Link to="/privacy" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-slate-200 text-slate-900 font-semibold text-sm bg-white transition-all duration-200 hover:border-cyan-300 hover:bg-cyan-50 active:scale-[0.98] px-6 py-2.5 text-sm">Privacy Policy</Link>
  <Link to="/contact" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 text-white font-semibold text-sm transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] px-6 py-2.5 text-sm shadow-sm">Contact DPO <ArrowRight className="w-3.5 h-3.5"/></Link>

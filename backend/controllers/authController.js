@@ -124,10 +124,10 @@ exports.forgotPassword = async (req, res) => {
   try {
     await sendEmail({
       to:      user.email,
-      subject: "LearnFlow — Password Reset Request",
+      subject: "Learnodays — Password Reset Request",
       html: `
         <h2>Password Reset</h2>
-        <p>You requested a password reset for your LearnFlow account.</p>
+        <p>You requested a password reset for your Learnodays account.</p>
         <p>Click the button below to reset your password. This link expires in <strong>15 minutes</strong>.</p>
         <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;">Reset Password</a>
         <p>If you didn't request this, you can safely ignore this email.</p>

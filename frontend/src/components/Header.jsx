@@ -19,7 +19,7 @@ const COURSE_CATS = [
 ];
 
 const MORE_LINKS = [
-  { label: 'About Learnflow', desc: 'Our mission & story',       icon: Info,          href: '/about'       },
+  { label: 'About Learnodays', desc: 'Our mission & story',       icon: Info,          href: '/about'       },
   { label: 'Our Instructors', desc: 'Expert mentors from India', icon: GraduationCap, href: '/instructors' },
   { label: 'Help Centre',     desc: 'FAQs & Support',            icon: HelpCircle,    href: '/help'        },
   { label: 'Contact Us',      desc: 'Get in touch with us',      icon: Phone,         href: '/contact'     },
@@ -154,7 +154,7 @@ export default function Header() {
               transition-all duration-300
               group-hover:shadow-[0_0_0_3px_rgba(6,182,212,0.3)]
               group-hover:scale-105">
-              <img src={LOGO_URL} alt="Learnflow" className="w-full h-full object-cover" />
+              <img src={LOGO_URL} alt="Learnodays" className="w-full h-full object-cover" />
             </div>
             <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter uppercase truncate">
               Learn<span className="text-indigo-600">flow</span>

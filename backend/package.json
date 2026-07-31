@@ -1,7 +1,7 @@
 {
-  "name": "learnflow-backend",
+  "name": "Learnodays-backend",
   "version": "2.0.0",
-  "description": "LearnFlow LMS Backend — Professional REST API with Socket.IO realtime",
+  "description": "Learnodays LMS Backend — Professional REST API with Socket.IO realtime",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

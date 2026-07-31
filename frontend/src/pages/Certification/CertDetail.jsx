@@ -280,7 +280,7 @@ export default function CertDetail() {
           <Award className="w-10 h-10 text-cyan-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-slate-900 mb-3">Ready to earn your certificate?</h2>
           <p className="text-slate-600 text-sm leading-relaxed mb-6">
-            Join 50,000+ professionals who have already levelled up with Learnflow.
+            Join 50,000+ professionals who have already levelled up with Learnodays.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <ActionButton extraClasses="px-10" />

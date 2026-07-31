@@ -187,7 +187,7 @@ export default function AdminDashboard() {
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center">
                 <img src={LOGO_URL} className="w-5 h-5 object-contain" />
               </div>
-              <span className="font-black text-sm text-slate-900">Learnflow</span>
+              <span className="font-black text-sm text-slate-900">Learnodays</span>
             </div>
             <LiveClock />
           </div>

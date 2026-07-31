@@ -51,7 +51,7 @@ const INDIAN_CITIES = [
 
 const PRIVACY_CONFIG = [
   { label: 'Public profile',                      desc: 'Allow anyone to view your profile and courses',          color: 'from-cyan-500 to-blue-500' },
-  { label: 'Share progress with hiring partners', desc: "Let Learnflow's hiring partners see your skills",        color: 'from-emerald-500 to-teal-500' }
+  { label: 'Share progress with hiring partners', desc: "Let Learnodays's hiring partners see your skills",        color: 'from-emerald-500 to-teal-500' }
 ];
 
 /* ─── password strength ──────────────────────────────────── */

@@ -597,7 +597,7 @@ export default function CourseCheckout() {
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 font-mono leading-relaxed">
-                  I agree to Learnflow's{' '}
+                  I agree to Learnodays's{' '}
                   <Link to="/terms" className="text-cyan-600 hover:underline">Terms of Service</Link>{' '}
                   and{' '}
                   <Link to="/privacy" className="text-cyan-600 hover:underline">Privacy Policy</Link>.
@@ -725,7 +725,7 @@ export default function CourseCheckout() {
                   {/* Discount row — only shown when there is an actual discount */}
                   {course.origPrice > course.price && (
                     <div className="flex items-center justify-between text-sm font-mono">
-                      <span className="text-slate-600">Learnflow discount</span>
+                      <span className="text-slate-600">Learnodays discount</span>
                       <span className="text-emerald-600 font-semibold">
                         −₹{(course.origPrice - course.price).toLocaleString('en-IN')}
                       </span>

@@ -63,7 +63,7 @@ export default function Certifications() {
  <div className="absolute inset-0 pointer-events-none"/>
  <div className="absolute top-10 right-10 w-72 h-72 bg-violet-100/30 blur-3xl rounded-full pointer-events-none animate-float"/>
  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono bg-cyan-50 text-cyan-700 border border-cyan-200 mb-4 mb-5">Learnflow Certifications</span>
+ <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono bg-cyan-50 text-cyan-700 border border-cyan-200 mb-4 mb-5">Learnodays Certifications</span>
  <h1 className=" text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-5 leading-[1.1]">
  Credentials That<br/>
  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-violet-600">Actually Move Careers.</span>
@@ -112,7 +112,7 @@ export default function Certifications() {
  <section className="py-20 border-t border-slate-200 bg-white">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div className="text-center mb-14">
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono bg-cyan-50 text-cyan-700 border border-cyan-200 mb-4">Why Learnflow Certs?</span>
+ <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono bg-cyan-50 text-cyan-700 border border-cyan-200 mb-4">Why Learnodays Certs?</span>
  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">Built for real-world credibility</h2>
  </div>
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -166,7 +166,7 @@ export default function Certifications() {
  <div className="max-w-2xl mx-auto px-4 text-center">
  <Award className="w-12 h-12 text-cyan-600 mx-auto mb-4"/>
  <h2 className=" text-3xl font-bold text-slate-900 mb-4">Earn your certificate today</h2>
- <p className="text-slate-600 text-base leading-relaxed mb-8">Join 50,000+ Indian professionals who have already levelled up with Learnflow certifications.</p>
+ <p className="text-slate-600 text-base leading-relaxed mb-8">Join 50,000+ Indian professionals who have already levelled up with Learnodays certifications.</p>
  <div className="flex flex-wrap justify-center gap-4">
  <Link to="/register" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 text-white font-semibold text-sm transition-all duration-200 hover:bg-cyan-700 active:scale-[0.98] px-8 py-3.5 text-base shadow-sm">Get started free <ArrowRight className="w-4 h-4"/></Link>
  <Link to="/courses" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-slate-200 text-slate-900 font-semibold text-sm bg-white transition-all duration-200 hover:border-cyan-300 hover:bg-cyan-50 active:scale-[0.98] px-8 py-3.5 text-base">Browse all courses</Link>

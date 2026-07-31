@@ -12,16 +12,16 @@ import { collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, limit,
 
 /* ─── Static data ─────────────────────────────────────────── */
 const OFFICES = [
-  { city: 'Thane (HQ)', icon: '🏢', address: 'Learnflow Tower, Phase II, Ghodbunder Rd, near Viviana Mall, Thane West, Maharashtra — 400 606', phone: '+91 22 4567 8900', email: 'hello@learnflow.in', hours: 'Mon–Fri, 9 AM – 7 PM IST' },
-  { city: 'Bengaluru',  icon: '📍', address: '3rd Floor, 91springboard, Koramangala, Bengaluru — 560 034', phone: '+91 80 4567 8900', email: 'blr@learnflow.in', hours: 'Mon–Fri, 9 AM – 7 PM IST' },
-  { city: 'Mumbai',     icon: '🏙️', address: 'WeWork BKC, G Block, Bandra Kurla Complex, Mumbai — 400 051', phone: '+91 22 6789 0123', email: 'mumbai@learnflow.in', hours: 'Mon–Fri, 9 AM – 7 PM IST' },
+  { city: 'Thane (HQ)', icon: '🏢', address: 'Learnodays Tower, Phase II, Ghodbunder Rd, near Viviana Mall, Thane West, Maharashtra — 400 606', phone: '+91 22 4567 8900', email: 'hello@Learnodays.in', hours: 'Mon–Fri, 9 AM – 7 PM IST' },
+  { city: 'Bengaluru',  icon: '📍', address: '3rd Floor, 91springboard, Koramangala, Bengaluru — 560 034', phone: '+91 80 4567 8900', email: 'blr@Learnodays.in', hours: 'Mon–Fri, 9 AM – 7 PM IST' },
+  { city: 'Mumbai',     icon: '🏙️', address: 'WeWork BKC, G Block, Bandra Kurla Complex, Mumbai — 400 051', phone: '+91 22 6789 0123', email: 'mumbai@Learnodays.in', hours: 'Mon–Fri, 9 AM – 7 PM IST' },
 ];
 
 const OPTIONS = [
   { icon: MessageCircle,  title: 'General Enquiry',    desc: 'Questions about courses, features, or the platform?',     cta: 'Chat with us',    link: '#form',  color: 'bg-cyan-50 border-cyan-200 text-cyan-600'       },
   { icon: HeadphonesIcon, title: 'Learner Support',    desc: 'Issue with your account, payment, or course access?',     cta: 'Get support',    link: '/help',  color: 'bg-violet-50 border-violet-200 text-violet-600' },
   { icon: Briefcase,      title: 'Corporate Training', desc: 'Looking to upskill your team? We offer custom B2B plans.', cta: 'Talk to sales',  link: '#form',  color: 'bg-emerald-50 border-emerald-200 text-emerald-600' },
-  { icon: Building2,      title: 'Hiring Partnership', desc: 'Want to hire verified Learnflow graduates?',               cta: 'Partner with us', link: '#form', color: 'bg-amber-50 border-amber-200 text-amber-600'     },
+  { icon: Building2,      title: 'Hiring Partnership', desc: 'Want to hire verified Learnodays graduates?',               cta: 'Partner with us', link: '#form', color: 'bg-amber-50 border-amber-200 text-amber-600'     },
 ];
 
 const AVATAR_COLORS = [
@@ -305,7 +305,7 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
     /* autoComplete="off" on the form element as the first layer */
     <form onSubmit={handleSubmit} autoComplete="off" className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col gap-6 shadow-sm">
       <div>
-        <h3 className="text-xl font-bold text-slate-900 mb-1">Share your Learnflow experience</h3>
+        <h3 className="text-xl font-bold text-slate-900 mb-1">Share your Learnodays experience</h3>
         <p className="text-sm text-slate-500">Your review helps thousands of learners make better decisions.</p>
       </div>
 
@@ -361,7 +361,7 @@ function ReviewForm({ onSubmit, submitting, submitted }) {
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Overall Experience *</label>
           <NoFillTextarea rows={4}
-            placeholder="Share your overall experience — how Learnflow helped your career…"
+            placeholder="Share your overall experience — how Learnodays helped your career…"
             value={form.overallDetail}
             onChange={e => set('overallDetail', e.target.value)}
             className={`${inputCls} resize-none`} />
@@ -434,7 +434,7 @@ export default function Contact() {
     try {
       await addDoc(collection(db, "reviews"), {
         name: formData.name.trim(),
-        role: formData.role.trim() || 'Learnflow Learner',
+        role: formData.role.trim() || 'Learnodays Learner',
         city: formData.city.trim() || 'India',
         avatar: formData.name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
         courseRating: formData.courseRating,
@@ -707,7 +707,7 @@ export default function Contact() {
                 Based on <span className="font-bold text-slate-900">{reviews.length}</span> verified reviews
               </div>
               <div className="w-px h-6 bg-slate-200 hidden sm:block" />
-              <div className="text-sm text-slate-600"><span className="font-bold text-slate-900">98%</span> would recommend Learnflow</div>
+              <div className="text-sm text-slate-600"><span className="font-bold text-slate-900">98%</span> would recommend Learnodays</div>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-# 🚀 LearnFlow — Full-Stack LMS Platform
+# 🚀 Learnodays — Full-Stack LMS Platform
 
 > India's premier online learning platform. Built with React 18, Node.js, MongoDB, and Socket.IO for real-time features.
 
@@ -82,7 +82,7 @@
 ## 📁 Project Structure
 
 ```
-learnflow/
+Learnodays/
 ├── backend/
 │   ├── config/
 │   │   ├── db.js              # MongoDB connection
@@ -151,13 +151,13 @@ learnflow/
 ### Step 1: Clone / Extract the project
 ```bash
 # If using the ZIP files:
-unzip backend.zip -d learnflow-backend
-unzip src.zip -d learnflow-frontend
+unzip backend.zip -d Learnodays-backend
+unzip src.zip -d Learnodays-frontend
 ```
 
 ### Step 2: Backend Setup
 ```bash
-cd learnflow-backend
+cd Learnodays-backend
 
 # Install dependencies
 npm install
@@ -177,7 +177,7 @@ npm run dev
 
 ### Step 3: Frontend Setup
 ```bash
-cd learnflow-frontend
+cd Learnodays-frontend
 
 # Install dependencies
 npm install
@@ -203,9 +203,9 @@ PORT=5000
 NODE_ENV=development
 
 # MongoDB
-MONGO_URI=mongodb://localhost:27017/learnflow
+MONGO_URI=mongodb://localhost:27017/Learnodays
 # Or for MongoDB Atlas:
-# MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/learnflow
+# MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/Learnodays
 
 # JWT
 JWT_SECRET=your_super_secret_jwt_key_min_32_chars
@@ -249,9 +249,9 @@ After running `npm run seed` in the backend:
 
 | Role        | Email                       | Password        |
 |-------------|----------------------------|-----------------|
-| **Admin**   | admin@learnflow.com        | admin123        |
-| **Instructor** | rahul@learnflow.com     | instructor123   |
-| **Student** | student@learnflow.com      | student123      |
+| **Admin**   | admin@Learnodays.com        | admin123        |
+| **Instructor** | rahul@Learnodays.com     | instructor123   |
+| **Student** | student@Learnodays.com      | student123      |
 
 ---
 
@@ -389,4 +389,4 @@ MIT License — free to use for personal and commercial projects.
 
 **Built with ❤️ for learners across India**
 
-*LearnFlow v2.0 — React 18 + Node.js + Socket.IO*
+*Learnodays v2.0 — React 18 + Node.js + Socket.IO*

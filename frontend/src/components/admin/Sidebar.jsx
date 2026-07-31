@@ -36,7 +36,7 @@ function NavContent({ active, onChange, onClose }) {
             <img src="https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp" className="w-9 h-9 object-contain" />
           </div>
           <div>
-            <h1 className="font-black text-sm tracking-tight text-slate-900">Learnflow</h1>
+            <h1 className="font-black text-sm tracking-tight text-slate-900">Learnodays</h1>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-cyan-600">Admin Console</p>
           </div>
         </div>

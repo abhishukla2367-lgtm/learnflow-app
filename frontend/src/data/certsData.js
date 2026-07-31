@@ -133,7 +133,7 @@ export const CERTS = [
       name: 'Sunny Verma',
       role: 'Data Analyst · Mu Sigma',
       city: 'Bengaluru',
-      text: 'Mu Sigma shortlisted me specifically because of the Learnflow badge on my LinkedIn. The Data Science cert is gold.',
+      text: 'Mu Sigma shortlisted me specifically because of the Learnodays badge on my LinkedIn. The Data Science cert is gold.',
       avatar: 'SV',
       rating: 5,
     },

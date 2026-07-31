@@ -218,28 +218,28 @@ const seed = async () => {
 
   // ── 1. Admin ──────────────────────────────────────────────────────────────
   const [admin] = await User.insertMany([{
-    name: "Admin", email: "admin@learnflow.com",
+    name: "Admin", email: "admin@Learnodays.com",
     password: hashedPw, role: "admin", isVerified: true,
   }]);
-  console.log("✅ Admin seeded       →  admin@learnflow.com / password123");
+  console.log("✅ Admin seeded       →  admin@Learnodays.com / password123");
 
   // ── 2. Instructors — index order must match CATEGORY_INSTRUCTOR above ─────
   const instructors = await User.insertMany([
-    { name: "Rohan Gupta",    email: "rohan.gupta@learnflow.com",    password: hashedPw, role: "instructor", isVerified: true }, 
-    { name: "Priya Kulkarni", email: "priya.kulkarni@learnflow.com", password: hashedPw, role: "instructor", isVerified: true }, 
-    { name: "Ananya Iyer",    email: "ananya.iyer@learnflow.com",    password: hashedPw, role: "instructor", isVerified: true }, 
-    { name: "Siddharth Rao",  email: "siddharth.rao@learnflow.com",  password: hashedPw, role: "instructor", isVerified: true }, 
-    { name: "Kavita Bhosle",  email: "kavita.bhosle@learnflow.com",  password: hashedPw, role: "instructor", isVerified: true }, 
-    { name: "Ajay Chauhan",   email: "ajay.chauhan@learnflow.com",   password: hashedPw, role: "instructor", isVerified: true }, 
+    { name: "Rohan Gupta",    email: "rohan.gupta@Learnodays.com",    password: hashedPw, role: "instructor", isVerified: true }, 
+    { name: "Priya Kulkarni", email: "priya.kulkarni@Learnodays.com", password: hashedPw, role: "instructor", isVerified: true }, 
+    { name: "Ananya Iyer",    email: "ananya.iyer@Learnodays.com",    password: hashedPw, role: "instructor", isVerified: true }, 
+    { name: "Siddharth Rao",  email: "siddharth.rao@Learnodays.com",  password: hashedPw, role: "instructor", isVerified: true }, 
+    { name: "Kavita Bhosle",  email: "kavita.bhosle@Learnodays.com",  password: hashedPw, role: "instructor", isVerified: true }, 
+    { name: "Ajay Chauhan",   email: "ajay.chauhan@Learnodays.com",   password: hashedPw, role: "instructor", isVerified: true }, 
   ]);
   console.log(`✅ Instructors seeded  →  ${instructors.length} instructors`);
 
   // ── 3. Demo student ───────────────────────────────────────────────────────
   const [demoStudent] = await User.insertMany([{
-    name: "Demo Student", email: "student@learnflow.com",
+    name: "Demo Student", email: "student@Learnodays.com",
     password: hashedPw, role: "student", isVerified: true,
   }]);
-  console.log("✅ Demo student seeded →  student@learnflow.com / password123");
+  console.log("✅ Demo student seeded →  student@Learnodays.com / password123");
 
   // ── 4. Extra students (for realistic reviews) ─────────────────────────────
   const extraStudents = await User.insertMany([

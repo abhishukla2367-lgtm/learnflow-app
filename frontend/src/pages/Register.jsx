@@ -186,7 +186,7 @@ export default function Register() {
         localStorage.setItem('lf_token', res.data.token);
         localStorage.setItem('lf_user', JSON.stringify(res.data.user ?? res.data));
       }
-      toast.success('Account created! Welcome to Learnflow 🎉');
+      toast.success('Account created! Welcome to Learnodays 🎉');
       navigate('/dashboard');
     } catch (err) {
       toast.error(err?.response?.data?.message ?? 'Invalid OTP. Please try again.');

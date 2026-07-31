@@ -43,7 +43,7 @@ export default function Login() {
           <div className="relative">
             <Link to="/" className="flex items-center gap-2.5 mb-8">
               <div className="w-9 h-9 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center"><Zap className="w-4 h-4 text-white" /></div>
-              <span className="text-xl font-bold text-white">Learnflow</span>
+              <span className="text-xl font-bold text-white">Learnodays</span>
             </Link>
             <h2 className="text-3xl font-bold text-white mb-3">Welcome back!</h2>
             <p className="text-cyan-100 font-sans text-sm mb-8 leading-relaxed">Continue your learning journey with India's best online learning platform.</p>
@@ -75,7 +75,7 @@ export default function Login() {
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 min-h-[420px]">
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">Login to Learnflow</h1>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">Login to Learnodays</h1>
             <p className="text-sm text-slate-500 font-sans mb-8">Enter your credentials to continue</p>
 
             <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
@@ -91,7 +91,7 @@ export default function Login() {
                 <label className="block text-xs font-semibold text-slate-600 font-sans mb-2">Email address</label>
                 <input
                   type="email"
-                  name="learnflow_email"
+                  name="Learnodays_email"
                   autoComplete="off"
                   placeholder="you@example.com"
                   value={form.email}
@@ -110,7 +110,7 @@ export default function Login() {
                 <div className="relative">
                   <input
                     type={show ? 'text' : 'password'}
-                    name="learnflow_password"
+                    name="Learnodays_password"
                     autoComplete="new-password"
                     placeholder="••••••••"
                     value={form.password}

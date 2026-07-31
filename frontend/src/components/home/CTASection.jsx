@@ -41,7 +41,7 @@ export default function CTASection() {
               </h2>
 
               <p className="text-cyan-100/90 mb-10 max-w-xl mx-auto text-base md:text-lg leading-relaxed">
-                Join 50,000+ professionals building tech careers with Learnflow.
+                Join 50,000+ professionals building tech careers with Learnodays.
               </p>
 
               {/* Buttons */}

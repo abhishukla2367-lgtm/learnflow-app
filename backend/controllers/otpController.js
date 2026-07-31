@@ -45,10 +45,10 @@ exports.sendOTP = async (req, res) => {
     // 4. Send Email
     await sendEmail({
       to: cleanEmail,
-      subject: "LearnFlow — Your OTP Code",
+      subject: "Learnodays — Your OTP Code",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px;">
-          <h2 style="color: #0891b2;">Welcome to LearnFlow!</h2>
+          <h2 style="color: #0891b2;">Welcome to Learnodays!</h2>
           <p>Hi ${name.trim()},</p>
           <p>Use the code below to verify your email and complete your registration:</p>
           <div style="background: #f1f5f9; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #0891b2; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
@@ -159,7 +159,7 @@ exports.resendOTP = async (req, res) => {
     // 3. Resend the Email
     await sendEmail({
       to: cleanEmail,
-      subject: "LearnFlow — Your NEW OTP Code",
+      subject: "Learnodays — Your NEW OTP Code",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px;">
           <h2 style="color: #0891b2;">Resending your OTP</h2>

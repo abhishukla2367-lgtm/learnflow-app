@@ -54,7 +54,7 @@ export default function CertificatePage() {
   const handlePrint = () => window.print();
 
   const handleLinkedIn = () => {
-    const url = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.title)}&organizationName=Learnflow&issueYear=${new Date().getFullYear()}&issueMonth=${new Date().getMonth() + 1}&certUrl=${encodeURIComponent(window.location.href)}&certId=${certIdStr}`;
+    const url = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.title)}&organizationName=Learnodays&issueYear=${new Date().getFullYear()}&issueMonth=${new Date().getMonth() + 1}&certUrl=${encodeURIComponent(window.location.href)}&certId=${certIdStr}`;
     window.open(url, '_blank');
   };
 
@@ -181,7 +181,7 @@ export default function CertificatePage() {
                       <path d="M 130 35 C 138 28, 142 45, 148 38 C 153 32, 157 44, 162 38 C 168 32, 172 45, 178 38 C 183 32, 188 45, 192 40" stroke="#1e3a5f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M 5 58 Q 100 68 195 52" stroke="#1e3a5f" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
                     </svg>
-                    <p className="text-xs font-semibold text-slate-600 font-mono">Learnflow Certifications</p>
+                    <p className="text-xs font-semibold text-slate-600 font-mono">Learnodays Certifications</p>
                     <p className="text-[11px] text-slate-400 font-mono mt-1.5">Authorised Signatory</p>
                   </div>
                   <div className="text-center">

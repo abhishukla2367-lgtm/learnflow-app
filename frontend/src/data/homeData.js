@@ -239,11 +239,11 @@ export const FEATURES = [
 export const TESTIMONIALS = [
   {
     name: 'Raj Sridhar', role: 'SDE at Infosys', avatar: 'RS', rating: 5, city: 'Coimbatore',
-    text: "Learnflow's Full Stack bootcamp gave me the confidence to crack my first FAANG-adjacent interview. I went from ₹4.5 LPA to ₹11 LPA in 5 months.",
+    text: "Learnodays's Full Stack bootcamp gave me the confidence to crack my first FAANG-adjacent interview. I went from ₹4.5 LPA to ₹11 LPA in 5 months.",
   },
   {
     name: 'Sunny Verma', role: 'Data Analyst at Mu Sigma', avatar: 'SV', rating: 5, city: 'Bengaluru',
-    text: 'The ML course used real Indian datasets — railway booking patterns, IPL stats, election data. It felt relevant, not generic. Got shortlisted at Mu Sigma specifically because of my Learnflow badge.',
+    text: 'The ML course used real Indian datasets — railway booking patterns, IPL stats, election data. It felt relevant, not generic. Got shortlisted at Mu Sigma specifically because of my Learnodays badge.',
   },
   {
     name: 'Meena Patel', role: 'Product Designer at Razorpay', avatar: 'MP', rating: 4, city: 'Pune',

@@ -21,7 +21,7 @@ const sendEmail = async ({ to, subject, html }) => {
     await transporter.verify();
 
     const mailOptions = {
-      from: `"LearnFlow Support" <${process.env.EMAIL_USER}>`,
+      from: `"Learnodays Support" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

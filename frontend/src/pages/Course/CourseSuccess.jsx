@@ -59,7 +59,7 @@ export default function CourseSuccess() {
 
   /* ── Share handler ── */
   const handleShare = async () => {
-    const text = `I just enrolled in "${courseName}" on Learnflow! 🎓`;
+    const text = `I just enrolled in "${courseName}" on Learnodays! 🎓`;
     if (navigator.share) {
       try { await navigator.share({ title: courseName, text }); } catch (_) {}
     } else {

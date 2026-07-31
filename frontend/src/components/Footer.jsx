@@ -94,7 +94,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono mt-1">
               <Mail className="w-3.5 h-3.5 text-cyan-500" />
-              hello@learnflow.in
+              hello@Learnodays.in
             </div>
           </div>
 
@@ -123,7 +123,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500 font-mono">
-            © 2020-{new Date().getFullYear()} Learnflow Technologies Pvt Ltd · CIN U72900KA2020PTC135792 · All rights reserved.
+            © 2020-{new Date().getFullYear()} Learnodays Technologies Pvt Ltd · CIN U72900KA2020PTC135792 · All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {SOCIALS.map(({ icon: Icon, href, label }) => (

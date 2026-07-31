@@ -17,7 +17,7 @@ const AUTO_ADVANCE_MS = 5000;
 
 const BULLET_DELAYS = ['delay-0', 'delay-75', 'delay-150', 'delay-[225ms]'];
 
-export default function WhyLearnflowSection() {
+export default function WhyLearnodaysSection() {
   const { user } = useAuth();
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -67,7 +67,7 @@ export default function WhyLearnflowSection() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <FadeIn className="max-w-xl">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold font-mono bg-cyan-50 text-cyan-700 border border-cyan-200 mb-4 shadow-sm shadow-cyan-100">
-              Why Learnflow
+              Why Learnodays
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight mb-3">
               Everything you need to<br />land your dream role.

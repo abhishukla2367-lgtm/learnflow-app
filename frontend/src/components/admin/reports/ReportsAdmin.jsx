@@ -172,7 +172,7 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
         const ExcelJS = (await import("exceljs")).default;
         const d  = data ?? MOCK;
         const wb = new ExcelJS.Workbook();
-        wb.creator = "LearnFlow Admin";
+        wb.creator = "Learnodays Admin";
         wb.created = new Date();
 
         const HEADER_FILL = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6366F1" } };
@@ -270,7 +270,7 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
         const url    = URL.createObjectURL(blob);
         const a      = document.createElement("a");
         a.href       = url;
-        a.download   = `learnflow_report_${period}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.download   = `Learnodays_report_${period}_${new Date().toISOString().slice(0, 10)}.xlsx`;
         a.click();
         URL.revokeObjectURL(url);
       };

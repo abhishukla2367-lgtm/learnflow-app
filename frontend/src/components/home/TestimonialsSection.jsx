@@ -172,7 +172,7 @@ export default function TestimonialsSection() {
             </div>
             <div className="w-px h-6 bg-slate-200 hidden sm:block" />
             <div className="text-sm text-slate-600">
-              <span className="font-bold text-slate-900">98%</span> would recommend Learnflow
+              <span className="font-bold text-slate-900">98%</span> would recommend Learnodays
             </div>
           </div>
         </FadeIn>

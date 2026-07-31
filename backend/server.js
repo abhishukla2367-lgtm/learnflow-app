@@ -151,7 +151,7 @@ server.listen(PORT, () => {
   const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
   console.log("");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(`🚀 LearnFlow API   : Started`);
+  console.log(`🚀 Learnodays API   : Started`);
   console.log(`📡 URL            : http://localhost:${PORT}/api`);
   console.log(`🔌 Socket.IO      : Connected`);
   console.log(`✅ MongoDB        : Connected`);

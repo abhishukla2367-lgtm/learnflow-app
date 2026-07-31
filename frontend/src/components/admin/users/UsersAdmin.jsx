@@ -164,7 +164,7 @@ export default function UsersAdmin({ downloadReportRef, exportPdfRef }) {
       downloadReportRef.current = async () => {
         const ExcelJS = (await import("exceljs")).default;
         const wb = new ExcelJS.Workbook();
-        wb.creator = "LearnFlow Admin";
+        wb.creator = "Learnodays Admin";
         const ws = wb.addWorksheet("Users");
 
         ws.columns = [
@@ -219,7 +219,7 @@ export default function UsersAdmin({ downloadReportRef, exportPdfRef }) {
         const blob   = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const url    = URL.createObjectURL(blob);
         const a      = document.createElement("a");
-        a.href = url; a.download = `learnflow_users_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.href = url; a.download = `Learnodays_users_${new Date().toISOString().slice(0,10)}.xlsx`;
         a.click(); URL.revokeObjectURL(url);
       };
     }

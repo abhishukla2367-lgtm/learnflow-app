@@ -596,7 +596,7 @@ export default function CertCheckout() {
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 font-mono leading-relaxed">
-                  I agree to Learnflow's{' '}
+                  I agree to Learnodays's{' '}
                   <Link to="/terms" className="text-cyan-600 hover:underline">Terms of Service</Link>{' '}
                   and{' '}
                   <Link to="/privacy" className="text-cyan-600 hover:underline">Privacy Policy</Link>.
@@ -723,10 +723,10 @@ export default function CertCheckout() {
                     </span>
                   </div>
 
-                  {/* Learnflow discount — only shown when there is an actual discount */}
+                  {/* Learnodays discount — only shown when there is an actual discount */}
                   {cert.origPrice > cert.price && (
                     <div className="flex items-center justify-between text-sm font-mono">
-                      <span className="text-slate-600">Learnflow discount</span>
+                      <span className="text-slate-600">Learnodays discount</span>
                       <span className="text-emerald-600 font-semibold">
                         −₹{(cert.origPrice - cert.price).toLocaleString('en-IN')}
                       </span>
