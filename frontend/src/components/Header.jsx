@@ -27,7 +27,24 @@ const MORE_LINKS = [
 
 const NAV_BTN = 'px-4 py-2 text-sm font-bold uppercase tracking-widest text-slate-500 hover:text-black transition-colors duration-150';
 
-const LOGO_URL = 'https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp';
+/* ── Logo mark (real SVG, not a flattened image, so it can react to hover) ── */
+function LearnodaysLogo({ className = 'w-full h-full' }) {
+  return (
+    <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Learnodays">
+      <rect x="6" y="6" width="188" height="188" rx="44" fill="#0b0b0d" />
+      <path
+        d="M46,48 L52,48 L52,134 L90,134 L90,152 L34,152 L34,70 Z"
+        fill="#ffffff"
+        className="transition-colors duration-300 group-hover:fill-cyan-400"
+      />
+      <path
+        d="M104 48 L134 48 C 158 48 172 68 172 100 C172 132 158 152 134 152 L104 152 Z M118 62 L132 62 C 148 62 158 76 158 100 C158 124 148 138 132 138 L118 138 Z"
+        fillRule="evenodd"
+        fill="#ffffff"
+      />
+    </svg>
+  );
+}
 
 /* ── Dropdown ── */
 function NavDropdown({ children, label, width = 'w-64' }) {
@@ -150,14 +167,13 @@ export default function Header() {
           {/* ── BRAND ── */}
           <Link to="/" className="flex items-center gap-2.5 group flex-1 min-w-0 active:opacity-80">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm
-              bg-gradient-to-br from-cyan-500 to-cyan-700
               transition-all duration-300
               group-hover:shadow-[0_0_0_3px_rgba(6,182,212,0.3)]
               group-hover:scale-105">
-              <img src={LOGO_URL} alt="Learnodays" className="w-full h-full object-cover" />
+              <LearnodaysLogo />
             </div>
-            <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter uppercase truncate">
-              Learn<span className="text-indigo-600">flow</span>
+            <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter uppercase truncate pr-0.5">
+              Learno<span className="text-indigo-600">days</span>
             </span>
           </Link>
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Zap, MapPin, Mail } from 'lucide-react';
+import { MapPin, Mail } from 'lucide-react';
 import { FaFacebook, FaLinkedin, FaXTwitter, FaYoutube, FaInstagram } from 'react-icons/fa6';
 
 const LINKS = {
@@ -39,6 +39,25 @@ const STATS = [
 // 6× duplication ensures seamless -50% loop at any screen width
 const TICKER_ITEMS = [...STATS, ...STATS, ...STATS, ...STATS, ...STATS, ...STATS];
 
+/* ── Logo mark (same real SVG used in the Header, so it can react to hover) ── */
+function LearnodaysLogo({ className = 'w-full h-full' }) {
+  return (
+    <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Learnodays">
+      <rect x="6" y="6" width="188" height="188" rx="44" fill="#0b0b0d" />
+      <path
+        d="M46,48 L52,48 L52,134 L90,134 L90,152 L34,152 L34,70 Z"
+        fill="#ffffff"
+        className="transition-colors duration-300 group-hover:fill-cyan-400"
+      />
+      <path
+        d="M104 48 L134 48 C 158 48 172 68 172 100 C172 132 158 152 134 152 L104 152 Z M118 62 L132 62 C 148 62 158 76 158 100 C158 124 148 138 132 138 L118 138 Z"
+        fillRule="evenodd"
+        fill="#ffffff"
+      />
+    </svg>
+  );
+}
+
 export default function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-white">
@@ -75,12 +94,15 @@ export default function Footer() {
 
           {/* Brand col */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2.5 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-cyan-50 border border-cyan-200 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-cyan-600" />
+            <Link to="/" className="flex items-center gap-2.5 mb-5 group">
+              <div className="w-9 h-9 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm
+                transition-all duration-300
+                group-hover:shadow-[0_0_0_3px_rgba(6,182,212,0.3)]
+                group-hover:scale-105">
+                <LearnodaysLogo />
               </div>
-              <span className="text-lg font-bold text-slate-900">
-                Learn<span className="text-cyan-600">flow</span>
+              <span className="text-lg font-black text-slate-900 tracking-tighter uppercase">
+                Learno<span className="text-indigo-600">days</span>
               </span>
             </Link>
             <p className="text-sm text-slate-600 font-sans leading-relaxed mb-4 max-w-xs">
