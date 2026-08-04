@@ -8,7 +8,6 @@ const Course      = require("./models/Course");
 const Enrollment  = require("./models/Enrollment");
 const Review      = require("./models/Review");
 const Quiz        = require("./models/Quiz");
-const LearningPath = require("./models/LearningPath");
 const { Certificate } = require("./models/index");
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
