@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, Users, ClipboardList,
@@ -20,6 +19,25 @@ const DELAY_CLASSES = [
   "delay-[180ms]","delay-[240ms]","delay-[300ms]",
 ];
 
+/* ── Logo mark (same real SVG used in the Footer, so it can react to hover) ── */
+function LearnodaysLogo({ className = "w-full h-full" }) {
+  return (
+    <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Learnodays">
+      <rect x="6" y="6" width="188" height="188" rx="44" fill="#0b0b0d" />
+      <path
+        d="M46,48 L52,48 L52,134 L90,134 L90,152 L34,152 L34,70 Z"
+        fill="#ffffff"
+        className="transition-colors duration-300 group-hover:fill-cyan-400"
+      />
+      <path
+        d="M104 48 L134 48 C 158 48 172 68 172 100 C172 132 158 152 134 152 L104 152 Z M118 62 L132 62 C 148 62 158 76 158 100 C158 124 148 138 132 138 L118 138 Z"
+        fillRule="evenodd"
+        fill="#ffffff"
+      />
+    </svg>
+  );
+}
+
 function NavContent({ active, onChange, onClose }) {
   const navigate   = useNavigate();
   const { logout } = useAuth();
@@ -30,10 +48,9 @@ function NavContent({ active, onChange, onClose }) {
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-black
-          flex items-center justify-center shadow-lg shadow-black/25 overflow-hidden">
-            <img src="https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp" className="w-9 h-9 object-contain" />
+        <div className="flex items-center gap-3 group">
+          <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0">
+            <LearnodaysLogo />
           </div>
           <div>
             <h1 className="font-black text-sm tracking-tight text-slate-900">Learnodays</h1>

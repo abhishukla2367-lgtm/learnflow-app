@@ -53,7 +53,24 @@ function LiveClock() {
   );
 }
 
-const LOGO_URL = 'https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp';
+/* ── Logo mark (same real SVG used in the Footer, so it can react to hover) ── */
+function LearnodaysLogo({ className = "w-full h-full" }) {
+  return (
+    <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Learnodays">
+      <rect x="6" y="6" width="188" height="188" rx="44" fill="#0b0b0d" />
+      <path
+        d="M46,48 L52,48 L52,134 L90,134 L90,152 L34,152 L34,70 Z"
+        fill="#ffffff"
+        className="transition-colors duration-300 group-hover:fill-cyan-400"
+      />
+      <path
+        d="M104 48 L134 48 C 158 48 172 68 172 100 C172 132 158 152 134 152 L104 152 Z M118 62 L132 62 C 148 62 158 76 158 100 C158 124 148 138 132 138 L118 138 Z"
+        fillRule="evenodd"
+        fill="#ffffff"
+      />
+    </svg>
+  );
+}
 
 /* ── Page meta ───────────────────────────────────────────── */
 const PAGE_META = {
@@ -183,9 +200,9 @@ export default function AdminDashboard() {
               className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200">
               <Menu size={20} />
             </button>
-            <div className="lg:hidden flex items-center gap-2 mr-1">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center">
-                <img src={LOGO_URL} className="w-5 h-5 object-contain" />
+            <div className="lg:hidden flex items-center gap-2 mr-1 group">
+              <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
+                <LearnodaysLogo />
               </div>
               <span className="font-black text-sm text-slate-900">Learnodays</span>
             </div>
