@@ -52,7 +52,6 @@ function getAvatarUrl(name = "") {
 
 /* ── Social links ── */
 function getSocialLinks(instructor) {
-  const slug = instructor.name?.toLowerCase().replace(/\s+/g, "") || "user";
   return [
     {
       key:   "github",
@@ -78,7 +77,7 @@ function getSocialLinks(instructor) {
     {
       key:   "X",
       icon:  XIcon,
-      href:  instructor.X           || "https://X.com",
+      href:  instructor.social?.twitter   || "https://x.com",
       label: "X",
       hover: "hover:bg-indigo-500 hover:text-white",
     },
@@ -248,9 +247,6 @@ export default function InstructorsAdmin({ exportPdfRef }) {
     } catch { setError(true); }
     finally  { setLoading(false); }
   }, [search]);
-  useEffect(() => {
-  if (instructors.length > 0) console.log(instructors[0]);
-}, [instructors]);
   useEffect(() => { load(); }, [load]);
   const { socket } = useSocket();
 
