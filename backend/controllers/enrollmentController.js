@@ -1,13 +1,27 @@
 const { Enrollment, Course, Certificate } = require('../models/index');
 const mongoose = require('mongoose');
-const notify   = require('../utils/notify'); // ← ADD THIS
+const notify   = require('../utils/notify');
 
-// Helper to get socket broadcast (won't crash if socket not ready)
+// Helper to get socket broadcast
 function getBroadcast() {
   try { return require('../socket').broadcast; } catch { return null; }
 }
 
-// ─── 1. Enroll (Handle Trial & Paid) ─────────────────────────────────────────
+// Helper to reliably extract flat lessons array from product or snapshot
+function extractLessons(product) {
+  if (!product) return [];
+  if (Array.isArray(product.lessons) && product.lessons.length > 0) {
+    return product.lessons;
+  }
+  if (Array.isArray(product.sections)) {
+    return product.sections.flatMap(sec =>
+      (sec.lessons || []).map(l => ({ ...l, weekLabel: l.weekLabel || sec.title }))
+    );
+  }
+  return [];
+}
+
+// ─── 1. Enroll ───────────────────────────────────────────────────────────────
 exports.enroll = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -17,7 +31,6 @@ exports.enroll = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format." });
     }
 
-    // Try Course first, then Certificate
     let product = await Course.findById(courseId);
     let courseModel = "Course";
     if (!product) {
@@ -29,7 +42,11 @@ exports.enroll = async (req, res) => {
       return res.status(404).json({ success: false, message: "Course or Certification not found." });
     }
 
-    const existing = await Enrollment.findOne({ student: userId, course: courseId });
+    const existing = await Enrollment.findOne({ 
+      student: userId, 
+      course: courseId,
+      isDeleted: { $ne: true }
+    });
     
     if (existing) {
       return res.status(200).json({ 
@@ -40,7 +57,9 @@ exports.enroll = async (req, res) => {
       });
     }
 
-    // Build certData snapshot for safety (Lessons fallback)
+    const lessonsList = extractLessons(product);
+
+    // Build certData snapshot
     const certData = {
       title:       product.title       || "",
       thumbnail:   product.thumbnail   || "",
@@ -48,12 +67,13 @@ exports.enroll = async (req, res) => {
       description: product.description || product.desc || "",
       emoji:       product.emoji       || "",
       tag:         product.tag         || product.category || "",
-      lessons: (product.sections || []).flatMap(sec =>
-      (sec.lessons || []).map(l => ({ ...l, weekLabel: sec.title }))
-       )
+      lessons:     lessonsList
     };
 
-    const isTrial = req.body.type === 'trial' || (product.price !== undefined && product.price === 0);
+    // Explicit check for trial vs free vs paid
+    const isExplicitTrial = req.body.type === 'trial';
+    const isFree = product.price === 0 || product.price === undefined;
+    const isTrial = isExplicitTrial && !isFree;
     const trialEndsAt = isTrial ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null;
     
     const newEnrollment = await Enrollment.create({
@@ -62,14 +82,13 @@ exports.enroll = async (req, res) => {
       courseModel,
       certData,
       amount:      req.body.amount || product.price || 0,
-      type:        isTrial ? 'trial' : (product.price > 0 ? 'paid' : 'free'),
+      type:        isTrial ? 'trial' : (isFree ? 'free' : 'paid'),
       status:      isTrial ? 'trialing' : 'enrolled',
       isTrial:     isTrial,
       trialEndsAt: trialEndsAt,
       enrolledAt:  Date.now(),
     });
     
-    // Real-time: notify the student's socket room
     const broadcast = getBroadcast();
     if (broadcast) {
       const io = (() => { try { return require('../socket').getIO(); } catch { return null; } })();
@@ -89,7 +108,6 @@ exports.enroll = async (req, res) => {
       });
     }
 
-    // ── Notify student of successful enrollment ──────────────────────────────
     await notify(userId, {
       type:    'enrollment',
       title:   `You're enrolled in "${product.title}"! 🎉`,
@@ -98,7 +116,7 @@ exports.enroll = async (req, res) => {
         : 'Your course is ready. Start learning now and track your progress.',
       link:    '/my-courses',
       metadata: { courseId: String(courseId), courseTitle: product.title },
-    });
+    }).catch(e => console.error("Notification Error:", e));
 
     res.status(201).json({ 
       success: true, 
@@ -112,12 +130,12 @@ exports.enroll = async (req, res) => {
   }
 };
 
-// ─── 2. Get My Enrollments (For Dashboard) ───────────────────────────────────
+// ─── 2. Get My Enrollments ───────────────────────────────────────────────────
 exports.getMyEnrollments = async (req, res) => {
   try {
     const enrollments = await Enrollment.find({ 
-    student: req.user._id,
-    isDeleted: { $ne: true }
+      student: req.user._id,
+      isDeleted: { $ne: true }
     })
       .populate('course')
       .sort({ enrolledAt: -1 })
@@ -126,6 +144,7 @@ exports.getMyEnrollments = async (req, res) => {
     const normalized = enrollments.map(e => {
       const populated = e.course && typeof e.course === 'object' ? e.course : null;
       const snap = e.certData || {};
+      const lessons = extractLessons(populated) || snap.lessons || [];
 
       return {
         ...e,
@@ -140,7 +159,7 @@ exports.getMyEnrollments = async (req, res) => {
           description: populated?.description || snap.description || '',
           emoji: populated?.emoji || snap.emoji || '',
           tag: populated?.tag || populated?.category || snap.tag || '',
-          lessons: populated?.lessons || snap.lessons || [],
+          lessons: lessons,
         },
       };
     });
@@ -151,30 +170,33 @@ exports.getMyEnrollments = async (req, res) => {
   }
 };
 
-// ─── 3. Get Enrollment Detail (For the Course Player) ────────────────────────
+// ─── 3. Get Enrollment Detail ────────────────────────────────────────────────
 exports.getEnrollmentDetail = async (req, res) => {
   try {
     const { courseId } = req.params;
     const userId = req.user._id;
 
     const enrollment = await Enrollment.findOne({ 
-    student: userId, 
-    course: courseId,
-    isDeleted: { $ne: true }
+      student: userId, 
+      course: courseId,
+      isDeleted: { $ne: true }
     }).populate('course').lean();
 
     if (!enrollment) {
       return res.status(404).json({ success: false, message: "Enrollment not found" });
     }
 
-    if (!enrollment.course || !enrollment.course.lessons) {
-      enrollment.course = {
-        ...(enrollment.course || {}),
-        _id: courseId,
-        lessons: enrollment.certData?.lessons || [],
-        title: enrollment.certData?.title || "Untitled Course"
-      };
-    }
+    const populatedCourse = enrollment.course && typeof enrollment.course === 'object' ? enrollment.course : {};
+    const lessons = extractLessons(populatedCourse).length > 0 
+      ? extractLessons(populatedCourse) 
+      : (enrollment.certData?.lessons || []);
+
+    enrollment.course = {
+      ...populatedCourse,
+      _id: courseId,
+      title: populatedCourse.title || enrollment.certData?.title || "Untitled Course",
+      lessons: lessons
+    };
 
     res.status(200).json({ success: true, enrollment });
   } catch (error) {
@@ -182,7 +204,7 @@ exports.getEnrollmentDetail = async (req, res) => {
   }
 };
 
-// ─── 4. Update Progress (with milestone notifications) ───────────────────────
+// ─── 4. Update Progress ──────────────────────────────────────────────────────
 exports.updateProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -190,7 +212,8 @@ exports.updateProgress = async (req, res) => {
 
     const enrollment = await Enrollment.findOne({ 
       student: userId, 
-      course: courseId 
+      course: courseId,
+      isDeleted: { $ne: true }
     }).populate('course', 'title');
 
     if (!enrollment) {
@@ -212,9 +235,9 @@ exports.updateProgress = async (req, res) => {
     enrollment.lastAccessedAt = new Date();
     await enrollment.save();
 
-    // ── Milestone notifications (fire once per milestone) ─────────────────
+    // Check milestones in DESCENDING order (100 -> 75 -> 50 -> 25)
     const courseTitle = enrollment.course?.title || enrollment.certData?.title || 'your course';
-    const MILESTONES  = [25, 50, 75, 100];
+    const MILESTONES  = [100, 75, 50, 25];
 
     for (const milestone of MILESTONES) {
       if (prevProgress < milestone && newProgress >= milestone) {
@@ -225,7 +248,7 @@ exports.updateProgress = async (req, res) => {
             message: `Congratulations! You've completed "${courseTitle}". Your certificate is now available.`,
             link:    `/course-certificate/${courseId}`,
             metadata: { courseId: String(courseId), milestone: 100 },
-          });
+          }).catch(e => console.error("Notification Error:", e));
         } else {
           await notify(userId, {
             type:    'progress',
@@ -233,9 +256,9 @@ exports.updateProgress = async (req, res) => {
             message: `Great progress on "${courseTitle}"! Keep going, you're doing amazing.`,
             link:    '/my-courses',
             metadata: { courseId: String(courseId), milestone },
-          });
+          }).catch(e => console.error("Notification Error:", e));
         }
-        break; // Only fire the highest crossed milestone per update
+        break; // Trigger highest reached milestone only
       }
     }
 

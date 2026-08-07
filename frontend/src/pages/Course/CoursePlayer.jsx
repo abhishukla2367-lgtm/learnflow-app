@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COURSES } from '../../data/coursesData';
 import {
   CheckCircle, Circle, ChevronLeft, ChevronRight, Menu,
@@ -7,6 +7,21 @@ import {
   ChevronDown, ChevronUp, Award
 } from 'lucide-react';
 import api from '../../utils/api';
+
+/* ── YouTube ID Extractor Helper ── */
+function extractYouTubeId(urlOrId) {
+  if (!urlOrId || typeof urlOrId !== 'string') return null;
+  
+  // If it's already a raw 11-char ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(urlOrId.trim())) {
+    return urlOrId.trim();
+  }
+  
+  // Regex for standard YouTube URLs, shortlinks, embeds
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = urlOrId.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 /* ── localStorage helpers ── */
 function loadProgress(id) {
@@ -37,84 +52,152 @@ function saveNote(id, lessonId, text) {
   } catch {}
 }
 
+function loadQuizStatus(id) {
+  try {
+    return JSON.parse(localStorage.getItem('lf_quiz') || '{}')[id] || null;
+  } catch { return null; }
+}
+
 function lid(lesson) {
-  return lesson?.id || lesson?._id || '';
+  return String(lesson?.id || lesson?._id || '');
 }
 
 function normaliseLessons(lessons = []) {
   if (!Array.isArray(lessons)) return [];
-  return lessons.map((l, i) => ({
-    ...l,
-    id: String(l.id || l._id || i),
-    weekLabel: l.weekLabel || `Section ${Math.floor(i / 5) + 1}`,
-    duration: l.duration ? (typeof l.duration === 'number' ? `${l.duration} min` : l.duration) : '5 min',
-    videoId: l.videoId || null,
-    videoUrl: l.videoUrl || null,
-  }));
+  return lessons.map((l, i) => {
+    // Extract video string/object variations across all possible backend schemas
+    const rawVideo = l.videoId || l.youtubeId || l.video || l.videoUrl || l.video_url || l.video_id || l.url || l.embedUrl || (l.video && typeof l.video === 'object' ? l.video.url : null);
+    
+    const ytId = extractYouTubeId(rawVideo);
+    
+    return {
+      ...l,
+      id: String(l.id || l._id || i),
+      title: l.title || l.name || l.lessonTitle || `Lesson ${i + 1}`,
+      weekLabel: l.weekLabel || l.sectionTitle || l.moduleTitle || `Section ${Math.floor(i / 5) + 1}`,
+      duration: l.duration ? (typeof l.duration === 'number' ? `${l.duration} min` : l.duration) : '10 min',
+      videoId: ytId,
+      videoUrl: !ytId && typeof rawVideo === 'string' ? rawVideo : null,
+    };
+  });
 }
 
-/* ── Custom hook ── */
-/* ── Custom hook for Courses ── */
-function useResolveCourse(courseId) { 
-  const [apiFetched, setApiFetched] = useState(null);
+function extractLessonsFromCourse(fetched) {
+  if (!fetched) return [];
+  
+  if (Array.isArray(fetched.lessons) && fetched.lessons.length > 0) {
+    return fetched.lessons;
+  }
+  
+  const containers = fetched.curriculum || fetched.modules || fetched.sections || fetched.chapters || fetched.syllabus;
+  
+  if (Array.isArray(containers)) {
+    return containers.flatMap((group, idx) => {
+      const groupTitle = group.title || group.name || group.sectionTitle || `Section ${idx + 1}`;
+      const groupLessons = group.lessons || group.items || group.topics || [];
+      return groupLessons.map((lesson) => ({
+        ...lesson,
+        weekLabel: lesson.weekLabel || groupTitle,
+      }));
+    });
+  }
+  
+  return [];
+}
 
-  const staticOrCached = (() => {
-    if (!courseId) return null;
+/* ── Enhanced Hook Supporting both Courses & Certifications ── */
+function useResolveCourse(courseId, isCertification) { 
+  const [resolvedCourse, setResolvedCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    // 1. Check local static data first
+  useEffect(() => {
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+
+    // 1. Check local cache
+    try {
+      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+      const cached = cache[courseId];
+      if (cached?.lessons?.length) {
+        if (isMounted) {
+          setResolvedCourse({ ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) });
+          setLoading(false);
+        }
+        return;
+      }
+    } catch (e) { console.error('Cache read error:', e); }
+
+    // 2. Check static data
     const fromStatic = COURSES.find(
       (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
     );
-    if (fromStatic) return { ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) };
-try {
-  const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-  const cached = cache[courseId];
-  if (cached?.lessons?.length) return { ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) };
-} catch (e) { console.error('Cache read error:', e); }
-    return null;
-  })();
-
-  useEffect(() => {
-    if (staticOrCached || apiFetched !== null) return;
-
-    // THE NUCLEAR LINE: Fetch from the enrollment detail route
-    // This ensures you get the course snapshot (certData) and populated lessons
-    // Try course-specific endpoint first, fall back to enrollment detail
-const apiPath = `/courses/${courseId}`;
-
-api.get(apiPath)
-  .then(res => {
-    const fetched = res.data?.course || res.data;
-    if (fetched && !fetched.lessons?.length && Array.isArray(fetched.sections)) {
-  fetched.lessons = fetched.sections.flatMap(sec =>
-    (sec.lessons || []).map(l => ({ ...l, weekLabel: sec.title }))
-  );
-}
-    
-    if (!fetched?.lessons?.length) {
-      // fallback: try enrollment detail route
-      return api.get(`/enrollments/${courseId}/detail`)
-        .then(r => r.data?.enrollment?.course || r.data);
+    if (fromStatic?.lessons?.length > 1 || (fromStatic?.lessons?.length === 1 && (fromStatic.lessons[0].videoId || fromStatic.lessons[0].videoUrl || fromStatic.lessons[0].video))) {
+      if (isMounted) {
+        setResolvedCourse({ ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) });
+        setLoading(false);
+      }
+      return;
     }
-    return fetched;
-  })
-  .then(fetched => {
-    const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-    cache[courseId] = fetched;
-    localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-    setApiFetched(fetched);
-  })
-  .catch((err) => {
-    console.error("Course Fetch Error:", err);
-    setApiFetched({});
-  });
-  }, [courseId, staticOrCached, apiFetched]);
 
-  if (staticOrCached) return staticOrCached;
-  if (apiFetched?._id || apiFetched?.id) {
-    return { ...apiFetched, id: courseId, lessons: normaliseLessons(apiFetched.lessons) };
-  }
-  return null;
+    // 3. API Fetch Strategy
+    const fetchCourseData = async () => {
+      try {
+        let fetchedData = null;
+        
+        // Dynamically choose endpoint based on route context
+        const endpoints = isCertification 
+          ? [`/certifications/${courseId}`, `/courses/${courseId}`, `/enrollments/${courseId}/detail`]
+          : [`/courses/${courseId}`, `/certifications/${courseId}`, `/enrollments/${courseId}/detail`];
+
+        for (const endpoint of endpoints) {
+          try {
+            const res = await api.get(endpoint);
+            fetchedData = res.data?.certification || res.data?.course || res.data;
+            const lessons = extractLessonsFromCourse(fetchedData);
+            if (lessons.length > 0) break;
+          } catch (err) {
+            // keep trying next endpoint
+          }
+        }
+
+        let extractedLessons = extractLessonsFromCourse(fetchedData);
+
+        if (isMounted) {
+          if (fetchedData && extractedLessons.length) {
+            const resolved = {
+              ...fetchedData,
+              id: courseId,
+              lessons: normaliseLessons(extractedLessons)
+            };
+            try {
+              const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
+              cache[courseId] = resolved;
+              localStorage.setItem('lf_course_cache', JSON.stringify(cache));
+            } catch {}
+            setResolvedCourse(resolved);
+          } else {
+            setResolvedCourse(null);
+          }
+        }
+      } catch (err) {
+        console.error("Course/Certification Fetch Error:", err);
+        if (isMounted) setResolvedCourse(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchCourseData();
+
+    return () => { isMounted = false; };
+  }, [courseId, isCertification]);
+
+  return { course: resolvedCourse, loading };
 }
 
 async function syncProgressToBackend(courseId, completedCount, totalCount) {
@@ -126,61 +209,69 @@ async function syncProgressToBackend(courseId, completedCount, totalCount) {
 
 export default function CoursePlayer({ courseId: propId, lessonId: propLessonId }) {
   const { id: paramId, lessonId: paramLessonId } = useParams();
+  const location = useLocation();
   const id = propId || paramId;
   const lessonId = propLessonId || paramLessonId;
   const navigate = useNavigate();
 
-  const course = useResolveCourse(id); 
+  // Detect route type dynamically (/learn/certification vs /learn/course)
+  const isCertRoute = location.pathname.includes('/learn/certification');
+  const basePath = isCertRoute ? `/learn/certification/${id}` : `/learn/course/${id}`;
+
+  const { course, loading: courseLoading } = useResolveCourse(id, isCertRoute); 
   const lessons = course?.lessons || [];
 
-  const lessonIdx = lessonId ? lessons.findIndex((l) => String(lid(l)) === String(lessonId)) : 0;
+  const lessonIdx = lessonId ? lessons.findIndex((l) => lid(l) === String(lessonId)) : 0;
   const lesson = lessons[lessonIdx === -1 ? 0 : lessonIdx];
 
-  const [progress, setProgress] = useState({ completedLessons: [], lastLesson: null });
+  const [progress, setProgress] = useState(() => loadProgress(id));
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [noteSaved, setNoteSaved] = useState(false);
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [justCompleted, setJustCompleted] = useState(false);
+
   const videoRef = useRef(null);
   const completionRef = useRef(null);
+  const navTimerRef = useRef(null);
 
-useEffect(() => {
-  if (!id || (!lesson?.id && !lesson?._id)) return;
+  useEffect(() => {
+    return () => {
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    };
+  }, []);
 
-  const currentLid = String(lid(lesson));
-  const p = loadProgress(id);
-  
-  setProgress(prev => {
-    if (JSON.stringify(prev) === JSON.stringify(p)) return prev;
-    return p;
-  });
+  useEffect(() => {
+    if (!id || !lesson) return;
 
-  setNoteText(loadNotes(id, currentLid));
-  setNoteSaved(false);
-  setJustCompleted(false);
+    const currentLid = lid(lesson);
+    const p = loadProgress(id);
+    setProgress(p);
 
-  if (lesson.weekLabel) {
-    setExpandedWeeks((prev) => ({ ...prev, [lesson.weekLabel]: true }));
-  }
+    setNoteText(loadNotes(id, currentLid));
+    setNoteSaved(false);
+    setJustCompleted(false);
 
-  const updated = { ...p, lastLesson: currentLid };
-  saveProgress(id, updated);
-  const completedCount = p.completedLessons?.length || 0;
-  const totalCount = lessons.length;
-  if (totalCount > 0 && completedCount >= totalCount) {
-    const scrollTimer = setTimeout(() => {
-      if (completionRef.current) {
-        completionRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-      }
-    }, 600); 
-    return () => clearTimeout(scrollTimer);
-  }
-}, [id, lesson?.id, lesson?._id, lessons.length, progress.completedLessons.length]);
+    if (lesson.weekLabel) {
+      setExpandedWeeks((prev) => ({ ...prev, [lesson.weekLabel]: true }));
+    }
+
+    const updated = { ...p, lastLesson: currentLid };
+    saveProgress(id, updated);
+  }, [id, lessonId, lesson]);
+
+  const completedCount = progress.completedLessons?.length || 0;
+  const allDone = completedCount >= lessons.length && lessons.length > 0;
+
+  useEffect(() => {
+    if (allDone && completionRef.current) {
+      const scrollTimer = setTimeout(() => {
+        completionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 600);
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [allDone]);
 
   const isCompleted = useCallback(
     (lId) => progress.completedLessons?.includes(String(lId)),
@@ -189,7 +280,7 @@ useEffect(() => {
 
   const markComplete = () => {
     if (!lesson) return;
-    const currentLid = String(lid(lesson));
+    const currentLid = lid(lesson);
     const already = isCompleted(currentLid);
     const updatedList = already ? progress.completedLessons : [...(progress.completedLessons || []), currentLid];
 
@@ -200,10 +291,11 @@ useEffect(() => {
 
     syncProgressToBackend(id, updatedList.length, lessons.length);
 
-    setTimeout(() => {
+    if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    navTimerRef.current = setTimeout(() => {
       setJustCompleted(false);
       const next = lessons[lessonIdx + 1];
-      if (next) navigate(`/learn/course/${id}/${lid(next)}`);
+      if (next) navigate(`${basePath}/${lid(next)}`);
     }, 1200);
   };
 
@@ -216,13 +308,13 @@ useEffect(() => {
     setTimeout(() => setNoteSaved(false), 2000);
   };
 
-  if (!course || !lesson) {
+  if (courseLoading || !course || !lesson) {
     return (
       <div className="flex flex-col h-screen bg-slate-900 items-center justify-center text-white p-6 text-center">
         <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 className="text-xl font-bold mb-2">Loading Course Content...</h2>
+        <h2 className="text-xl font-bold mb-2">Loading Certification Content...</h2>
         <button onClick={() => navigate('/my-courses')} className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300">
-          <ArrowLeft className="w-4 h-4" /> Back to My Courses
+          <ArrowLeft className="w-4 h-4" /> Back to My Learning
         </button>
       </div>
     );
@@ -244,9 +336,7 @@ useEffect(() => {
     );
   }
 
-  const completedCount = progress.completedLessons?.length || 0;
   const pct = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
-  const allDone = completedCount >= lessons.length && lessons.length > 0;
 
   const weekGroups = lessons.reduce((acc, l) => {
     const key = l.weekLabel;
@@ -255,13 +345,16 @@ useEffect(() => {
     return acc;
   }, {});
 
+  const quizData = loadQuizStatus(id);
+  const hasPassed = quizData?.passed === true;
+
   return (
     <div className="flex h-screen bg-slate-900 overflow-hidden font-sans">
       {/* SIDEBAR */}
       <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} flex-shrink-0 bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300 overflow-hidden`}>
         <div className="p-4 border-b border-slate-700 flex-shrink-0">
           <button onClick={() => navigate('/my-courses')} className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white mb-3 transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" /> My Courses
+            <ArrowLeft className="w-3.5 h-3.5" /> My Learning
           </button>
           <h2 className="text-sm font-bold text-white leading-tight line-clamp-2">{course.title}</h2>
           <div className="mt-3">
@@ -285,14 +378,14 @@ useEffect(() => {
               {expandedWeeks[week] && sectionLessons.map((l) => (
                 <button
                   key={lid(l)}
-                  onClick={() => navigate(`/learn/course/${id}/${lid(l)}`)}
-                  className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all ${String(lid(l)) === String(lid(lesson)) ? 'bg-slate-700/80 border-l-2 border-cyan-500' : 'hover:bg-slate-700/30 border-l-2 border-transparent'}`}
+                  onClick={() => navigate(`${basePath}/${lid(l)}`)}
+                  className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all ${lid(l) === lid(lesson) ? 'bg-slate-700/80 border-l-2 border-cyan-500' : 'hover:bg-slate-700/30 border-l-2 border-transparent'}`}
                 >
                   <div className="flex-shrink-0 mt-0.5">
-                    {isCompleted(lid(l)) ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : String(lid(l)) === String(lid(lesson)) ? <PlayCircle className="w-4 h-4 text-cyan-400" /> : <Circle className="w-4 h-4 text-slate-600" />}
+                    {isCompleted(lid(l)) ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : lid(l) === lid(lesson) ? <PlayCircle className="w-4 h-4 text-cyan-400" /> : <Circle className="w-4 h-4 text-slate-600" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs leading-snug font-medium line-clamp-2 ${String(lid(l)) === String(lid(lesson)) ? 'text-white' : 'text-slate-400'}`}>{l.title}</p>
+                    <p className={`text-xs leading-snug font-medium line-clamp-2 ${lid(l) === lid(lesson) ? 'text-white' : 'text-slate-400'}`}>{l.title}</p>
                     <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {l.duration}</p>
                   </div>
                 </button>
@@ -302,7 +395,7 @@ useEffect(() => {
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="bg-slate-800/50 backdrop-blur-md border-b border-slate-700/50 px-4 py-3 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
@@ -319,16 +412,16 @@ useEffect(() => {
               <StickyNote className="w-4 h-4" /><span className="hidden sm:block text-xs font-bold">Notes</span>
             </button>
             <div className="h-4 w-[1px] bg-slate-700 mx-1" />
-            <button onClick={() => { const p = lessons[lessonIdx - 1]; if (p) navigate(`/learn/course/${id}/${lid(p)}`)}} disabled={lessonIdx === 0} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
+            <button onClick={() => { const p = lessons[lessonIdx - 1]; if (p) navigate(`${basePath}/${lid(p)}`); }} disabled={lessonIdx === 0} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={() => { const n = lessons[lessonIdx + 1]; if (n) navigate(`/learn/course/${id}/${lid(n)}`) }} disabled={lessonIdx === lessons.length - 1} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
+            <button onClick={() => { const n = lessons[lessonIdx + 1]; if (n) navigate(`${basePath}/${lid(n)}`); }} disabled={lessonIdx === lessons.length - 1} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 transition-all">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </header>
 
-        <div className="flex-1 flex overflow-hidden" autoComplete="off">
+        <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="relative w-full bg-black aspect-video shadow-2xl force-magnifier">
               {lesson.videoId ? (
@@ -371,40 +464,33 @@ useEffect(() => {
               </div>
 
               {/* ALL DONE / QUIZ BLOCK */}
-              {allDone && (() => {
-                const quizData = JSON.parse(localStorage.getItem('lf_quiz') || '{}')[id];
-                const hasPassed = quizData?.passed === true;
-
-                return (
-    <div 
-      ref={completionRef} 
-      className="mt-12 p-10 bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700/50 rounded-[2.5rem] text-center shadow-2xl scroll-mt-20"
-    >
-      <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-      <h3 className="text-3xl font-black text-white mb-3">
-        {hasPassed ? "Certification Earned! 🎓" : "Course Completed! 🎉"}
-      </h3>
-      <p className="text-slate-400 mb-8 max-w-md mx-auto text-sm">
-        {hasPassed 
-          ? "You've successfully cleared the assessment. Claim your reward below." 
-          : "You've finished all lessons. Complete the quiz to earn your certificate."}
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        {hasPassed ? (
-          <button 
-          onClick={() => navigate(`/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
-            <Award className="w-5 h-5" /> View Certificate
-          </button>
-        ) : (
-          <button 
-          onClick={() => navigate(`/course-quiz/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
-            Take Final Quiz
-          </button>
-        )}
-      </div>
-    </div>
-  );
-})()}
+              {allDone && (
+                <div 
+                  ref={completionRef} 
+                  className="mt-12 p-10 bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700/50 rounded-[2.5rem] text-center shadow-2xl scroll-mt-20"
+                >
+                  <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-6" />
+                  <h3 className="text-3xl font-black text-white mb-3">
+                    {hasPassed ? "Certification Earned! 🎓" : "Course Completed! 🎉"}
+                  </h3>
+                  <p className="text-slate-400 mb-8 max-w-md mx-auto text-sm">
+                    {hasPassed 
+                      ? "You've successfully cleared the assessment. Claim your reward below." 
+                      : "You've finished all lessons. Complete the quiz to earn your certificate."}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    {hasPassed ? (
+                      <button onClick={() => navigate(`/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
+                        <Award className="w-5 h-5" /> View Certificate
+                      </button>
+                    ) : (
+                      <button onClick={() => navigate(`/course-quiz/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
+                        Take Final Quiz
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

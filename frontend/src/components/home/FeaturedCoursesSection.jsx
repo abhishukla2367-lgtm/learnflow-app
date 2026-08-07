@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Flame } from 'lucide-react';
+import { ChevronRight, Flame } from 'lucide-react';
 import { FadeIn } from '../ui/FadeIn';
 import CourseCard from '../CourseCard';
 import { FEATURED_COURSES } from '../../data/homeData';
@@ -8,25 +8,28 @@ import api from '../../utils/api';
 
 export default function FeaturedCoursesSection() {
   const scrollRef = useRef(null);
-  const [canScrollLeft,  setCanScrollLeft]  = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-  const [activeIndex,    setActiveIndex]    = useState(0);
-  const [courses,        setCourses]        = useState(FEATURED_COURSES); // fallback to static
+  const [, setCanScrollLeft] = useState(false);
+  const [, setCanScrollRight] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [courses, setCourses] = useState(FEATURED_COURSES); // fallback to static
 
   useEffect(() => {
+    let isMounted = true;
+    
     api.get('/courses/featured')
-      .then(res => {
-        const data = res.data?.courses;
-        if (Array.isArray(data) && data.length > 0) setCourses(data);
+      .then((res) => {
+        // Support both { success: true, courses: [...] } and raw array responses
+        const data = res.data?.courses || res.data;
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setCourses(data);
+        }
       })
-      .catch(() => {}); // silently fall back to static data
-  }, []);
+      .catch(() => {
+        // Silently fall back to static data if backend/network fails
+      });
 
-  const scroll = dir => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === 'left' ? -340 : 340, behavior: 'smooth' });
-  };
+    return () => { isMounted = false; };
+  }, []);
 
   const onScroll = () => {
     const el = scrollRef.current;
@@ -67,7 +70,7 @@ export default function FeaturedCoursesSection() {
         {/* ── Desktop: standard grid ── */}
         <div className="hidden lg:grid grid-cols-4 gap-5 items-stretch">
           {courses.map((c, i) => (
-            <FadeIn key={c._id} delay={i * 80} className="h-full">
+            <FadeIn key={c._id || c.id || i} delay={i * 80} className="h-full">
               <CourseCard course={c} />
             </FadeIn>
           ))}
@@ -86,8 +89,8 @@ export default function FeaturedCoursesSection() {
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {courses.map(c => (
-              <div key={c._id} className="flex-shrink-0 w-72 snap-start">
+            {courses.map((c, i) => (
+              <div key={c._id || c.id || i} className="flex-shrink-0 w-72 snap-start">
                 <CourseCard course={c} />
               </div>
             ))}
@@ -96,7 +99,12 @@ export default function FeaturedCoursesSection() {
           {/* Mobile scroll dots */}
           <div className="flex justify-center gap-1.5 mt-4">
             {courses.map((c, i) => (
-              <div key={c._id} className={`h-1.5 rounded-full transition-all duration-300 ${i === activeIndex ? 'w-6 bg-cyan-500' : 'w-1.5 bg-slate-200'}`} />
+              <div
+                key={c._id || c.id || i}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === activeIndex ? 'w-6 bg-cyan-500' : 'w-1.5 bg-slate-200'
+                }`}
+              />
             ))}
           </div>
         </div>
