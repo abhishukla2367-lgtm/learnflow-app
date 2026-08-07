@@ -5,7 +5,6 @@ const express  = require("express");
 const mongoose = require("mongoose");
 const cors     = require("cors");
 const helmet   = require("helmet");
-const morgan   = require("morgan");
 const dns      = require("node:dns");
 const http     = require("http");
 const rateLimit = require("express-rate-limit");
@@ -14,7 +13,6 @@ dns.setServers(["8.8.8.8", "1.1.1.1"]);
 process.removeAllListeners("warning");
 
 /* ── 1. VALIDATE CRITICAL ENV VARS (Including Email) ───────────────────── */
-// Added EMAIL_USER and EMAIL_PASS to ensure your mailer doesn't crash later
 const REQUIRED_ENV = [
   "MONGO_URI", 
   "JWT_SECRET", 
@@ -72,7 +70,7 @@ app.use(rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15, // Slightly increased for better UX
+  max: 15,
   message: { success: false, message: "Too many auth attempts, please wait 15 minutes." },
 });
 
@@ -83,7 +81,8 @@ app.use((req, res, next) => {
   express.urlencoded({ extended: true })(req, res, next);
 });
 
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+// Disabled HTTP request logging:
+// app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // --- 3. DATABASE CONNECTION ---
 
@@ -94,18 +93,18 @@ mongoose.connect(process.env.MONGO_URI)
   });
 
 // --- 4. ROUTES ---
-const otpRoutes        = require("./routes/otpRoutes");
-const authRoutes         = require("./routes/authRoutes");
-const courseRoutes       = require("./routes/courseRoutes");
-const enrollmentRoutes   = require("./routes/enrollmentRoutes");
-const quizRoutes         = require("./routes/quizRoutes");
-const reviewRoutes       = require("./routes/reviewRoutes");
-const certificateRoutes  = require("./routes/certificateRoutes");
-const adminRoutes        = require("./routes/adminRoutes");
-const userRoutes         = require("./routes/userRoutes");
+const otpRoutes         = require("./routes/otpRoutes");
+const authRoutes        = require("./routes/authRoutes");
+const courseRoutes      = require("./routes/courseRoutes");
+const enrollmentRoutes  = require("./routes/enrollmentRoutes");
+const quizRoutes        = require("./routes/quizRoutes");
+const reviewRoutes      = require("./routes/reviewRoutes");
+const certificateRoutes = require("./routes/certificateRoutes");
+const adminRoutes       = require("./routes/adminRoutes");
+const userRoutes        = require("./routes/userRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-const paymentRoutes      = require("./routes/paymentRoutes");
-const profileRoutes      = require("./routes/profileRoutes");
+const paymentRoutes     = require("./routes/paymentRoutes");
+const profileRoutes     = require("./routes/profileRoutes");
 
 app.use("/api/otp",           authLimiter, otpRoutes);
 app.use("/api/auth",          authLimiter, authRoutes);
@@ -125,7 +124,7 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     status:   "Active",
     database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
-    email:    process.env.EMAIL_USER ? "Configured" : "Missing", // Check email status
+    email:    process.env.EMAIL_USER ? "Configured" : "Missing",
     sockets:  io.engine.clientsCount,
   });
 });
@@ -152,7 +151,7 @@ server.listen(PORT, () => {
   console.log("");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log(`🚀 Learnodays API   : Started`);
-  console.log(`📡 URL            : http://localhost:${PORT}/api`);
+  console.log(`📡 URL             : http://localhost:${PORT}/api`);
   console.log(`🔌 Socket.IO      : Connected`);
   console.log(`✅ MongoDB        : Connected`);
   console.log(`🕐 Started at      : ${timestamp}`);
