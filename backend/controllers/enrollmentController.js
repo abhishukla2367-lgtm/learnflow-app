@@ -48,7 +48,9 @@ exports.enroll = async (req, res) => {
       description: product.description || product.desc || "",
       emoji:       product.emoji       || "",
       tag:         product.tag         || product.category || "",
-      lessons:     product.lessons     || [], 
+      lessons: (product.sections || []).flatMap(sec =>
+      (sec.lessons || []).map(l => ({ ...l, weekLabel: sec.title }))
+       )
     };
 
     const isTrial = req.body.type === 'trial' || (product.price !== undefined && product.price === 0);

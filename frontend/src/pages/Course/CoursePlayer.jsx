@@ -85,6 +85,11 @@ const apiPath = `/courses/${courseId}`;
 api.get(apiPath)
   .then(res => {
     const fetched = res.data?.course || res.data;
+    if (fetched && !fetched.lessons?.length && Array.isArray(fetched.sections)) {
+  fetched.lessons = fetched.sections.flatMap(sec =>
+    (sec.lessons || []).map(l => ({ ...l, weekLabel: sec.title }))
+  );
+}
     
     if (!fetched?.lessons?.length) {
       // fallback: try enrollment detail route
