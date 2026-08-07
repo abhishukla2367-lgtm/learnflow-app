@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
   useEffect(() => {
@@ -8,12 +9,15 @@ export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
       const el = targetRef?.current;
       if (!el) return;
 
-      const toast   = (await import("react-hot-toast")).default;
       const toastId = toast.loading("Generating PDF…");
 
       try {
-        const html2canvas = (await import("html2canvas")).default;
-        const { jsPDF }   = await import("jspdf");
+        const [html2canvasModule, jsPDFModule] = await Promise.all([
+          import("html2canvas"),
+          import("jspdf"),
+        ]);
+        const html2canvas = html2canvasModule.default;
+        const { jsPDF } = jsPDFModule;
 
         /* ── Step 1: Deep-clone off-screen ────────────────────────── */
         const clone = el.cloneNode(true);
@@ -34,8 +38,8 @@ export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
           const cls = node.getAttribute("class") || "";
 
           /* A. Kill animations */
-          node.style.animation         = "none";
-          node.style.transition        = "none";
+          node.style.animation        = "none";
+          node.style.transition       = "none";
           node.style.animationDuration = "0s";
 
           /* B. Hide pdf-hide elements */
@@ -59,15 +63,7 @@ export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
             }
           }
 
-          /* ── E. UNIVERSAL BADGE/PILL FIX (computed-style based) ────
-           *
-           *  Detects ANY pill by computed style — NOT class names.
-           *  Works on every page, every colour, every future badge.
-           *
-           *  Criteria:  border-radius ≥ 6px
-           *           + font-size ≤ 13px
-           *           + horizontal padding ≥ 4px
-           * ──────────────────────────────────────────────────────── */
+          /* ── E. UNIVERSAL BADGE/PILL FIX ────────────────────────── */
           const borderRadius  = parseFloat(cs.borderRadius)  || 0;
           const fontSize      = parseFloat(cs.fontSize)      || 16;
           const paddingLeft   = parseFloat(cs.paddingLeft)   || 0;
@@ -84,11 +80,9 @@ export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
             node.style.whiteSpace     = "nowrap";
             node.style.boxSizing      = "border-box";
 
-            /* Minimum vertical padding so text has breathing room */
             if (paddingTop    < 4) node.style.paddingTop    = "4px";
             if (paddingBottom < 4) node.style.paddingBottom = "4px";
 
-            /* Resolve opacity-bg shorthand colours for overlay pills */
             if (cs.backdropFilter && cs.backdropFilter !== "none") {
               node.style.backdropFilter       = "none";
               node.style.webkitBackdropFilter = "none";
@@ -108,11 +102,9 @@ export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
             }
           }
 
-          /* ── F. UNIVERSAL STATUS DOT FIX ──────────────────────────
-           *  Any tiny square span with full border-radius = status dot.
-           * ─────────────────────────────────────────────────────── */
-          const w    = parseFloat(cs.width)  || 0;
-          const h    = parseFloat(cs.height) || 0;
+          /* ── F. UNIVERSAL STATUS DOT FIX ────────────────────────── */
+          const w     = parseFloat(cs.width)  || 0;
+          const h     = parseFloat(cs.height) || 0;
           const isDot = (
             tag === "SPAN" &&
             Math.abs(w - h) < 1 &&
@@ -174,7 +166,7 @@ export default function usePdfExport(exportPdfRef, targetRef, filename, title) {
         const pageH    = pdf.internal.pageSize.getHeight();
         const MARGIN   = 10;
         const HEADER_H = 14;
-        const FOOTER_H =  6;
+        const FOOTER_H = 6;
         const usableW  = pageW - MARGIN * 2;
 
         const totalImgH  = (canvas.height * usableW) / canvas.width;

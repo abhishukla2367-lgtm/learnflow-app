@@ -94,7 +94,7 @@ export default function CourseCertificate() {
                     </div>
                     <div>
                       <p className="text-lg font-black text-slate-900 tracking-tight leading-none">
-                        LEARN<span className="text-cyan-600">FLOW</span>
+                        LEARNO<span className="text-cyan-600">Days</span>
                       </p>
                       <p className="text-[11px] text-slate-400 font-mono mt-0.5">Certificate of Completion</p>
                     </div>

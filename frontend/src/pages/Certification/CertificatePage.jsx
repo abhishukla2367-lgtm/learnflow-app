@@ -21,8 +21,6 @@ export default function CertificatePage() {
   const { user } = useAuth();
   const cert = CERTS.find(c => String(c.id) === String(certId));
   const result = getQuizResult(String(certId));
-  const LOGO_URL = 'https://res.cloudinary.com/db2vju4mv/image/upload/q_auto/f_auto/v1775046563/p1_l90afj.webp';
-
   const exportPdfRef = useRef(null);
   const certRef = useRef(null);
 
@@ -89,12 +87,23 @@ export default function CertificatePage() {
                 
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-black flex items-center justify-center shadow-md overflow-hidden">
-                      <img src={LOGO_URL} alt="Logo" className="w-full h-full object-cover" crossOrigin="anonymous" />
-                    </div>
+                    <div className="w-12 h-12 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm">
+  <svg viewBox="0 0 200 200" className="w-full h-full" role="img" aria-label="Learnodays">
+    <rect x="6" y="6" width="188" height="188" rx="44" fill="#0b0b0d" />
+    <path
+      d="M46,48 L52,48 L52,134 L90,134 L90,152 L34,152 L34,70 Z"
+      fill="#ffffff"
+    />
+    <path
+      d="M104 48 L134 48 C 158 48 172 68 172 100 C172 132 158 152 134 152 L104 152 Z M118 62 L132 62 C 148 62 158 76 158 100 C158 124 148 138 132 138 L118 138 Z"
+      fillRule="evenodd"
+      fill="#ffffff"
+    />
+  </svg>
+</div>
                     <div>
                       <p className="text-lg font-black text-slate-900 tracking-tight leading-none">
-                        LEARN<span className="text-cyan-600">FLOW</span>
+                        LEARNO<span className="text-cyan-600">DAYS</span>
                       </p>
                       <p className="text-[11px] text-slate-400 font-mono mt-0.5">Certificate of Completion</p>
                     </div>
