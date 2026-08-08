@@ -61,7 +61,7 @@ function saveNote(id, lessonId, text) {
 }
 
 function loadQuizStatus(id) {
-  const all = safeJSONParse('lf_quiz', {});
+  const all = safeJSONParse('lf_course_quiz', {});
   return all[id] || null;
 }
 
@@ -244,7 +244,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
   // Sync state across browser tabs via storage events
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'lf_quiz') {
+      if (e.key === 'lf_course_quiz') {
         setQuizPassed(loadQuizStatus(id)?.passed === true);
       }
       if (e.key === 'lf_progress') {
