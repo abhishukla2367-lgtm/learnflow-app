@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COURSES } from '../../data/coursesData';
 import {
@@ -11,51 +11,58 @@ import api from '../../utils/api';
 /* ── YouTube ID Extractor Helper ── */
 function extractYouTubeId(urlOrId) {
   if (!urlOrId || typeof urlOrId !== 'string') return null;
+  const trimmed = urlOrId.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
   
-  // If it's already a raw 11-char ID
-  if (/^[a-zA-Z0-9_-]{11}$/.test(urlOrId.trim())) {
-    return urlOrId.trim();
-  }
-  
-  // Regex for standard YouTube URLs, shortlinks, embeds
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = urlOrId.match(regExp);
+  const match = trimmed.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
+}
+
+/* ── Safely parse JSON from localStorage ── */
+function safeJSONParse(key, defaultValue) {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
 }
 
 /* ── localStorage helpers ── */
 function loadProgress(id) {
-  try {
-    return JSON.parse(localStorage.getItem('lf_progress') || '{}')[id] || { completedLessons: [], lastLesson: null };
-  } catch { return { completedLessons: [], lastLesson: null }; }
+  const all = safeJSONParse('lf_progress', {});
+  return all[id] || { completedLessons: [], lastLesson: null };
 }
 
 function saveProgress(id, data) {
   try {
-    const all = JSON.parse(localStorage.getItem('lf_progress') || '{}');
+    const all = safeJSONParse('lf_progress', {});
     all[id] = data;
     localStorage.setItem('lf_progress', JSON.stringify(all));
-  } catch {}
+  } catch (e) {
+    console.error('Failed to save progress to localStorage', e);
+  }
 }
 
 function loadNotes(id, lessonId) {
-  try {
-    return JSON.parse(localStorage.getItem('lf_notes') || '{}')[`${id}-${lessonId}`] || '';
-  } catch { return ''; }
+  const all = safeJSONParse('lf_notes', {});
+  return all[`${id}-${lessonId}`] || '';
 }
 
 function saveNote(id, lessonId, text) {
   try {
-    const all = JSON.parse(localStorage.getItem('lf_notes') || '{}');
+    const all = safeJSONParse('lf_notes', {});
     all[`${id}-${lessonId}`] = text;
     localStorage.setItem('lf_notes', JSON.stringify(all));
-  } catch {}
+  } catch (e) {
+    console.error('Failed to save note to localStorage', e);
+  }
 }
 
 function loadQuizStatus(id) {
-  try {
-    return JSON.parse(localStorage.getItem('lf_quiz') || '{}')[id] || null;
-  } catch { return null; }
+  const all = safeJSONParse('lf_quiz', {});
+  return all[id] || null;
 }
 
 function lid(lesson) {
@@ -65,8 +72,9 @@ function lid(lesson) {
 function normaliseLessons(lessons = []) {
   if (!Array.isArray(lessons)) return [];
   return lessons.map((l, i) => {
-    // Extract video string/object variations across all possible backend schemas
-    const rawVideo = l.videoId || l.youtubeId || l.video || l.videoUrl || l.video_url || l.video_id || l.url || l.embedUrl || (l.video && typeof l.video === 'object' ? l.video.url : null);
+    const rawVideo = l.videoId || l.youtubeId || l.video || l.videoUrl || 
+                     l.video_url || l.video_id || l.url || l.embedUrl || 
+                     (typeof l.video === 'object' ? l.video?.url : null);
     
     const ytId = extractYouTubeId(rawVideo);
     
@@ -84,13 +92,9 @@ function normaliseLessons(lessons = []) {
 
 function extractLessonsFromCourse(fetched) {
   if (!fetched) return [];
-  
-  if (Array.isArray(fetched.lessons) && fetched.lessons.length > 0) {
-    return fetched.lessons;
-  }
+  if (Array.isArray(fetched.lessons) && fetched.lessons.length > 0) return fetched.lessons;
   
   const containers = fetched.curriculum || fetched.modules || fetched.sections || fetched.chapters || fetched.syllabus;
-  
   if (Array.isArray(containers)) {
     return containers.flatMap((group, idx) => {
       const groupTitle = group.title || group.name || group.sectionTitle || `Section ${idx + 1}`;
@@ -101,7 +105,6 @@ function extractLessonsFromCourse(fetched) {
       }));
     });
   }
-  
   return [];
 }
 
@@ -119,24 +122,25 @@ function useResolveCourse(courseId, isCertification) {
     let isMounted = true;
     setLoading(true);
 
-    // 1. Check local cache
-    try {
-      const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-      const cached = cache[courseId];
-      if (cached?.lessons?.length) {
-        if (isMounted) {
-          setResolvedCourse({ ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) });
-          setLoading(false);
-        }
-        return;
+    // 1. Local cache check
+    const cache = safeJSONParse('lf_course_cache', {});
+    const cached = cache[courseId];
+    if (cached?.lessons?.length) {
+      if (isMounted) {
+        setResolvedCourse({ ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) });
+        setLoading(false);
       }
-    } catch (e) { console.error('Cache read error:', e); }
+      return;
+    }
 
-    // 2. Check static data
+    // 2. Static data check
     const fromStatic = COURSES.find(
       (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
     );
-    if (fromStatic?.lessons?.length > 1 || (fromStatic?.lessons?.length === 1 && (fromStatic.lessons[0].videoId || fromStatic.lessons[0].videoUrl || fromStatic.lessons[0].video))) {
+    if (
+      fromStatic?.lessons?.length > 1 || 
+      (fromStatic?.lessons?.length === 1 && (fromStatic.lessons[0].videoId || fromStatic.lessons[0].videoUrl || fromStatic.lessons[0].video))
+    ) {
       if (isMounted) {
         setResolvedCourse({ ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) });
         setLoading(false);
@@ -144,12 +148,10 @@ function useResolveCourse(courseId, isCertification) {
       return;
     }
 
-    // 3. API Fetch Strategy
+    // 3. API Fetching
     const fetchCourseData = async () => {
       try {
         let fetchedData = null;
-        
-        // Dynamically choose endpoint based on route context
         const endpoints = isCertification 
           ? [`/certifications/${courseId}`, `/courses/${courseId}`, `/enrollments/${courseId}/detail`]
           : [`/courses/${courseId}`, `/certifications/${courseId}`, `/enrollments/${courseId}/detail`];
@@ -160,12 +162,10 @@ function useResolveCourse(courseId, isCertification) {
             fetchedData = res.data?.certification || res.data?.course || res.data;
             const lessons = extractLessonsFromCourse(fetchedData);
             if (lessons.length > 0) break;
-          } catch (err) {
-            // keep trying next endpoint
-          }
+          } catch {}
         }
 
-        let extractedLessons = extractLessonsFromCourse(fetchedData);
+        const extractedLessons = extractLessonsFromCourse(fetchedData);
 
         if (isMounted) {
           if (fetchedData && extractedLessons.length) {
@@ -174,11 +174,9 @@ function useResolveCourse(courseId, isCertification) {
               id: courseId,
               lessons: normaliseLessons(extractedLessons)
             };
-            try {
-              const cache = JSON.parse(localStorage.getItem('lf_course_cache') || '{}');
-              cache[courseId] = resolved;
-              localStorage.setItem('lf_course_cache', JSON.stringify(cache));
-            } catch {}
+            const updatedCache = safeJSONParse('lf_course_cache', {});
+            updatedCache[courseId] = resolved;
+            localStorage.setItem('lf_course_cache', JSON.stringify(updatedCache));
             setResolvedCourse(resolved);
           } else {
             setResolvedCourse(null);
@@ -193,7 +191,6 @@ function useResolveCourse(courseId, isCertification) {
     };
 
     fetchCourseData();
-
     return () => { isMounted = false; };
   }, [courseId, isCertification]);
 
@@ -204,7 +201,9 @@ async function syncProgressToBackend(courseId, completedCount, totalCount) {
   try {
     const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
     await api.patch(`/enrollments/${courseId}/progress`, { progress: pct });
-  } catch {}
+  } catch (err) {
+    console.error("Failed to sync progress to server:", err);
+  }
 }
 
 export default function CoursePlayer({ courseId: propId, lessonId: propLessonId }) {
@@ -214,17 +213,22 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
   const lessonId = propLessonId || paramLessonId;
   const navigate = useNavigate();
 
-  // Detect route type dynamically (/learn/certification vs /learn/course)
   const isCertRoute = location.pathname.includes('/learn/certification');
   const basePath = isCertRoute ? `/learn/certification/${id}` : `/learn/course/${id}`;
 
   const { course, loading: courseLoading } = useResolveCourse(id, isCertRoute); 
   const lessons = course?.lessons || [];
 
-  const lessonIdx = lessonId ? lessons.findIndex((l) => lid(l) === String(lessonId)) : 0;
-  const lesson = lessons[lessonIdx === -1 ? 0 : lessonIdx];
+  const lessonIdx = useMemo(() => {
+    if (!lessonId) return 0;
+    const idx = lessons.findIndex((l) => lid(l) === String(lessonId));
+    return idx === -1 ? 0 : idx;
+  }, [lessons, lessonId]);
+
+  const lesson = lessons[lessonIdx];
 
   const [progress, setProgress] = useState(() => loadProgress(id));
+  const [quizPassed, setQuizPassed] = useState(() => loadQuizStatus(id)?.passed === true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
@@ -235,6 +239,27 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
   const videoRef = useRef(null);
   const completionRef = useRef(null);
   const navTimerRef = useRef(null);
+  const ytPlayerRef = useRef(null);
+  const ytContainerRef = useRef(null);
+
+  // Sync state across browser tabs via storage events
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'lf_quiz') {
+        setQuizPassed(loadQuizStatus(id)?.passed === true);
+      }
+      if (e.key === 'lf_progress') {
+        setProgress(loadProgress(id));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [id]);
+
+  useEffect(() => {
+    setQuizPassed(loadQuizStatus(id)?.passed === true);
+  }, [id]);
 
   useEffect(() => {
     return () => {
@@ -278,7 +303,7 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
     [progress]
   );
 
-  const markComplete = () => {
+  const markComplete = useCallback(() => {
     if (!lesson) return;
     const currentLid = lid(lesson);
     const already = isCompleted(currentLid);
@@ -297,9 +322,61 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
       const next = lessons[lessonIdx + 1];
       if (next) navigate(`${basePath}/${lid(next)}`);
     }, 1200);
-  };
+  }, [lesson, isCompleted, progress, id, lessons.length, lessonIdx, basePath, navigate]);
 
-  const handleVideoEnded = () => { if (!isCompleted(lid(lesson))) markComplete(); };
+  const handleVideoEnded = useCallback(() => { 
+    if (lesson && !isCompleted(lid(lesson))) {
+      markComplete(); 
+    }
+  }, [lesson, isCompleted, markComplete]);
+
+  /* ── YouTube IFrame API Initialization for completion tracking ── */
+  useEffect(() => {
+    if (!lesson?.videoId || !ytContainerRef.current) return;
+
+    let player = null;
+
+    const createPlayer = () => {
+      if (!ytContainerRef.current || !window.YT) return;
+      player = new window.YT.Player(ytContainerRef.current, {
+        videoId: lesson.videoId,
+        playerVars: { rel: 0, modestbranding: 1, autoplay: 0 },
+        events: {
+          onStateChange: (event) => {
+            // YT.PlayerState.ENDED === 0
+            if (event.data === 0) {
+              handleVideoEnded();
+            }
+          },
+        },
+      });
+      ytPlayerRef.current = player;
+    };
+
+    if (window.YT && window.YT.Player) {
+      createPlayer();
+    } else {
+      const existingScript = document.getElementById('youtube-iframe-api');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.id = 'youtube-iframe-api';
+        script.src = 'https://www.youtube.com/iframe_api';
+        document.body.appendChild(script);
+      }
+      const prevCallback = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (prevCallback) prevCallback();
+        createPlayer();
+      };
+    }
+
+    return () => {
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+    };
+  }, [lesson?.videoId, handleVideoEnded]);
 
   const saveNoteHandler = () => {
     if (!lesson) return;
@@ -345,13 +422,18 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
     return acc;
   }, {});
 
-  const quizData = loadQuizStatus(id);
-  const hasPassed = quizData?.passed === true;
-
   return (
-    <div className="flex h-screen bg-slate-900 overflow-hidden font-sans">
+    <div className="flex h-screen bg-slate-900 overflow-hidden font-sans relative">
+      {/* MOBILE BACKDROP OVERLAY */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)} 
+          className="md:hidden fixed inset-0 bg-black/60 z-20 backdrop-blur-sm"
+        />
+      )}
+
       {/* SIDEBAR */}
-      <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} flex-shrink-0 bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300 overflow-hidden`}>
+      <aside className={`${sidebarOpen ? 'w-80 translate-x-0' : 'w-0 -translate-x-full md:translate-x-0'} fixed md:relative z-30 h-full bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300 overflow-hidden flex-shrink-0`}>
         <div className="p-4 border-b border-slate-700 flex-shrink-0">
           <button onClick={() => navigate('/my-courses')} className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white mb-3 transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" /> My Learning
@@ -378,7 +460,10 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
               {expandedWeeks[week] && sectionLessons.map((l) => (
                 <button
                   key={lid(l)}
-                  onClick={() => navigate(`${basePath}/${lid(l)}`)}
+                  onClick={() => {
+                    navigate(`${basePath}/${lid(l)}`);
+                    if (window.innerWidth < 768) setSidebarOpen(false);
+                  }}
                   className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all ${lid(l) === lid(lesson) ? 'bg-slate-700/80 border-l-2 border-cyan-500' : 'hover:bg-slate-700/30 border-l-2 border-transparent'}`}
                 >
                   <div className="flex-shrink-0 mt-0.5">
@@ -423,9 +508,9 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
 
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="relative w-full bg-black aspect-video shadow-2xl force-magnifier">
+            <div className="relative w-full bg-black aspect-video shadow-2xl">
               {lesson.videoId ? (
-                <iframe src={`https://www.youtube.com/embed/${lesson.videoId}?rel=0&modestbranding=1&autoplay=0`} className="absolute inset-0 w-full h-full" allow="autoplay; encrypted-media" allowFullScreen />
+                <div ref={ytContainerRef} className="w-full h-full" />
               ) : lesson.videoUrl ? (
                 <video ref={videoRef} src={lesson.videoUrl} controls onEnded={handleVideoEnded} className="absolute inset-0 w-full h-full object-contain" />
               ) : (
@@ -471,15 +556,15 @@ export default function CoursePlayer({ courseId: propId, lessonId: propLessonId 
                 >
                   <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-6" />
                   <h3 className="text-3xl font-black text-white mb-3">
-                    {hasPassed ? "Certification Earned! 🎓" : "Course Completed! 🎉"}
+                    {quizPassed ? "Certification Earned! 🎓" : "Course Completed! 🎉"}
                   </h3>
                   <p className="text-slate-400 mb-8 max-w-md mx-auto text-sm">
-                    {hasPassed 
+                    {quizPassed 
                       ? "You've successfully cleared the assessment. Claim your reward below." 
                       : "You've finished all lessons. Complete the quiz to earn your certificate."}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    {hasPassed ? (
+                    {quizPassed ? (
                       <button onClick={() => navigate(`/course-certificate/${id}`)} className="flex items-center gap-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg">
                         <Award className="w-5 h-5" /> View Certificate
                       </button>
