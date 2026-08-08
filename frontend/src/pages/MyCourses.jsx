@@ -1,4 +1,5 @@
 import { COURSES } from '../data/coursesData';
+import { CERTS } from '../data/certsData';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Play, ChevronRight } from 'lucide-react';
@@ -52,16 +53,22 @@ function CourseRow({ enrollment }) {
   const status   = statusOf(progress);
   const courseId = course._id || course.id || '';
 
-  const model       = enrollment.courseModel || '';
-  const hasCertData = !!(enrollment.certData && enrollment.certData.title);
+  // NOTE: certData is attached to every enrollment (course AND certification)
+  // by the backend, so it can no longer be used as a certification signal —
+  // only `courseModel` ('Course' vs 'Certificate') and static-array membership
+  // reliably distinguish the two.
+  const model = (enrollment.courseModel || '').toLowerCase();
 
   const isStaticCourse = COURSES.some(
+    c => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+  );
+  const isStaticCert = CERTS.some(
     c => String(c.id) === String(courseId) || String(c._id) === String(courseId)
   );
 
   const type = isStaticCourse
     ? 'course'
-    : (model.toLowerCase() === 'certification' || hasCertData)
+    : isStaticCert || model === 'certificate' || enrollment.certData?.isCertification === true
       ? 'certification'
       : 'course';
 

@@ -122,27 +122,26 @@ function useResolveCourse(courseId, isCertification) {
     let isMounted = true;
     setLoading(true);
 
-    // 1. Local cache check
-    const cache = safeJSONParse('lf_course_cache', {});
-    const cached = cache[courseId];
-    if (cached?.lessons?.length) {
+    // 1. Static data check (source of truth — mirrors useResolveCert in
+    // CertCoursePlayer.jsx, which also checks static data before cache/API
+    // so a stale or malformed cache entry can never shadow the real curriculum)
+    const fromStatic = COURSES.find(
+      (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
+    );
+    if (fromStatic) {
       if (isMounted) {
-        setResolvedCourse({ ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) });
+        setResolvedCourse({ ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) });
         setLoading(false);
       }
       return;
     }
 
-    // 2. Static data check
-    const fromStatic = COURSES.find(
-      (c) => String(c.id) === String(courseId) || String(c._id) === String(courseId)
-    );
-    if (
-      fromStatic?.lessons?.length > 1 || 
-      (fromStatic?.lessons?.length === 1 && (fromStatic.lessons[0].videoId || fromStatic.lessons[0].videoUrl || fromStatic.lessons[0].video))
-    ) {
+    // 2. Local cache check
+    const cache = safeJSONParse('lf_course_cache', {});
+    const cached = cache[courseId];
+    if (cached?.lessons?.length) {
       if (isMounted) {
-        setResolvedCourse({ ...fromStatic, lessons: normaliseLessons(fromStatic.lessons) });
+        setResolvedCourse({ ...cached, id: courseId, lessons: normaliseLessons(cached.lessons) });
         setLoading(false);
       }
       return;

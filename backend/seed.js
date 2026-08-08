@@ -96,6 +96,18 @@ const CATEGORY_MAP = {
   "Cloud Computing": "Cloud Computing",
 };
 
+// ── Course IDs match coursesData.js exactly (mirrors CERTIFICATIONS_DATA below) ──
+// Index-aligned with COURSE_TITLES[key] so seeded Course docs get the SAME _id
+// as the static frontend curriculum, instead of a random auto-generated one.
+const COURSE_IDS = {
+  "Marketing":       ["69d9301719ab4505458555ba", "69d9301719ab4505458555bd", "69d9301719ab4505458555c0", "69d9301719ab4505458555c3"],
+  "Web Dev":         ["69d9301719ab4505458555c6", "69d9301719ab4505458555c9", "69d9301719ab4505458555cc", "69d9301719ab4505458555cf"],
+  "AI / ML":         ["69d9301719ab4505458555d2", "69d9301719ab4505458555d5", "69d9301719ab4505458555d8", "69d9301719ab4505458555db"],
+  "Design":          ["69d9301719ab4505458555de", "69d9301719ab4505458555e1", "69d9301719ab4505458555e4", "69d9301719ab4505458555e7"],
+  "Data Science":    ["69d9301719ab4505458555ea", "69d9301719ab4505458555ed", "69d9301719ab4505458555f0", "69d9301719ab4505458555f3"],
+  "Cloud Computing": ["69d9301719ab4505458555f6", "69d9301719ab4505458555f9", "69d9301719ab4505458555fc", "69d9301719ab4505458555ff"],
+};
+
 const REVIEW_TITLES = [
   "Absolutely loved this course!", "Great content, highly recommend",
   "Very well structured", "Worth every penny", "Exceeded my expectations",
@@ -267,6 +279,7 @@ const seed = async () => {
       const isFeatured   = index === 0 || index === 2;       // Beginner & Advanced are featured
       const difficulty   = DIFFICULTY_MAP[index];
       coursesToInsert.push({
+        _id:         new mongoose.Types.ObjectId(COURSE_IDS[key][index]),
         title,
         subtitle:    `Master ${dbCategory} with professional-grade curriculum.`,
         description: `This ${dbCategory} course includes deep-dive modules, real-world projects, and lifetime access.`,

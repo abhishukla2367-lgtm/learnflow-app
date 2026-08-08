@@ -60,14 +60,19 @@ exports.enroll = async (req, res) => {
     const lessonsList = extractLessons(product);
 
     // Build certData snapshot
+    // NOTE: this snapshot is attached to every enrollment (courses AND
+    // certifications alike), so its presence/title is NOT a valid signal for
+    // "this is a certification" on the frontend. `isCertification` below
+    // (mirrors courseModel === 'Certificate') is the reliable signal to use.
     const certData = {
-      title:       product.title       || "",
-      thumbnail:   product.thumbnail   || "",
-      instructor:  product.instructor?.toString() || "",
-      description: product.description || product.desc || "",
-      emoji:       product.emoji       || "",
-      tag:         product.tag         || product.category || "",
-      lessons:     lessonsList
+      title:           product.title       || "",
+      thumbnail:       product.thumbnail   || "",
+      instructor:      product.instructor?.toString() || "",
+      description:     product.description || product.desc || "",
+      emoji:           product.emoji       || "",
+      tag:             product.tag         || product.category || "",
+      lessons:         lessonsList,
+      isCertification: courseModel === "Certificate",
     };
 
     // Explicit check for trial vs free vs paid
@@ -96,6 +101,7 @@ exports.enroll = async (req, res) => {
         io.to(`user:${userId}`).emit('enrollment:confirmed', {
           enrollmentId: newEnrollment._id,
           certId:       courseId,
+          courseModel,
           course:       { ...certData, _id: courseId },
           progress:     0,
           enrolledAt:   newEnrollment.enrolledAt,

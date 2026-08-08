@@ -49,7 +49,8 @@ export default function CourseDetail() {
   const buildLessons = (c) =>
     (c.sections || []).flatMap(sec =>
       (sec.lessons || []).map(l => ({
-        courseId: l._id,
+        id: l._id,
+        weekLabel: sec.title,
         title: l.title,
         duration: l.duration || 0,
         videoUrl: l.videoUrl || '',

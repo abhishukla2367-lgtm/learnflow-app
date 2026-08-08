@@ -83,12 +83,16 @@ export function SocketProvider({ children }) {
           (e.certId || e.course?._id || e.course?.id) !== String(payload.certId)
         );
         const entry = {
-          _id:        payload.enrollmentId,
-          course:     { _id: payload.certId, id: payload.certId, ...payload.certData },
-          certId:     payload.certId,
-          progress:   0,
-          enrolledAt: payload.enrolledAt || new Date().toISOString(),
-          type:       'paid',
+          _id:         payload.enrollmentId,
+          // NOTE: backend emits the merged snapshot under `course`, not
+          // `certData` — spreading the wrong key here silently dropped
+          // title/thumbnail/lessons/isCertification from real-time entries.
+          course:      { _id: payload.certId, id: payload.certId, ...payload.course },
+          certId:      payload.certId,
+          courseModel: payload.courseModel || '',
+          progress:    0,
+          enrolledAt:  payload.enrolledAt || new Date().toISOString(),
+          type:        'paid',
         };
         localStorage.setItem(lsKey, JSON.stringify([...deduped, entry]));
 
