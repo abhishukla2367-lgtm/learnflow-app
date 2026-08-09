@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSocket } from "../../../context/SocketContext";
 import {
   TrendingUp, IndianRupee, Users, BookOpen,
-  Star, Award, BarChart3, ArrowUpRight,
+  Star, Award, BarChart3, ArrowUpRight, Calendar, ChevronDown,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -15,6 +15,69 @@ import { SkeletonTopCourseCard } from "../shared/SkeletonCard";
 import usePdfExport from "../shared/usePdfExport";
 
 const PIE_COLORS = ["#6366f1","#8b5cf6","#06b6d4","#f59e0b","#10b981","#f43f5e"];
+
+/* ── Calendar-aligned report periods (Coursera / Udemy admin style) ── */
+const PERIOD_GROUPS = [
+  { label: "Week",  options: [{ value: "this_week",  label: "This Week"  }, { value: "last_week",  label: "Last Week"  }] },
+  { label: "Month", options: [{ value: "this_month", label: "This Month" }, { value: "last_month", label: "Last Month" }] },
+  { label: "Year",  options: [{ value: "this_year",  label: "This Year"  }, { value: "last_year",  label: "Last Year"  }] },
+];
+const PERIOD_LABELS = Object.fromEntries(PERIOD_GROUPS.flatMap(g => g.options).map(o => [o.value, o.label]));
+
+function PeriodDropdown({ period, setPeriod }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative pdf-hide">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:border-indigo-300 hover:shadow-sm transition-all"
+      >
+        <Calendar size={13} className="text-slate-400" />
+        {PERIOD_LABELS[period] ?? period}
+        <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2">
+          {PERIOD_GROUPS.map((group, gi) => (
+            <div key={group.label} className={gi > 0 ? "mt-1 pt-1 border-t border-slate-100" : ""}>
+              <p className="px-3 pt-2 pb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">{group.label}</p>
+              {group.options.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setPeriod(opt.value); setOpen(false); }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                    period === opt.value ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChangeBadge({ value = 0 }) {
+  const isUp = value >= 0;
+  return (
+    <span className={`inline-flex items-center leading-none px-2.5 py-1 text-[10px] font-black rounded-full border ${
+      isUp ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-600 border-rose-200"
+    }`}>
+      {isUp ? "+" : ""}{value}%
+    </span>
+  );
+}
 
 function ChartTooltip({ active, payload, label, prefix = "" }) {
   if (!active || !payload?.length) return null;
@@ -119,6 +182,7 @@ function TopCourseCard({ course, rank }) {
 
 const MOCK = {
   totalRevenue:1380000, newStudents:950, newEnrollments:3241, avgOrderValue:2800,
+  changes:{ totalRevenue:22, newStudents:12, newEnrollments:18, avgOrderValue:8 },
   revenueChart:[{label:"Oct",value:128000},{label:"Nov",value:192000},{label:"Dec",value:156000},{label:"Jan",value:248000},{label:"Feb",value:312000},{label:"Mar",value:380000}],
   enrollmentChart:[{label:"Oct",value:320},{label:"Nov",value:480},{label:"Dec",value:390},{label:"Jan",value:620},{label:"Feb",value:780},{label:"Mar",value:950}],
   categoryBreakdown:[{label:"Web Development",value:1240},{label:"AI / Machine Learning",value:980},{label:"Design",value:756},{label:"Data Science",value:623},{label:"DevOps",value:542},{label:"Cybersecurity",value:389}],
@@ -136,7 +200,7 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(false);
-  const [period,  setPeriod]  = useState("monthly");
+  const [period,  setPeriod]  = useState("this_month");
   const chartsRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -259,7 +323,7 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
           { metric: "New Students",    value: d.newStudents    ?? 0 },
           { metric: "New Enrollments", value: d.newEnrollments ?? 0 },
           { metric: "Avg Order Value", value: `₹${(d.avgOrderValue ?? 0).toLocaleString("en-IN")}` },
-          { metric: "Report Period",   value: period.charAt(0).toUpperCase() + period.slice(1) },
+          { metric: "Report Period",   value: PERIOD_LABELS[period] ?? period },
           { metric: "Exported On",     value: new Date().toLocaleString("en-IN") },
         ].forEach(r => ws4.addRow(r));
         styleHeader(ws4); styleRows(ws4, 6);
@@ -278,16 +342,16 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   });
 
   // ── PDF export — captures charts section via shared hook ──
-  usePdfExport(exportPdfRef, chartsRef, `analytics_${period}`, "Reports & Analytics");
+  usePdfExport(exportPdfRef, chartsRef, `analytics_${period}`, `Reports & Analytics — ${PERIOD_LABELS[period] ?? period}`);
 
   if (error) return <ErrorState onRetry={load} />;
   const d = data ?? MOCK;
 
   const SUMMARY = [
-    { icon:IndianRupee, label:"Total Revenue",   value:d.totalRevenue,    prefix:"₹", change:22, accentBg:"bg-emerald-50", accentIcon:"text-emerald-600", accentBorder:"border-emerald-200" },
-    { icon:Users,       label:"New Students",    value:d.newStudents,                 change:12, accentBg:"bg-cyan-50",    accentIcon:"text-cyan-600",    accentBorder:"border-cyan-200"    },
-    { icon:TrendingUp,  label:"New Enrollments", value:d.newEnrollments,              change:18, accentBg:"bg-violet-50",  accentIcon:"text-violet-600",  accentBorder:"border-violet-200"  },
-    { icon:BarChart3,   label:"Avg Order Value", value:d.avgOrderValue,   prefix:"₹", change:8,  accentBg:"bg-amber-50",   accentIcon:"text-amber-600",   accentBorder:"border-amber-200"   },
+    { icon:IndianRupee, label:"Total Revenue",   value:d.totalRevenue,    prefix:"₹", change:d.changes?.totalRevenue   ?? 0, accentBg:"bg-emerald-50", accentIcon:"text-emerald-600", accentBorder:"border-emerald-200" },
+    { icon:Users,       label:"New Students",    value:d.newStudents,                 change:d.changes?.newStudents    ?? 0, accentBg:"bg-cyan-50",    accentIcon:"text-cyan-600",    accentBorder:"border-cyan-200"    },
+    { icon:TrendingUp,  label:"New Enrollments", value:d.newEnrollments,              change:d.changes?.newEnrollments ?? 0, accentBg:"bg-violet-50",  accentIcon:"text-violet-600",  accentBorder:"border-violet-200"  },
+    { icon:BarChart3,   label:"Avg Order Value", value:d.avgOrderValue,   prefix:"₹", change:d.changes?.avgOrderValue  ?? 0, accentBg:"bg-amber-50",   accentIcon:"text-amber-600",   accentBorder:"border-amber-200"   },
   ];
 
   const pieTotal  = d.categoryBreakdown.reduce((a,c) => a+(c.value??0),0)||1;
@@ -299,14 +363,9 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   return (
     <div className="space-y-8">
 
-      {/* Period toggle */}
-      <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit pdf-hide">
-        {["weekly","monthly","yearly"].map(p => (
-          <button key={p} onClick={() => setPeriod(p)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${period===p?"bg-white text-slate-900 shadow-sm":"text-slate-500 hover:text-slate-700"}`}>
-            {p}
-          </button>
-        ))}
+      {/* Period selector */}
+      <div className="flex items-center justify-between pdf-hide">
+        <PeriodDropdown period={period} setPeriod={setPeriod} />
       </div>
 
       {/* Summary */}
@@ -329,7 +388,7 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
               <IndianRupee size={15} className="text-emerald-500" />
               <h3 className="font-black text-slate-900 text-sm">Revenue Trend</h3>
             </div>
-            <span className="inline-flex items-center leading-none px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full border border-emerald-200">+22%</span>
+            <ChangeBadge value={d.changes?.totalRevenue ?? 0} />
           </div>
           {loading ? <div className="h-52 bg-slate-100 rounded-xl animate-pulse" /> : (
             <ResponsiveContainer width="100%" height={200}>
@@ -357,7 +416,7 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
               <Users size={15} className="text-indigo-500"/>
               <h3 className="font-black text-slate-900 text-sm">Enrollment Growth</h3>
             </div>
-            <span className="inline-flex items-center leading-none px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-full border border-indigo-200">+18%</span>
+            <ChangeBadge value={d.changes?.newEnrollments ?? 0} />
           </div>
           {loading ? <div className="h-52 bg-slate-100 rounded-xl animate-pulse"/> : (
             <ResponsiveContainer width="100%" height={200}>

@@ -305,79 +305,165 @@ exports.toggleUser = async (req, res) => {
   });
 };
 
+/* ── Report period helpers ─────────────────────────────────────
+   Calendar-aligned "This X / Last X" ranges (Coursera/Udemy-style
+   admin reporting) instead of a rolling window. */
+const PERIOD_ALIASES = { weekly: "this_week", monthly: "this_month", yearly: "this_year" };
+const VALID_PERIODS  = ["this_week", "last_week", "this_month", "last_month", "this_year", "last_year"];
+
+function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+function endOfDay(d)   { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; }
+
+function mondayOf(d) {
+  const x   = new Date(d);
+  const day = x.getDay(); // 0=Sun..6=Sat
+  x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day));
+  return startOfDay(x);
+}
+
+function getPeriodRange(period, now) {
+  let granularity, start, end, prevStart, prevEnd;
+
+  if (period === "this_week" || period === "last_week") {
+    const thisMonday = mondayOf(now);
+    if (period === "this_week") {
+      start = thisMonday;
+      end   = endOfDay(new Date(+thisMonday + 6 * 86400000));
+    } else {
+      end   = endOfDay(new Date(+thisMonday - 86400000));
+      start = startOfDay(new Date(+end - 6 * 86400000));
+    }
+    prevStart = startOfDay(new Date(+start - 7 * 86400000));
+    prevEnd   = endOfDay(new Date(+prevStart + 6 * 86400000));
+    granularity = "week";
+  } else if (period === "this_month" || period === "last_month") {
+    const y = now.getFullYear(), m = now.getMonth();
+    const t = period === "this_month" ? m : m - 1;
+    start = startOfDay(new Date(y, t, 1));
+    end   = endOfDay(new Date(y, t + 1, 0));
+    prevStart = startOfDay(new Date(y, t - 1, 1));
+    prevEnd   = endOfDay(new Date(y, t, 0));
+    granularity = "month";
+  } else { // this_year / last_year
+    const y = now.getFullYear();
+    const t = period === "this_year" ? y : y - 1;
+    start = startOfDay(new Date(t, 0, 1));
+    end   = endOfDay(new Date(t, 11, 31));
+    prevStart = startOfDay(new Date(t - 1, 0, 1));
+    prevEnd   = endOfDay(new Date(t - 1, 11, 31));
+    granularity = "year";
+  }
+  return { granularity, start, end, prevStart, prevEnd };
+}
+
+function buildBuckets(granularity, start) {
+  const buckets = [];
+  if (granularity === "week") {
+    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((label, i) => {
+      const from = new Date(start); from.setDate(from.getDate() + i);
+      buckets.push({ label, from: startOfDay(from), to: endOfDay(from) });
+    });
+  } else if (granularity === "month") {
+    const y = start.getFullYear(), m = start.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      buckets.push({ label: String(d), from: startOfDay(new Date(y, m, d)), to: endOfDay(new Date(y, m, d)) });
+    }
+  } else { // year
+    const y = start.getFullYear();
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].forEach((label, m) => {
+      buckets.push({ label, from: startOfDay(new Date(y, m, 1)), to: endOfDay(new Date(y, m + 1, 0)) });
+    });
+  }
+  return buckets;
+}
+
+function pctChange(curr, prev) {
+  if (prev === 0) return curr > 0 ? 100 : 0;
+  return Math.round(((curr - prev) / prev) * 1000) / 10;
+}
+
+/* Sum/count period-scoped docs into pre-built, non-overlapping buckets via
+   binary search — avoids relying on Mongo's date operators (which default to
+   UTC) so bucket boundaries stay exactly consistent with getPeriodRange(). */
+function bucketize(buckets, docs, valueFn) {
+  const sums = new Array(buckets.length).fill(0);
+  docs.forEach((doc) => {
+    const t = new Date(doc.createdAt).getTime();
+    let lo = 0, hi = buckets.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (t < buckets[mid].from.getTime())      hi = mid - 1;
+      else if (t > buckets[mid].to.getTime())   lo = mid + 1;
+      else { sums[mid] += valueFn(doc); return; }
+    }
+  });
+  return sums;
+}
+
 /* ── GET /api/admin/reports ──────────────────────────────────── */
 exports.adminReports = async (req, res) => {
-  const { period = "monthly" } = req.query;
+  let period = PERIOD_ALIASES[req.query.period] || req.query.period || "this_month";
+  if (!VALID_PERIODS.includes(period)) period = "this_month";
+
   const now = new Date();
-
-  const labels =
-    period === "weekly"  ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] :
-    period === "yearly"  ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
-                           ["Week 1", "Week 2", "Week 3", "Week 4"];
-
-  const range = (i) => {
-    const from = new Date(now);
-    const to   = new Date(now);
-    if (period === "weekly") {
-      from.setDate(now.getDate() - (6 - i)); from.setHours(0,  0,  0,  0);
-      to.setDate(now.getDate()   - (5 - i)); to.setHours(23, 59, 59, 999);
-    } else if (period === "monthly") {
-      from.setDate(1 + i * 7); from.setHours(0,  0,  0,  0);
-      to.setDate(7   + i * 7); to.setHours(23, 59, 59, 999);
-    } else {
-      from.setMonth(i, 1);    from.setHours(0,  0,  0,  0);
-      to.setMonth(i + 1, 0);  to.setHours(23, 59, 59, 999);
-    }
-    return { from, to };
-  };
-
-  const [revenueChart, enrollmentChart] = await Promise.all([
-    Promise.all(
-      labels.map(async (label, i) => {
-        const { from, to } = range(i);
-        const agg = await Enrollment.aggregate([
-          { $match: { type: "paid", createdAt: { $gte: from, $lte: to } } },
-          { $group: { _id: null, total: { $sum: "$amount" } } },
-        ]);
-        return { label, value: agg[0]?.total || 0 };
-      })
-    ),
-    Promise.all(
-      labels.map(async (label, i) => {
-        const { from, to } = range(i);
-        const count = await Enrollment.countDocuments({ createdAt: { $gte: from, $lte: to } });
-        return { label, value: count };
-      })
-    ),
-  ]);
-
-  const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+  const { granularity, start, end, prevStart, prevEnd } = getPeriodRange(period, now);
+  const buckets = buildBuckets(granularity, start);
 
   const [
+    paidDocs,           // for revenue chart — 1 query instead of up to 31
+    allDocs,             // for enrollment chart — 1 query instead of up to 31
     newStudents,
     newEnrollments,
     revenueAgg,
-    catBreakdown,
-    topCourses,
-    completionRates,
+    prevNewStudents,
+    prevNewEnrollments,
+    prevRevenueAgg,
+    periodByCourse,      // period-scoped enrollments/revenue grouped by course
+    catBreakdown,        // period-scoped category breakdown
+    completionRates,     // completion rate stays all-time (see note below)
   ] = await Promise.all([
-    User.countDocuments({ role: "student", createdAt: { $gte: monthAgo } }),
-    Enrollment.countDocuments({ createdAt: { $gte: monthAgo } }),
+    Enrollment.find({ type: "paid", createdAt: { $gte: start, $lte: end } })
+      .select("amount createdAt").lean(),
+    Enrollment.find({ createdAt: { $gte: start, $lte: end } })
+      .select("createdAt").lean(),
+    User.countDocuments({ role: "student", createdAt: { $gte: start, $lte: end } }),
+    Enrollment.countDocuments({ createdAt: { $gte: start, $lte: end } }),
     Enrollment.aggregate([
-      { $match: { type: "paid" } },
+      { $match: { type: "paid", createdAt: { $gte: start, $lte: end } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]),
-    Course.aggregate([
-      { $group: { _id: "$category", value: { $sum: "$enrollmentCount" } } },
+    User.countDocuments({ role: "student", createdAt: { $gte: prevStart, $lte: prevEnd } }),
+    Enrollment.countDocuments({ createdAt: { $gte: prevStart, $lte: prevEnd } }),
+    Enrollment.aggregate([
+      { $match: { type: "paid", createdAt: { $gte: prevStart, $lte: prevEnd } } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]),
+    Enrollment.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      {
+        $group: {
+          _id:         "$course",
+          enrollments: { $sum: 1 },
+          revenue:     { $sum: { $cond: [{ $eq: ["$type", "paid"] }, "$amount", 0] } },
+        },
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 8 },
+    ]),
+    Enrollment.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $lookup: { from: "courses", localField: "course", foreignField: "_id", as: "courseDoc" } },
+      { $unwind: "$courseDoc" },
+      { $group: { _id: "$courseDoc.category", value: { $sum: 1 } } },
       { $sort: { value: -1 } },
       { $limit: 6 },
       { $project: { label: "$_id", value: 1, _id: 0 } },
     ]),
-    Course.find({ isPublished: true })
-      .sort({ enrollmentCount: -1 })
-      .limit(8)
-      .populate("instructor", "name")
-      .select("title enrollmentCount averageRating price"),
+    // Completion rate is deliberately NOT period-scoped: a course's overall
+    // track record is more meaningful here than the completion rate of only
+    // this period's cohort, who mostly haven't had time to finish yet
+    // (that would read as artificially near-zero for "This Week", etc).
     Enrollment.aggregate([
       {
         $group: {
@@ -396,30 +482,60 @@ exports.adminReports = async (req, res) => {
     ]),
   ]);
 
-  const totalRevenue  = revenueAgg[0]?.total || 0;
-  const avgOrderValue = newEnrollments > 0 ? Math.round(totalRevenue / newEnrollments) : 0;
+  const revenueSums  = bucketize(buckets, paidDocs, (d) => d.amount || 0);
+  const enrollCounts = bucketize(buckets, allDocs,  () => 1);
+  const revenueChart    = buckets.map((b, i) => ({ label: b.label, value: revenueSums[i] }));
+  const enrollmentChart = buckets.map((b, i) => ({ label: b.label, value: enrollCounts[i] }));
+
+  const totalRevenue      = revenueAgg[0]?.total || 0;
+  const prevTotalRevenue  = prevRevenueAgg[0]?.total || 0;
+  const avgOrderValue     = newEnrollments     > 0 ? Math.round(totalRevenue     / newEnrollments)     : 0;
+  const prevAvgOrderValue = prevNewEnrollments > 0 ? Math.round(prevTotalRevenue / prevNewEnrollments) : 0;
 
   const compMap = {};
   completionRates.forEach((r) => {
     compMap[r._id.toString()] = Math.round(r.completionRate);
   });
 
+  // Join the period-scoped enrollment counts/revenue back to live Course
+  // details (title/rating). Courses that no longer exist are dropped.
+  const courseIds = periodByCourse.map((p) => p._id).filter(Boolean);
+  const courseDocs = await Course.find({ _id: { $in: courseIds } })
+    .select("title averageRating")
+    .lean();
+  const courseMap = new Map(courseDocs.map((c) => [String(c._id), c]));
+
+  const topCourses = periodByCourse
+    .map((p) => {
+      const c = courseMap.get(String(p._id));
+      if (!c) return null;
+      return {
+        _id:            p._id,
+        title:          c.title,
+        enrollments:    p.enrollments,
+        revenue:        p.revenue,
+        rating:         c.averageRating,
+        completionRate: compMap[String(p._id)] ?? 0,
+      };
+    })
+    .filter(Boolean);
+
   res.json({
     success: true,
+    period,
     totalRevenue,
     newStudents,
     newEnrollments,
     avgOrderValue,
+    changes: {
+      totalRevenue:   pctChange(totalRevenue,   prevTotalRevenue),
+      newStudents:    pctChange(newStudents,    prevNewStudents),
+      newEnrollments: pctChange(newEnrollments, prevNewEnrollments),
+      avgOrderValue:  pctChange(avgOrderValue,  prevAvgOrderValue),
+    },
     revenueChart,
     enrollmentChart,
     categoryBreakdown: catBreakdown,
-    topCourses: topCourses.map((c) => ({
-      _id:            c._id,
-      title:          c.title,
-      enrollments:    c.enrollmentCount,
-      revenue:        c.price * c.enrollmentCount,
-      rating:         c.averageRating,
-      completionRate: compMap[c._id.toString()] ?? 0,
-    })),
+    topCourses,
   });
 };
