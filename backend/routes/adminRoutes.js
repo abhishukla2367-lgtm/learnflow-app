@@ -7,6 +7,7 @@ const {
   adminAllUsers,
   adminEnrollments,
   adminReports,
+  adminReportCategories,
   adminStats,
   toggleUser,
 } = require("../controllers/adminController");
@@ -84,6 +85,7 @@ router.patch("/enrollments/:id/restore", async (req, res) => {
 });
 
 router.get("/reports", adminReports);
+router.get("/reports/categories", adminReportCategories);
 
 /**
  * @route   GET /api/admin/payments

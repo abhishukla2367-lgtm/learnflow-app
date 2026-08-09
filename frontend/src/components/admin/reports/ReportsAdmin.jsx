@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import { useSocket } from "../../../context/SocketContext";
 import {
   TrendingUp, IndianRupee, Users, BookOpen,
   Star, Award, BarChart3, ArrowUpRight, Calendar, ChevronDown,
+  Filter, Download,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
-import { fetchReports } from "../../../api/adminApi";
+import { fetchReports, fetchReportCategories } from "../../../api/adminApi";
 import ErrorState from "../shared/ErrorState";
 import { SkeletonTopCourseCard } from "../shared/SkeletonCard";
 import usePdfExport from "../shared/usePdfExport";
@@ -24,8 +26,19 @@ const PERIOD_GROUPS = [
 ];
 const PERIOD_LABELS = Object.fromEntries(PERIOD_GROUPS.flatMap(g => g.options).map(o => [o.value, o.label]));
 
-function PeriodDropdown({ period, setPeriod }) {
+function fmtCustomLabel(range) {
+  if (!range?.from || !range?.to) return "Custom Range";
+  const opts = { day: "numeric", month: "short" };
+  return `${new Date(range.from).toLocaleDateString("en-IN", opts)} – ${new Date(range.to).toLocaleDateString("en-IN", opts)}`;
+}
+function periodLabel(period, customRange) {
+  return period === "custom" ? fmtCustomLabel(customRange) : (PERIOD_LABELS[period] ?? period);
+}
+
+function PeriodDropdown({ period, setPeriod, customRange, setCustomRange }) {
   const [open, setOpen] = useState(false);
+  const [draftFrom, setDraftFrom] = useState(customRange?.from ?? "");
+  const [draftTo,   setDraftTo]   = useState(customRange?.to   ?? "");
   const ref = useRef(null);
 
   useEffect(() => {
@@ -34,6 +47,15 @@ function PeriodDropdown({ period, setPeriod }) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  const applyCustom = () => {
+    if (!draftFrom || !draftTo) return;
+    setCustomRange({ from: draftFrom, to: draftTo });
+    setPeriod("custom");
+    setOpen(false);
+  };
+
+  const label = periodLabel(period, customRange);
+
   return (
     <div ref={ref} className="relative pdf-hide">
       <button
@@ -41,11 +63,11 @@ function PeriodDropdown({ period, setPeriod }) {
         className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:border-indigo-300 hover:shadow-sm transition-all"
       >
         <Calendar size={13} className="text-slate-400" />
-        {PERIOD_LABELS[period] ?? period}
+        {label}
         <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute z-20 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2">
+        <div className="absolute z-20 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl p-2">
           {PERIOD_GROUPS.map((group, gi) => (
             <div key={group.label} className={gi > 0 ? "mt-1 pt-1 border-t border-slate-100" : ""}>
               <p className="px-3 pt-2 pb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">{group.label}</p>
@@ -61,6 +83,78 @@ function PeriodDropdown({ period, setPeriod }) {
                 </button>
               ))}
             </div>
+          ))}
+          <div className="mt-1 pt-2 border-t border-slate-100 px-3 pb-2">
+            <p className="pt-1 pb-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400">Custom Range</p>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date" value={draftFrom} max={draftTo || undefined}
+                onChange={e => setDraftFrom(e.target.value)}
+                className="w-full text-[11px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-300"
+              />
+              <span className="text-slate-300 text-[10px]">to</span>
+              <input
+                type="date" value={draftTo} min={draftFrom || undefined}
+                onChange={e => setDraftTo(e.target.value)}
+                className="w-full text-[11px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-300"
+              />
+            </div>
+            <button
+              onClick={applyCustom}
+              disabled={!draftFrom || !draftTo}
+              className="w-full mt-2 py-1.5 rounded-lg text-[11px] font-bold bg-indigo-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CategoryDropdown({ category, setCategory, categories }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  if (!categories?.length) return null;
+
+  return (
+    <div ref={ref} className="relative pdf-hide">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:border-indigo-300 hover:shadow-sm transition-all"
+      >
+        <Filter size={13} className="text-slate-400" />
+        {category === "all" ? "All Categories" : category}
+        <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-72 overflow-y-auto">
+          <button
+            onClick={() => { setCategory("all"); setOpen(false); }}
+            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+              category === "all" ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            All Categories
+          </button>
+          {categories.map(c => (
+            <button
+              key={c}
+              onClick={() => { setCategory(c); setOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                category === c ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {c}
+            </button>
           ))}
         </div>
       )}
@@ -197,18 +291,44 @@ const MOCK = {
 };
 
 export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
-  const [period,  setPeriod]  = useState("this_month");
+  const [data,        setData]        = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(false);
+  const [period,      setPeriod]      = useState("this_month");
+  const [customRange, setCustomRange] = useState(null); // { from: "YYYY-MM-DD", to: "YYYY-MM-DD" }
+  const [category,    setCategory]    = useState("all");
+  const [categories,  setCategories]  = useState([]);
   const chartsRef = useRef(null);
+
+  // Category filter options — fetched once, independent of the selected period.
+  useEffect(() => {
+    fetchReportCategories()
+      .then(({ data: res }) => setCategories(res?.categories ?? []))
+      .catch(() => {}); // non-critical — filter just stays hidden if this fails
+  }, []);
 
   const load = useCallback(async () => {
     setError(false); setLoading(true);
-    try { const { data: res } = await fetchReports(period); setData(res); }
-    catch { setData(MOCK); }
-    finally { setLoading(false); }
-  }, [period]);
+    try {
+      const extra = {};
+      if (period === "custom" && customRange?.from && customRange?.to) {
+        extra.startDate = customRange.from;
+        extra.endDate   = customRange.to;
+      }
+      if (category !== "all") extra.category = category;
+      const { data: res } = await fetchReports(period, extra);
+      setData(res);
+    } catch {
+      // Do NOT fall back to fake MOCK numbers here — an admin looking at
+      // "₹13,80,000 revenue" has no way to tell that's demo data and not
+      // a real figure. Show the error state (with retry) instead, same
+      // as every other admin panel in this app already does.
+      setData(null);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [period, customRange, category]);
 
   useEffect(() => { load(); }, [load]);
   const { socket } = useSocket();
@@ -233,8 +353,9 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   useEffect(() => {
     if (downloadReportRef) {
       downloadReportRef.current = async () => {
+        if (!data) { toast.error("No report data loaded yet — try again in a moment."); return; }
         const ExcelJS = (await import("exceljs")).default;
-        const d  = data ?? MOCK;
+        const d  = data;
         const wb = new ExcelJS.Workbook();
         wb.creator = "Learnodays Admin";
         wb.created = new Date();
@@ -323,10 +444,11 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
           { metric: "New Students",    value: d.newStudents    ?? 0 },
           { metric: "New Enrollments", value: d.newEnrollments ?? 0 },
           { metric: "Avg Order Value", value: `₹${(d.avgOrderValue ?? 0).toLocaleString("en-IN")}` },
-          { metric: "Report Period",   value: PERIOD_LABELS[period] ?? period },
+          { metric: "Report Period",   value: periodLabel(period, customRange) },
+          { metric: "Category Filter", value: category === "all" ? "All Categories" : category },
           { metric: "Exported On",     value: new Date().toLocaleString("en-IN") },
         ].forEach(r => ws4.addRow(r));
-        styleHeader(ws4); styleRows(ws4, 6);
+        styleHeader(ws4); styleRows(ws4, 7);
 
         // Download
         const buffer = await wb.xlsx.writeBuffer();
@@ -342,7 +464,55 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   });
 
   // ── PDF export — captures charts section via shared hook ──
-  usePdfExport(exportPdfRef, chartsRef, `analytics_${period}`, `Reports & Analytics — ${PERIOD_LABELS[period] ?? period}`);
+  usePdfExport(exportPdfRef, chartsRef, `analytics_${period}`, `Reports & Analytics — ${periodLabel(period, customRange)}`);
+
+  // ── Lightweight CSV export (self-contained button, not the shared
+  // toolbar ref — CSV is report-specific rather than a pattern every
+  // admin page needs) ──────────────────────────────────────────────
+  const downloadCsv = () => {
+    if (!data) { toast.error("No report data loaded yet — try again in a moment."); return; }
+    const esc  = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [];
+
+    rows.push(["Learnodays Report"]);
+    rows.push(["Period", periodLabel(period, customRange)]);
+    if (data.category) rows.push(["Category", data.category]);
+    rows.push(["Exported On", new Date().toLocaleString("en-IN")]);
+    rows.push([]);
+
+    rows.push(["Summary"]);
+    rows.push(["Metric", "Value"]);
+    rows.push(["Total Revenue (₹)", data.totalRevenue ?? 0]);
+    rows.push(["New Students",      data.newStudents ?? 0]);
+    rows.push(["New Enrollments",   data.newEnrollments ?? 0]);
+    rows.push(["Avg Order Value (₹)", data.avgOrderValue ?? 0]);
+    rows.push([]);
+
+    rows.push(["Revenue & Enrollments by Period"]);
+    rows.push(["Period", "Revenue (₹)", "Enrollments"]);
+    (data.revenueChart ?? []).forEach((r, i) => rows.push([r.label, r.value ?? 0, data.enrollmentChart?.[i]?.value ?? 0]));
+    rows.push([]);
+
+    rows.push(["Category Breakdown"]);
+    rows.push(["Category", "Enrollments"]);
+    (data.categoryBreakdown ?? []).forEach((c) => rows.push([c.label, c.value ?? 0]));
+    rows.push([]);
+
+    rows.push(["Top Courses"]);
+    rows.push(["Rank", "Course Title", "Students", "Revenue (₹)", "Rating", "Completion %"]);
+    (data.topCourses ?? []).forEach((c, i) =>
+      rows.push([i + 1, c.title, c.enrollments ?? 0, c.revenue ?? 0, c.rating?.toFixed(1) ?? "—", c.completionRate ?? 0])
+    );
+
+    const csv  = rows.map((row) => row.map(esc).join(",")).join("\r\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }); // BOM so ₹ renders right in Excel
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `Learnodays_report_${period}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (error) return <ErrorState onRetry={load} />;
   const d = data ?? MOCK;
@@ -363,9 +533,19 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   return (
     <div className="space-y-8">
 
-      {/* Period selector */}
-      <div className="flex items-center justify-between pdf-hide">
-        <PeriodDropdown period={period} setPeriod={setPeriod} />
+      {/* Period / category filters + CSV export */}
+      <div className="flex items-center justify-between flex-wrap gap-3 pdf-hide">
+        <div className="flex items-center gap-2 flex-wrap">
+          <PeriodDropdown period={period} setPeriod={setPeriod} customRange={customRange} setCustomRange={setCustomRange} />
+          <CategoryDropdown category={category} setCategory={setCategory} categories={categories} />
+        </div>
+        <button
+          onClick={downloadCsv}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:border-indigo-300 hover:shadow-sm transition-all"
+        >
+          <Download size={13} className="text-slate-400" />
+          CSV
+        </button>
       </div>
 
       {/* Summary */}

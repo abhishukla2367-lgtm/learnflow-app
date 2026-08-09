@@ -7,6 +7,13 @@ const Certificate = require("../models/Certificate");
 const notify      = require("../utils/notify");
 const { broadcast } = require("../socket");
 
+/* Shared "real, live" enrollment filter — excludes refunded orders and
+   soft-deleted rows from every revenue/enrollment number in the admin
+   panel (dashboard AND reports), so a refund or a soft-delete never
+   inflates a number an admin is trusting. */
+const LIVE          = { isDeleted: { $ne: true }, status: { $ne: "refunded" } };
+const NOT_DELETED   = { isDeleted: { $ne: true } }; // for feeds where a past refund is still legitimate to show
+
 /* ── Helper ─────────────────────────────────────────────────── */
 function timeAgo(date) {
   const diff = Date.now() - new Date(date).getTime();
@@ -39,23 +46,23 @@ exports.adminDashboard = async (req, res) => {
     User.countDocuments({ role: "student", createdAt: { $gte: prevMonth, $lt: monthAgo } }),
     Course.countDocuments({ isPublished: true }),
     Course.countDocuments({ isPublished: true, createdAt: { $gte: monthAgo } }),
-    Enrollment.countDocuments(),
-    Enrollment.countDocuments({ createdAt: { $gte: monthAgo } }),
-    Enrollment.countDocuments({ createdAt: { $gte: prevMonth, $lt: monthAgo } }),
+    Enrollment.countDocuments(LIVE),
+    Enrollment.countDocuments({ ...LIVE, createdAt: { $gte: monthAgo } }),
+    Enrollment.countDocuments({ ...LIVE, createdAt: { $gte: prevMonth, $lt: monthAgo } }),
     User.countDocuments({ role: "instructor" }),
     Enrollment.aggregate([
-      { $match: { type: "paid" } },
+      { $match: { ...LIVE, type: "paid" } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]),
     Enrollment.aggregate([
-      { $match: { type: "paid", createdAt: { $gte: monthAgo } } },
+      { $match: { ...LIVE, type: "paid", createdAt: { $gte: monthAgo } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]),
     Enrollment.aggregate([
-      { $match: { type: "paid", createdAt: { $gte: prevMonth, $lt: monthAgo } } },
+      { $match: { ...LIVE, type: "paid", createdAt: { $gte: prevMonth, $lt: monthAgo } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]),
-    Enrollment.find()
+    Enrollment.find(NOT_DELETED)
       .sort({ createdAt: -1 })
       .limit(6)
       .populate("student", "name avatar")
@@ -65,7 +72,7 @@ exports.adminDashboard = async (req, res) => {
       .limit(5)
       .populate("instructor", "name")
       .select("title thumbnail enrollmentCount averageRating price category instructor"),
-    Enrollment.countDocuments({ isCompleted: true }),
+    Enrollment.countDocuments({ ...LIVE, isCompleted: true }),
   ]);
 
   const pct = (a, b) => (b === 0 ? 100 : Math.round(((a - b) / b) * 100));
@@ -307,72 +314,118 @@ exports.toggleUser = async (req, res) => {
 
 /* ── Report period helpers ─────────────────────────────────────
    Calendar-aligned "This X / Last X" ranges (Coursera/Udemy-style
-   admin reporting) instead of a rolling window. */
+   admin reporting) instead of a rolling window.
+
+   IST-anchored: period boundaries are computed against India Standard
+   Time (UTC+5:30) rather than the host server's local timezone, so
+   "This Week"/"This Month" mean the same thing regardless of whether
+   this runs on a UTC cloud box or a dev machine in IST. All Date
+   objects returned are still real UTC instants — only the wall-clock
+   math used to find day/month/week boundaries is IST-based. */
 const PERIOD_ALIASES = { weekly: "this_week", monthly: "this_month", yearly: "this_year" };
-const VALID_PERIODS  = ["this_week", "last_week", "this_month", "last_month", "this_year", "last_year"];
+const VALID_PERIODS  = ["this_week", "last_week", "this_month", "last_month", "this_year", "last_year", "custom"];
 
-function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
-function endOfDay(d)   { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; }
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
-function mondayOf(d) {
-  const x   = new Date(d);
-  const day = x.getDay(); // 0=Sun..6=Sat
-  x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day));
-  return startOfDay(x);
+// Break a UTC instant into the Y/M/D it represents in IST.
+function istParts(d) {
+  const ist = new Date(d.getTime() + IST_OFFSET_MS);
+  return { y: ist.getUTCFullYear(), m: ist.getUTCMonth(), day: ist.getUTCDate(), dow: ist.getUTCDay() };
+}
+// Build the UTC instant for a given IST calendar date + wall-clock time.
+function fromIst(y, m, day, h, mi, s, ms) {
+  return new Date(Date.UTC(y, m, day, h, mi, s, ms) - IST_OFFSET_MS);
 }
 
-function getPeriodRange(period, now) {
+function startOfDayIst(d) { const { y, m, day } = istParts(d); return fromIst(y, m, day, 0, 0, 0, 0); }
+function endOfDayIst(d)   { const { y, m, day } = istParts(d); return fromIst(y, m, day, 23, 59, 59, 999); }
+
+function mondayOfIst(d) {
+  const { y, m, day, dow } = istParts(d); // dow: 0=Sun..6=Sat
+  const delta = dow === 0 ? -6 : 1 - dow;
+  return fromIst(y, m, day + delta, 0, 0, 0, 0);
+}
+
+function getPeriodRange(period, now, customStart, customEnd) {
   let granularity, start, end, prevStart, prevEnd;
 
-  if (period === "this_week" || period === "last_week") {
-    const thisMonday = mondayOf(now);
+  if (period === "custom") {
+    // customStart/customEnd are "YYYY-MM-DD" strings — interpreted as IST
+    // calendar dates (i.e. what the admin picked in the date inputs).
+    const [sy, sm, sd] = customStart.split("-").map(Number);
+    const [ey, em, ed] = customEnd.split("-").map(Number);
+    start = fromIst(sy, sm - 1, sd, 0, 0, 0, 0);
+    end   = endOfDayIst(fromIst(ey, em - 1, ed, 0, 0, 0, 0));
+    if (end < start) { const t = start; start = end; end = t; } // swap if picked backwards
+    const spanMs = +end - +start;
+    prevEnd   = endOfDayIst(new Date(+start - 86400000));
+    prevStart = startOfDayIst(new Date(+prevEnd - spanMs));
+    granularity = "custom";
+  } else if (period === "this_week" || period === "last_week") {
+    const thisMonday = mondayOfIst(now);
     if (period === "this_week") {
       start = thisMonday;
-      end   = endOfDay(new Date(+thisMonday + 6 * 86400000));
+      end   = endOfDayIst(new Date(+thisMonday + 6 * 86400000));
     } else {
-      end   = endOfDay(new Date(+thisMonday - 86400000));
-      start = startOfDay(new Date(+end - 6 * 86400000));
+      end   = endOfDayIst(new Date(+thisMonday - 86400000));
+      start = startOfDayIst(new Date(+end - 6 * 86400000));
     }
-    prevStart = startOfDay(new Date(+start - 7 * 86400000));
-    prevEnd   = endOfDay(new Date(+prevStart + 6 * 86400000));
+    prevStart = startOfDayIst(new Date(+start - 7 * 86400000));
+    prevEnd   = endOfDayIst(new Date(+prevStart + 6 * 86400000));
     granularity = "week";
   } else if (period === "this_month" || period === "last_month") {
-    const y = now.getFullYear(), m = now.getMonth();
+    const { y, m } = istParts(now);
     const t = period === "this_month" ? m : m - 1;
-    start = startOfDay(new Date(y, t, 1));
-    end   = endOfDay(new Date(y, t + 1, 0));
-    prevStart = startOfDay(new Date(y, t - 1, 1));
-    prevEnd   = endOfDay(new Date(y, t, 0));
+    start = fromIst(y, t, 1, 0, 0, 0, 0);
+    end   = endOfDayIst(new Date(+fromIst(y, t + 1, 1, 0, 0, 0, 0) - 86400000));
+    prevStart = fromIst(y, t - 1, 1, 0, 0, 0, 0);
+    prevEnd   = endOfDayIst(new Date(+fromIst(y, t, 1, 0, 0, 0, 0) - 86400000));
     granularity = "month";
   } else { // this_year / last_year
-    const y = now.getFullYear();
+    const { y } = istParts(now);
     const t = period === "this_year" ? y : y - 1;
-    start = startOfDay(new Date(t, 0, 1));
-    end   = endOfDay(new Date(t, 11, 31));
-    prevStart = startOfDay(new Date(t - 1, 0, 1));
-    prevEnd   = endOfDay(new Date(t - 1, 11, 31));
+    start = fromIst(t, 0, 1, 0, 0, 0, 0);
+    end   = endOfDayIst(fromIst(t, 11, 31, 0, 0, 0, 0));
+    prevStart = fromIst(t - 1, 0, 1, 0, 0, 0, 0);
+    prevEnd   = endOfDayIst(fromIst(t - 1, 11, 31, 0, 0, 0, 0));
     granularity = "year";
   }
   return { granularity, start, end, prevStart, prevEnd };
 }
 
-function buildBuckets(granularity, start) {
+function buildBuckets(granularity, start, end) {
   const buckets = [];
-  if (granularity === "week") {
+  const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  if (granularity === "custom") {
+    // One bucket per calendar day (IST) across the picked range. Diffing
+    // two start-of-day instants (rather than end-of-day, which sits 1ms
+    // shy of the next midnight) keeps this an exact whole-day count.
+    const totalDays = Math.round((+startOfDayIst(end) - +startOfDayIst(start)) / 86400000) + 1;
+    const { y, m, day } = istParts(start);
+    for (let i = 0; i < totalDays; i++) {
+      const from = fromIst(y, m, day + i, 0, 0, 0, 0);
+      const p    = istParts(from);
+      buckets.push({ label: `${p.day} ${MONTH_NAMES[p.m]}`, from, to: endOfDayIst(from) });
+    }
+  } else if (granularity === "week") {
+    const { y, m, day } = istParts(start);
     ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((label, i) => {
-      const from = new Date(start); from.setDate(from.getDate() + i);
-      buckets.push({ label, from: startOfDay(from), to: endOfDay(from) });
+      const from = fromIst(y, m, day + i, 0, 0, 0, 0);
+      buckets.push({ label, from, to: endOfDayIst(from) });
     });
   } else if (granularity === "month") {
-    const y = start.getFullYear(), m = start.getMonth();
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const { y, m } = istParts(start);
+    const daysInMonth = Math.round((+fromIst(y, m + 1, 1, 0, 0, 0, 0) - +fromIst(y, m, 1, 0, 0, 0, 0)) / 86400000);
     for (let d = 1; d <= daysInMonth; d++) {
-      buckets.push({ label: String(d), from: startOfDay(new Date(y, m, d)), to: endOfDay(new Date(y, m, d)) });
+      const from = fromIst(y, m, d, 0, 0, 0, 0);
+      buckets.push({ label: String(d), from, to: endOfDayIst(from) });
     }
   } else { // year
-    const y = start.getFullYear();
+    const { y } = istParts(start);
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].forEach((label, m) => {
-      buckets.push({ label, from: startOfDay(new Date(y, m, 1)), to: endOfDay(new Date(y, m + 1, 0)) });
+      const from = fromIst(y, m, 1, 0, 0, 0, 0);
+      const to   = endOfDayIst(new Date(+fromIst(y, m + 1, 1, 0, 0, 0, 0) - 86400000));
+      buckets.push({ label, from, to });
     });
   }
   return buckets;
@@ -406,41 +459,65 @@ exports.adminReports = async (req, res) => {
   let period = PERIOD_ALIASES[req.query.period] || req.query.period || "this_month";
   if (!VALID_PERIODS.includes(period)) period = "this_month";
 
+  const { startDate, endDate, category } = req.query;
+  if (period === "custom" && (!startDate || !endDate)) period = "this_month"; // incomplete range → safe default
+
   const now = new Date();
-  const { granularity, start, end, prevStart, prevEnd } = getPeriodRange(period, now);
-  const buckets = buildBuckets(granularity, start);
+  const { granularity, start, end, prevStart, prevEnd } =
+    getPeriodRange(period, now, startDate, endDate);
+  const buckets = buildBuckets(granularity, start, end);
+
+  // Optional category filter: resolve to a set of course ids up front so
+  // every Enrollment query below can just add `course: { $in: courseIds }`.
+  let courseFilter = {};
+  if (category && category !== "all") {
+    const catCourses = await Course.find({ category }).select("_id").lean();
+    courseFilter = { course: { $in: catCourses.map((c) => c._id) } };
+  }
+
+  // Base filters applied to every query below:
+  //  - isDeleted: { $ne: true }  → soft-deleted enrollments never count
+  //  - status:    { $ne: "refunded" } → refunded orders don't count as
+  //    revenue or as a "real" enrollment, matching how Coursera/Udemy
+  //    report net numbers rather than gross-before-refund numbers.
+  //  (LIVE is declared once at the top of this file and shared with
+  //   adminDashboard so both surfaces stay numerically consistent.)
 
   const [
     paidDocs,           // for revenue chart — 1 query instead of up to 31
     allDocs,             // for enrollment chart — 1 query instead of up to 31
     newStudents,
     newEnrollments,
+    newPaidEnrollments,  // paid-only count, used for Avg Order Value
     revenueAgg,
     prevNewStudents,
     prevNewEnrollments,
+    prevNewPaidEnrollments,
     prevRevenueAgg,
     periodByCourse,      // period-scoped enrollments/revenue grouped by course
     catBreakdown,        // period-scoped category breakdown
     completionRates,     // completion rate stays all-time (see note below)
   ] = await Promise.all([
-    Enrollment.find({ type: "paid", createdAt: { $gte: start, $lte: end } })
+    Enrollment.find({ ...LIVE, ...courseFilter, type: "paid", createdAt: { $gte: start, $lte: end } })
       .select("amount createdAt").lean(),
-    Enrollment.find({ createdAt: { $gte: start, $lte: end } })
+    Enrollment.find({ ...LIVE, ...courseFilter, createdAt: { $gte: start, $lte: end } })
       .select("createdAt").lean(),
     User.countDocuments({ role: "student", createdAt: { $gte: start, $lte: end } }),
-    Enrollment.countDocuments({ createdAt: { $gte: start, $lte: end } }),
+    Enrollment.countDocuments({ ...LIVE, ...courseFilter, createdAt: { $gte: start, $lte: end } }),
+    Enrollment.countDocuments({ ...LIVE, ...courseFilter, type: "paid", createdAt: { $gte: start, $lte: end } }),
     Enrollment.aggregate([
-      { $match: { type: "paid", createdAt: { $gte: start, $lte: end } } },
+      { $match: { ...LIVE, ...courseFilter, type: "paid", createdAt: { $gte: start, $lte: end } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]),
     User.countDocuments({ role: "student", createdAt: { $gte: prevStart, $lte: prevEnd } }),
-    Enrollment.countDocuments({ createdAt: { $gte: prevStart, $lte: prevEnd } }),
+    Enrollment.countDocuments({ ...LIVE, ...courseFilter, createdAt: { $gte: prevStart, $lte: prevEnd } }),
+    Enrollment.countDocuments({ ...LIVE, ...courseFilter, type: "paid", createdAt: { $gte: prevStart, $lte: prevEnd } }),
     Enrollment.aggregate([
-      { $match: { type: "paid", createdAt: { $gte: prevStart, $lte: prevEnd } } },
+      { $match: { ...LIVE, ...courseFilter, type: "paid", createdAt: { $gte: prevStart, $lte: prevEnd } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]),
     Enrollment.aggregate([
-      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $match: { ...LIVE, ...courseFilter, createdAt: { $gte: start, $lte: end } } },
       {
         $group: {
           _id:         "$course",
@@ -452,7 +529,7 @@ exports.adminReports = async (req, res) => {
       { $limit: 8 },
     ]),
     Enrollment.aggregate([
-      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $match: { ...LIVE, ...courseFilter, createdAt: { $gte: start, $lte: end } } },
       { $lookup: { from: "courses", localField: "course", foreignField: "_id", as: "courseDoc" } },
       { $unwind: "$courseDoc" },
       { $group: { _id: "$courseDoc.category", value: { $sum: 1 } } },
@@ -464,7 +541,10 @@ exports.adminReports = async (req, res) => {
     // track record is more meaningful here than the completion rate of only
     // this period's cohort, who mostly haven't had time to finish yet
     // (that would read as artificially near-zero for "This Week", etc).
+    // Still excludes soft-deleted/refunded enrollments so withdrawn students
+    // don't drag a course's completion rate down.
     Enrollment.aggregate([
+      { $match: { ...LIVE, ...courseFilter } },
       {
         $group: {
           _id:       "$course",
@@ -489,8 +569,10 @@ exports.adminReports = async (req, res) => {
 
   const totalRevenue      = revenueAgg[0]?.total || 0;
   const prevTotalRevenue  = prevRevenueAgg[0]?.total || 0;
-  const avgOrderValue     = newEnrollments     > 0 ? Math.round(totalRevenue     / newEnrollments)     : 0;
-  const prevAvgOrderValue = prevNewEnrollments > 0 ? Math.round(prevTotalRevenue / prevNewEnrollments) : 0;
+  // Avg Order Value = revenue / *paid* enrollments only — dividing by
+  // newEnrollments (which includes free/trial signups) understates AOV.
+  const avgOrderValue     = newPaidEnrollments     > 0 ? Math.round(totalRevenue     / newPaidEnrollments)     : 0;
+  const prevAvgOrderValue = prevNewPaidEnrollments > 0 ? Math.round(prevTotalRevenue / prevNewPaidEnrollments) : 0;
 
   const compMap = {};
   completionRates.forEach((r) => {
@@ -523,6 +605,8 @@ exports.adminReports = async (req, res) => {
   res.json({
     success: true,
     period,
+    range: { start, end },
+    category: category && category !== "all" ? category : null,
     totalRevenue,
     newStudents,
     newEnrollments,
@@ -538,4 +622,12 @@ exports.adminReports = async (req, res) => {
     categoryBreakdown: catBreakdown,
     topCourses,
   });
+};
+
+/* ── GET /api/admin/reports/categories ───────────────────────────
+   Lightweight list of every course category, for the Reports page's
+   category filter dropdown — independent of any period/date filter. */
+exports.adminReportCategories = async (req, res) => {
+  const categories = await Course.distinct("category", { isPublished: true });
+  res.json({ success: true, categories: categories.filter(Boolean).sort() });
 };

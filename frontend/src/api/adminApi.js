@@ -19,4 +19,6 @@ export const deleteAdminEnrollment = (id)             => API.delete(`/admin/enro
 export const restoreAdminEnrollment = (id)            => API.patch(`/admin/enrollments/${id}/restore`); 
 
 // ── Reports ────────────────────────────────────────────────
-export const fetchReports      = (period = "monthly") => API.get("/admin/reports", { params: { period } });
+export const fetchReports      = (period = "monthly", extra = {}) =>
+  API.get("/admin/reports", { params: { period, ...extra } });
+export const fetchReportCategories = () => API.get("/admin/reports/categories");
