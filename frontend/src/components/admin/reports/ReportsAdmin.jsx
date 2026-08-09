@@ -4,7 +4,7 @@ import { useSocket } from "../../../context/SocketContext";
 import {
   TrendingUp, IndianRupee, Users, BookOpen,
   Star, Award, BarChart3, ArrowUpRight, Calendar, ChevronDown,
-  Filter, Download,
+  Filter,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -533,19 +533,12 @@ export default function ReportsAdmin({ downloadReportRef, exportPdfRef }) {
   return (
     <div className="space-y-8">
 
-      {/* Period / category filters + CSV export */}
+      {/* Period / category filters */}
       <div className="flex items-center justify-between flex-wrap gap-3 pdf-hide">
         <div className="flex items-center gap-2 flex-wrap">
           <PeriodDropdown period={period} setPeriod={setPeriod} customRange={customRange} setCustomRange={setCustomRange} />
           <CategoryDropdown category={category} setCategory={setCategory} categories={categories} />
         </div>
-        <button
-          onClick={downloadCsv}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:border-indigo-300 hover:shadow-sm transition-all"
-        >
-          <Download size={13} className="text-slate-400" />
-          CSV
-        </button>
       </div>
 
       {/* Summary */}
