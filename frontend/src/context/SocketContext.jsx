@@ -2,8 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { io } from 'socket.io-client';
 import { useAuth, enrollmentKey } from './AuthContext';
 
-/* ── Singleton socket — created once, survives StrictMode ── */
-const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+const socket = io(import.meta.env.VITE_API_URL || undefined, {
   withCredentials: true,
   transports: ['websocket', 'polling'],
   reconnectionAttempts: 10,
