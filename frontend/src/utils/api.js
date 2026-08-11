@@ -1,9 +1,12 @@
 import axios from "axios";
 
-// Helper to guarantee the URL always ends with '/api' even if VITE_API_URL is set to 'http://localhost:5000'
+// Helper to guarantee the URL always ends with '/api'.
+// In production (no VITE_API_URL set), fall back to a relative path so
+// requests go to the same origin the frontend is served from — avoids
+// hardcoding localhost, which breaks in any deployed environment.
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (!envUrl) return "http://localhost:5000/api";
+  if (!envUrl) return "/api";
   const cleanUrl = envUrl.replace(/\/+$/, "");
   return cleanUrl.endsWith("/api") ? cleanUrl : `${cleanUrl}/api`;
 };
