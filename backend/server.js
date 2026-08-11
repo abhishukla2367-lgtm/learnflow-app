@@ -129,6 +129,14 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+const path = require("path");
+
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
+
 // --- 6. ERROR HANDLING ---
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
