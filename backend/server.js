@@ -49,7 +49,18 @@ app.set("io", io);
 
 // --- 2. MIDDLEWARE CONFIGURATION ---
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      connectSrc: ["'self'"], // same-origin covers your Socket.IO ws/wss connection
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
+    },
+  },
+}));
+
 app.set("trust proxy", 1);
 
 app.use(cors({
