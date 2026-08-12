@@ -1,18 +1,19 @@
 require("express-async-errors");
 require("dotenv").config();
 
-const express  = require("express");
-const mongoose = require("mongoose");
-const cors     = require("cors");
-const helmet   = require("helmet");
-const dns      = require("node:dns");
-const http     = require("http");
+const express   = require("express");
+const mongoose  = require("mongoose");
+const cors      = require("cors");
+const helmet    = require("helmet");
+const dns       = require("node:dns");
+const http      = require("http");
+const path      = require("path");
 const rateLimit = require("express-rate-limit");
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 process.removeAllListeners("warning");
 
-/* ── 1. VALIDATE CRITICAL ENV VARS (Including Email) ───────────────────── */
+/* ── 1. VALIDATE CRITICAL ENV VARS ─────────────────────────────────────── */
 const REQUIRED_ENV = [
   "MONGO_URI", 
   "JWT_SECRET", 
@@ -32,12 +33,17 @@ REQUIRED_ENV.forEach((k) => {
 const app    = express();
 const server = http.createServer(app);
 
-// ── Socket.io setup ───────────────────────────────────────────────────────────
+// ── Origin Parser Helper ──────────────────────────────────────────────────────
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
+  : ["http://localhost:5173", "http://localhost:5174"];
+
+// ── Socket.io Setup ───────────────────────────────────────────────────────────
 const { Server } = require("socket.io");
 const { initSocket } = require("./socket");
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || ["http://localhost:5173", "http://localhost:5174"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -49,43 +55,50 @@ app.set("io", io);
 
 // --- 2. MIDDLEWARE CONFIGURATION ---
 
+// Trust reverse proxy (Render, Nginx, Heroku)
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com"],
+        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com"],
         imgSrc: [
           "'self'",
           "data:",
+          "blob:",
           "https://res.cloudinary.com",
           "https://*.googleusercontent.com",
           "https:"
         ],
         connectSrc: [
           "'self'",
+          "https://firestore.googleapis.com",
           "https://*.firestore.googleapis.com",
-          "https://*.firebaseio.com",
+          "wss://firestore.googleapis.com",
+          "wss://*.firestore.googleapis.com",
           "https://identitytoolkit.googleapis.com",
           "https://securetoken.googleapis.com",
+          "https://*.firebaseio.com",
           "wss://*.firebaseio.com"
         ],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
       },
     },
   })
 );
 
-app.set("trust proxy", 1);
-
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ["http://localhost:5173", "http://localhost:5174"],
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// Global Rate Limiter
+// Rate Limiters
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
@@ -100,37 +113,23 @@ const authLimiter = rateLimit({
   message: { success: false, message: "Too many auth attempts, please wait 15 minutes." },
 });
 
+// Parsers
 app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-app.use((req, res, next) => {
-  if (req.is("multipart/form-data")) return next();
-  express.urlencoded({ extended: true })(req, res, next);
-});
-
-// Disabled HTTP request logging:
-// app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-
-// --- 3. DATABASE CONNECTION ---
-
-mongoose.connect(process.env.MONGO_URI)
-  .catch((err) => {
-    console.error("❌ MongoDB Connection Error:", err.message);
-    process.exit(1);
-  });
-
-// --- 4. ROUTES ---
-const otpRoutes         = require("./routes/otpRoutes");
-const authRoutes        = require("./routes/authRoutes");
-const courseRoutes      = require("./routes/courseRoutes");
-const enrollmentRoutes  = require("./routes/enrollmentRoutes");
-const quizRoutes        = require("./routes/quizRoutes");
-const reviewRoutes      = require("./routes/reviewRoutes");
-const certificateRoutes = require("./routes/certificateRoutes");
-const adminRoutes       = require("./routes/adminRoutes");
-const userRoutes        = require("./routes/userRoutes");
+// --- 3. ROUTES ---
+const otpRoutes          = require("./routes/otpRoutes");
+const authRoutes         = require("./routes/authRoutes");
+const courseRoutes       = require("./routes/courseRoutes");
+const enrollmentRoutes   = require("./routes/enrollmentRoutes");
+const quizRoutes         = require("./routes/quizRoutes");
+const reviewRoutes       = require("./routes/reviewRoutes");
+const certificateRoutes  = require("./routes/certificateRoutes");
+const adminRoutes        = require("./routes/adminRoutes");
+const userRoutes         = require("./routes/userRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-const paymentRoutes     = require("./routes/paymentRoutes");
-const profileRoutes     = require("./routes/profileRoutes");
+const paymentRoutes      = require("./routes/paymentRoutes");
+const profileRoutes      = require("./routes/profileRoutes");
 
 app.use("/api/otp",           authLimiter, otpRoutes);
 app.use("/api/auth",          authLimiter, authRoutes);
@@ -145,7 +144,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/payments",      paymentRoutes);
 app.use("/api/profile",       profileRoutes);
 
-// --- 5. HEALTH CHECK ---
+// --- 4. HEALTH CHECK & STATIC CLIENT SERVING ---
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status:   "Active",
@@ -155,15 +154,14 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-const path = require("path");
-
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-app.get(/^(?!\/api).*/, (req, res) => {
+app.get("*", (req, res, next) => {
+  if (req.originalUrl.startsWith("/api")) return next();
   res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
-// --- 6. ERROR HANDLING ---
+// --- 5. ERROR HANDLING ---
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
@@ -173,25 +171,32 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal Server Error",
-    error:   process.env.NODE_ENV === "development" ? err.message : {},
+    error:   process.env.NODE_ENV === "development" ? err.stack : {},
   });
 });
 
-// --- 7. START SERVER ---
+// --- 6. START SERVER AFTER DB CONNECT ---
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-  console.log("");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(`🚀 Learnodays API   : Started`);
-  console.log(`📡 URL             : http://localhost:${PORT}/api`);
-  console.log(`🔌 Socket.IO      : Connected`);
-  console.log(`✅ MongoDB        : Connected`);
-  console.log(`🕐 Started at      : ${timestamp}`);
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("");
-});
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    server.listen(PORT, () => {
+      const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      console.log("");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log(`🚀 Learnodays API   : Started`);
+      console.log(`📡 URL             : http://localhost:${PORT}/api`);
+      console.log(`🔌 Socket.IO      : Connected`);
+      console.log(`✅ MongoDB         : Connected`);
+      console.log(`🕐 Started at      : ${timestamp}`);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("");
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    process.exit(1);
+  });
 
 server.on("error", (e) => {
   if (e.code === "EADDRINUSE") {
